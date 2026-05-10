@@ -7,290 +7,316 @@
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Teko:wght@500;600&display=swap" rel="stylesheet"/>
 <style>
+/* ── RESET ── */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth}
-body{font-family:'Inter',sans-serif;font-size:13px;color:#1a1a1a;background:#f0f0f0;min-height:100vh}
+body{font-family:'Inter',sans-serif;font-size:13px;color:#1a1a1a;background:#efefef;min-height:100vh}
 a{text-decoration:none;color:inherit}
 table{border-collapse:collapse;width:100%}
-th,td{text-align:left;padding:7px 10px;white-space:nowrap}
+th,td{text-align:left;padding:7px 10px}
 
+/* ── COLORS ── */
 :root{
   --red:#c0392b;--green:#1a7a4a;--orange:#e07b00;
-  --blue:#0d47a1;--mc-blue:#0060df;
-  --border:#e0e0e0;--bg:#fff;--bg-head:#f5f7ff;
-  --dim:#666;
+  --blue:#0d47a1;--mc:#0060df;
+  --bdr:#e0e0e0;--bg:#fff;--bgh:#f5f7ff;--dim:#666;
 }
 
-/* TOP BAR */
-.top-bar{background:#0d47a1;color:#cfe2ff;font-size:11px;padding:5px 16px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:4px}
-.top-bar a{color:#90c4ff;margin-left:10px}
+/* ── TOP BAR ── */
+.topbar{background:#0d47a1;color:#cfe2ff;font-size:11px;padding:5px 16px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:4px}
+.topbar a{color:#90c4ff;margin-left:10px}
 
-/* HEADER */
-header{background:#fff;border-bottom:3px solid #0060df;box-shadow:0 2px 6px rgba(0,0,0,.1);position:sticky;top:0;z-index:300}
-.hdr-inner{max-width:1360px;margin:0 auto;display:flex;align-items:center;gap:14px;padding:0 16px;height:56px}
-.logo{display:flex;align-items:center;gap:10px;flex-shrink:0;margin-right:8px}
-.logo-hn{font-family:'Teko',sans-serif;font-size:26px;color:#0060df;line-height:1;letter-spacing:1px}
-.logo-en{font-family:'Teko',sans-serif;font-size:17px;font-weight:600;color:#111;line-height:1.1}
-.logo-sl{font-size:9px;color:#999;letter-spacing:.6px;text-transform:uppercase}
-nav{display:flex;gap:3px;flex:1;flex-wrap:wrap}
-.nb{padding:6px 13px;border-radius:3px;font-size:12px;font-weight:600;color:#444;cursor:pointer;border:none;background:none;transition:.2s;white-space:nowrap;font-family:'Inter',sans-serif}
-.nb:hover{background:#e8f0ff;color:#0060df}
-.nb.on{background:#0060df;color:#fff}
-.hdr-dt{font-size:11px;color:#999;flex-shrink:0}
+/* ── HEADER ── */
+header{background:#fff;border-bottom:3px solid var(--mc);box-shadow:0 2px 6px rgba(0,0,0,.1);position:sticky;top:0;z-index:300}
+.hdr{max-width:1360px;margin:0 auto;display:flex;align-items:center;gap:12px;padding:0 14px;height:54px}
+.logo{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.lhn{font-family:'Teko',sans-serif;font-size:24px;color:var(--mc);line-height:1;letter-spacing:1px}
+.len{font-family:'Teko',sans-serif;font-size:16px;font-weight:600;color:#111;line-height:1.1}
+.lsl{font-size:9px;color:#999;letter-spacing:.5px;text-transform:uppercase}
+nav{display:flex;gap:2px;flex:1;flex-wrap:wrap}
+.nb{padding:6px 11px;border-radius:3px;font-size:11.5px;font-weight:600;color:#444;cursor:pointer;border:none;background:none;transition:.2s;white-space:nowrap;font-family:'Inter',sans-serif;line-height:1}
+.nb:hover{background:#e8f0ff;color:var(--mc)}
+.nb.on{background:var(--mc);color:#fff}
+.hdt{font-size:11px;color:#999;flex-shrink:0;white-space:nowrap}
 
-/* TICKER */
-.ticker-bar{background:#fff;border-bottom:1px solid #e8e8e8;overflow:hidden;height:30px;display:flex;align-items:center}
-.tick-scroll{display:flex;align-items:center;animation:tscroll 55s linear infinite;white-space:nowrap}
-.tick-scroll:hover{animation-play-state:paused}
-@keyframes tscroll{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+/* ── TICKER ── */
+.ticker{background:#fff;border-bottom:1px solid #e8e8e8;overflow:hidden;height:30px;display:flex;align-items:center}
+.tscrl{display:flex;align-items:center;animation:tsc 55s linear infinite;white-space:nowrap}
+.tscrl:hover{animation-play-state:paused}
+@keyframes tsc{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
 .ti{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:500;padding:0 16px;border-right:1px solid #f0f0f0}
 .tn{color:#555}.tv{font-weight:700;color:#111}.tc{font-size:10.5px}
 .up{color:var(--green)}.dn{color:var(--red)}.nu{color:#999}
 
-/* WRAP */
-.wrap{max-width:1360px;margin:0 auto;padding:14px 16px}
+/* ── LAYOUT ── */
+.wrap{max-width:1360px;margin:0 auto;padding:12px 14px}
 .sec{display:none}.sec.on{display:block}
-.stitle{font-family:'Teko',sans-serif;font-size:22px;font-weight:600;color:#0d47a1;border-bottom:2px solid #0060df;padding-bottom:5px;margin-bottom:14px;letter-spacing:.3px}
+.stitle{font-family:'Teko',sans-serif;font-size:21px;font-weight:600;color:var(--blue);border-bottom:2px solid var(--mc);padding-bottom:5px;margin-bottom:12px;letter-spacing:.3px}
 
-/* MARKET CARDS */
-.cards{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:14px}
-.mc{background:#fff;border:1px solid var(--border);border-radius:5px;padding:12px 16px;min-width:150px;flex:1;position:relative;overflow:hidden}
-.mc::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:#0060df}
+/* ── MARKET SUMMARY CARDS ── */
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;margin-bottom:12px}
+.mc{background:#fff;border:1px solid var(--bdr);border-radius:5px;padding:11px 14px;position:relative;overflow:hidden}
+.mc::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--mc)}
 .mc.r::before{background:var(--red)}.mc.g::before{background:var(--green)}.mc.o::before{background:var(--orange)}
-.cl{font-size:10px;color:#999;font-weight:600;letter-spacing:.5px;text-transform:uppercase;margin-bottom:4px}
-.cv{font-family:'Teko',sans-serif;font-size:26px;font-weight:600;line-height:1;color:#111}
-.cc{font-size:11px;margin-top:3px}
+.cl{font-size:10px;color:#999;font-weight:600;letter-spacing:.4px;text-transform:uppercase;margin-bottom:3px}
+.cv{font-family:'Teko',sans-serif;font-size:24px;font-weight:600;line-height:1;color:#111}
+.cch{font-size:11px;margin-top:2px}
 
-/* TABLE CARDS */
-.tc-wrap{background:#fff;border:1px solid var(--border);border-radius:5px;margin-bottom:14px;overflow:hidden}
-.tc-hdr{background:var(--bg-head);padding:9px 14px;font-size:12px;font-weight:700;color:#0d47a1;border-bottom:1px solid #dce6ff;display:flex;justify-content:space-between;align-items:center}
-.cnt{font-size:10px;background:#0060df;color:#fff;padding:1px 8px;border-radius:10px;font-weight:600}
-.tscr{overflow-x:auto}
+/* ── TABLE WRAPPER ── */
+.tcw{background:#fff;border:1px solid var(--bdr);border-radius:5px;margin-bottom:12px;overflow:hidden}
+.tch{background:var(--bgh);padding:8px 12px;font-size:12px;font-weight:700;color:var(--blue);border-bottom:1px solid #dce6ff;display:flex;justify-content:space-between;align-items:center;gap:6px;flex-wrap:wrap}
+.cnt{font-size:10px;background:var(--mc);color:#fff;padding:1px 8px;border-radius:10px;font-weight:600;flex-shrink:0}
+.tscr{overflow-x:auto;-webkit-overflow-scrolling:touch}
 thead tr{background:#fafbff}
-thead th{font-size:11px;font-weight:700;color:#666;border-bottom:1px solid #eee;padding:7px 10px}
+thead th{font-size:11px;font-weight:700;color:#555;border-bottom:1px solid #eee;padding:7px 10px;white-space:nowrap}
 tbody tr{border-bottom:1px solid #f5f5f5}
 tbody tr:hover{background:#f8fbff}
-tbody td{font-size:12px;color:#222;padding:7px 10px}
+tbody td{font-size:12px;color:#222;padding:7px 10px;white-space:nowrap}
 .cp{color:var(--green);font-weight:600}.cn{color:var(--red);font-weight:600}
 .bd{display:inline-block;padding:1px 7px;border-radius:3px;font-size:10px;font-weight:700}
 .bd-g{background:#e6f4ee;color:#1a7a4a}.bd-a{background:#fff3e0;color:#e07b00}.bd-r{background:#fdecea;color:#c0392b}
 
-/* TWO COLUMNS */
-.g2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
-@media(max-width:768px){.g2{grid-template-columns:1fr}}
+/* ── 2-COL GRID ── */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+@media(max-width:640px){.g2{grid-template-columns:1fr}}
 
-/* IDX GRID */
-.igrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(195px,1fr));gap:10px;margin-bottom:14px}
-.icard{background:#fff;border:1px solid var(--border);border-radius:5px;padding:10px 12px;transition:.2s}
-.icard:hover{border-color:#0060df;box-shadow:0 2px 10px rgba(0,96,223,.12)}
+/* ── INDEX GRID (Global / Indian) ── */
+.igrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px;margin-bottom:12px}
+.icard{background:#fff;border:1px solid var(--bdr);border-radius:5px;padding:10px 12px;transition:.2s}
+.icard:hover{border-color:var(--mc);box-shadow:0 2px 10px rgba(0,96,223,.1)}
 .ireg{font-size:9px;color:#bbb;text-transform:uppercase;letter-spacing:.5px}
-.iname{font-size:12px;font-weight:700;color:#222;margin:2px 0}
-.iprice{font-family:'Teko',sans-serif;font-size:21px;color:#111;line-height:1.1}
-.ichgs{display:flex;gap:8px;font-size:11px;margin-top:2px}
+.iname{font-size:12px;font-weight:700;color:#222;margin:2px 0;white-space:normal;line-height:1.2}
+.iprc{font-family:'Teko',sans-serif;font-size:20px;color:#111;line-height:1.1}
+.ichs{display:flex;gap:6px;font-size:11px;margin-top:2px;flex-wrap:wrap}
 .ihl{font-size:10px;color:#bbb;margin-top:2px}
 .itm{font-size:9px;color:#ccc;margin-top:1px}
 
-/* ADVANCE DECLINE */
-.adr{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px}
-.adbox{background:#fff;border:1px solid var(--border);border-radius:5px;padding:10px 14px;flex:1;min-width:130px;text-align:center}
-.adl{font-size:10px;color:#999;text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px}
-.adn{font-family:'Teko',sans-serif;font-size:28px;line-height:1}
+/* ── FUTURES TABLE ── */
+.fut-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:8px;margin-bottom:12px}
+.fcard{background:#fff;border:1px solid var(--bdr);border-radius:5px;padding:10px 14px;transition:.2s}
+.fcard:hover{border-color:var(--mc);box-shadow:0 2px 10px rgba(0,96,223,.1)}
+.fregion{font-size:9px;color:#bbb;text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px}
+.fname{font-size:12px;font-weight:700;color:#222;margin-bottom:4px}
+.fprc{font-family:'Teko',sans-serif;font-size:22px;color:#111;line-height:1}
+.fchs{display:flex;align-items:center;gap:8px;font-size:11px;margin-top:3px}
+.fhl{font-size:10px;color:#bbb;margin-top:3px}
+.ftm{font-size:9px;color:#ccc;margin-top:1px}
 
-/* IPO BADGES */
+/* ── ADVANCE / DECLINE ── */
+.adr{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px}
+@media(max-width:500px){.adr{grid-template-columns:repeat(2,1fr)}}
+.adbox{background:#fff;border:1px solid var(--bdr);border-radius:5px;padding:10px;text-align:center}
+.adl{font-size:10px;color:#999;text-transform:uppercase;letter-spacing:.4px;margin-bottom:2px}
+.adn{font-family:'Teko',sans-serif;font-size:26px;line-height:1}
+
+/* ── IPO STATUS ── */
 .s-op{background:#e6f4ee;color:#1a7a4a;padding:2px 7px;border-radius:3px;font-size:10px;font-weight:700}
 .s-cl{background:#fdecea;color:#c0392b;padding:2px 7px;border-radius:3px;font-size:10px;font-weight:700}
 .s-up{background:#fff8e1;color:#b45309;padding:2px 7px;border-radius:3px;font-size:10px;font-weight:700}
 
-/* INVESTOR TABS */
-.itabs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
-.itb{padding:5px 13px;border:1px solid #ddd;border-radius:3px;font-size:11px;font-weight:600;cursor:pointer;background:#fff;color:#555;transition:.15s;font-family:'Inter',sans-serif}
-.itb:hover{border-color:#0060df;color:#0060df}
-.itb.on{background:#0060df;color:#fff;border-color:#0060df}
+/* ── INVESTOR TABS ── */
+.itabs{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px}
+.itb{padding:5px 12px;border:1px solid #ddd;border-radius:3px;font-size:11px;font-weight:600;cursor:pointer;background:#fff;color:#555;transition:.15s;font-family:'Inter',sans-serif}
+.itb:hover{border-color:var(--mc);color:var(--mc)}
+.itb.on{background:var(--mc);color:#fff;border-color:var(--mc)}
 .ipanel{display:none}.ipanel.on{display:block}
 .pv{font-size:11px;color:#888;margin-bottom:8px}
-.pv strong{color:#0d47a1;font-size:13px}
+.pv strong{color:var(--blue);font-size:13px}
 
-/* DISCLAIMER */
-.disc{background:#fffde7;border:1px solid #ffe082;border-radius:5px;padding:10px 14px;font-size:11px;color:#6d4c00;margin-bottom:14px}
+/* ── DISCLAIMER ── */
+.disc{background:#fffde7;border:1px solid #ffe082;border-radius:5px;padding:10px 14px;font-size:11px;color:#6d4c00;margin-bottom:12px}
 
-/* FOOTER */
-footer{background:#1a1a2e;color:#888;text-align:center;padding:18px 16px;font-size:11px;margin-top:20px}
+/* ── FOOTER ── */
+footer{background:#1a1a2e;color:#777;text-align:center;padding:16px;font-size:11px;margin-top:16px}
 footer a{color:#6ea8fe}
+
+/* ════════════ MOBILE ════════════ */
+@media(max-width:768px){
+  .hdr{height:auto;padding:8px 12px;flex-wrap:wrap;gap:8px}
+  nav{gap:3px;order:3;width:100%;padding-bottom:4px}
+  .nb{font-size:11px;padding:5px 9px}
+  .hdt{display:none}
+  .wrap{padding:10px}
+  .stitle{font-size:18px}
+  .igrid{grid-template-columns:repeat(2,1fr)}
+  .fut-grid{grid-template-columns:repeat(2,1fr)}
+  .cards{grid-template-columns:repeat(2,1fr)}
+  thead th,tbody td{padding:6px 8px;font-size:11px}
+  .cv{font-size:20px}
+  .iprc{font-size:18px}
+  .fprc{font-size:18px}
+}
+@media(max-width:400px){
+  .igrid{grid-template-columns:1fr 1fr}
+  .fut-grid{grid-template-columns:1fr 1fr}
+  .nb{font-size:10px;padding:4px 7px}
+}
 </style>
 </head>
 <body>
 
-<div class="top-bar">
-  <span>🇮🇳 &nbsp;Niveshaka-bandhu — Investor's Friend &nbsp;|&nbsp; For Investment Study Only &nbsp;|&nbsp; Data: 10 May 2026</span>
-  <span>
-    <a href="https://tinyurl.com/Niveshaka-bandhu" target="_blank">📊 Full Google Sheet</a>
-    <a href="https://tinyurl.com/Niveshaka-bandhu" target="_blank">📱 WhatsApp Channel</a>
-  </span>
+<!-- TOP BAR -->
+<div class="topbar">
+  <span>🇮🇳 Niveshaka-bandhu — Investor's Friend &nbsp;|&nbsp; Data: 10 May 2026 &nbsp;|&nbsp; For Study Only</span>
+  <span><a href="https://tinyurl.com/Niveshaka-bandhu" target="_blank">📊 Full Sheet</a></span>
 </div>
 
+<!-- HEADER -->
 <header>
-  <div class="hdr-inner">
+  <div class="hdr">
     <div class="logo">
-      <div class="logo-hn">निवेशक</div>
-      <div>
-        <div class="logo-en">Niveshaka-bandhu</div>
-        <div class="logo-sl">Investor's Friend</div>
-      </div>
+      <div class="lhn">निवेशक</div>
+      <div><div class="len">Niveshaka-bandhu</div><div class="lsl">Investor's Friend</div></div>
     </div>
     <nav>
-      <button class="nb on" onclick="showTab('global',this)">🌍 Global Indices</button>
-      <button class="nb" onclick="showTab('market',this)">📈 Market Data</button>
-      <button class="nb" onclick="showTab('ipo',this)">🏦 IPO Corner</button>
-      <button class="nb" onclick="showTab('currency',this)">💱 Currencies</button>
-      <button class="nb" onclick="showTab('ace',this)">🧠 Ace Investors</button>
+      <button class="nb on"  onclick="showTab('global',this)">🌍 Global</button>
+      <button class="nb"     onclick="showTab('futures',this)">📉 Futures</button>
+      <button class="nb"     onclick="showTab('indian',this)">🇮🇳 Indian</button>
+      <button class="nb"     onclick="showTab('market',this)">📈 Market</button>
+      <button class="nb"     onclick="showTab('ipo',this)">🏦 IPO</button>
+      <button class="nb"     onclick="showTab('currency',this)">💱 Currencies</button>
+      <button class="nb"     onclick="showTab('ace',this)">🧠 Ace Investors</button>
     </nav>
-    <div class="hdr-dt">10 May 2026</div>
+    <div class="hdt">10 May 2026</div>
   </div>
 </header>
 
-<div class="ticker-bar">
-  <div class="tick-scroll" id="tick"></div>
-</div>
+<!-- TICKER -->
+<div class="ticker"><div class="tscrl" id="tick"></div></div>
 
 <div class="wrap">
 
-<!-- ════════════════════════════════ GLOBAL INDICES ════ -->
+<!-- ══ GLOBAL INDICES ══════════════════════════════════════ -->
 <div class="sec on" id="s-global">
-  <div class="stitle">🌍 Global Indices — 10 May 2026</div>
+  <div class="stitle">🌍 Global Indices</div>
   <div class="cards">
-    <div class="mc r"><div class="cl">SENSEX</div><div class="cv">77,328</div><div class="cc dn">▼ 516.34 (−0.66%)</div></div>
-    <div class="mc r"><div class="cl">NIFTY 50</div><div class="cv">24,176</div><div class="cc dn">▼ 150.50 (−0.62%)</div></div>
-    <div class="mc g"><div class="cl">NASDAQ</div><div class="cv">26,247</div><div class="cc up">▲ 440.88 (+1.71%)</div></div>
-    <div class="mc g"><div class="cl">DOW JONES</div><div class="cv">49,609</div><div class="cc up">▲ 12.19 (+0.02%)</div></div>
-    <div class="mc g"><div class="cl">S&amp;P 500</div><div class="cv">7,398</div><div class="cc up">▲ 61.82 (+0.84%)</div></div>
-    <div class="mc o"><div class="cl">INDIA VIX</div><div class="cv">16.84</div><div class="cc up">▲ 0.22 (+1.32%)</div></div>
+    <div class="mc r"><div class="cl">SENSEX</div><div class="cv">77,328</div><div class="cch dn">▼ 516.34 (−0.66%)</div></div>
+    <div class="mc r"><div class="cl">NIFTY 50</div><div class="cv">24,176</div><div class="cch dn">▼ 150.50 (−0.62%)</div></div>
+    <div class="mc g"><div class="cl">NASDAQ</div><div class="cv">26,247</div><div class="cch up">▲ 440.88 (+1.71%)</div></div>
+    <div class="mc g"><div class="cl">DOW JONES</div><div class="cv">49,609</div><div class="cch up">▲ 12.19 (+0.02%)</div></div>
+    <div class="mc g"><div class="cl">S&amp;P 500</div><div class="cv">7,398</div><div class="cch up">▲ 61.82 (+0.84%)</div></div>
+    <div class="mc o"><div class="cl">INDIA VIX</div><div class="cv">16.84</div><div class="cch up">▲ 0.22 (+1.32%)</div></div>
   </div>
-
-  <div class="stitle" style="font-size:15px;border-bottom:1px solid #ddd">Asia Pacific</div>
+  <div class="stitle" style="font-size:14px;border-bottom:1px solid #ddd">Asia Pacific</div>
   <div class="igrid" id="ag"></div>
-
-  <div class="stitle" style="font-size:15px;border-bottom:1px solid #ddd;margin-top:8px">Europe &amp; Americas</div>
+  <div class="stitle" style="font-size:14px;border-bottom:1px solid #ddd;margin-top:6px">Europe &amp; Americas</div>
   <div class="igrid" id="eg"></div>
-
-  <p style="font-size:10px;color:#bbb;margin-top:8px">⚠️ Quotes may be delayed up to 20 min. Source: Google Finance. Not investment advice.</p>
+  <p style="font-size:10px;color:#bbb;margin-top:6px">⚠️ Quotes delayed up to 20 min. Source: Google Finance. Not investment advice.</p>
 </div>
 
-<!-- ════════════════════════════════ MARKET DATA ═══════ -->
+<!-- ══ FUTURES ══════════════════════════════════════════════ -->
+<div class="sec" id="s-futures">
+  <div class="stitle">📉 Index Futures — 10 May 2026</div>
+  <div class="disc">ℹ️ Futures prices are from Investing.com. Shown as-of market close or latest available session.</div>
+  <div class="stitle" style="font-size:14px;border-bottom:1px solid #ddd">🇺🇸 US &amp; Europe Futures</div>
+  <div class="fut-grid" id="fut-us"></div>
+  <div class="stitle" style="font-size:14px;border-bottom:1px solid #ddd;margin-top:4px">🇮🇳 India Futures</div>
+  <div class="fut-grid" id="fut-in"></div>
+  <div class="stitle" style="font-size:14px;border-bottom:1px solid #ddd;margin-top:4px">🌏 Asia &amp; Others</div>
+  <div class="fut-grid" id="fut-as"></div>
+  <div class="tcw" style="margin-top:8px">
+    <div class="tch">🎁 GIFT NIFTY — Live</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:0">
+      <div style="padding:14px 16px;border-right:1px solid #f0f0f0"><div class="adl">Name</div><div style="font-weight:700;font-size:13px">GIFT NIFTY</div></div>
+      <div style="padding:14px 16px;border-right:1px solid #f0f0f0"><div class="adl">Price</div><div style="font-family:'Teko',sans-serif;font-size:22px;font-weight:600">24,280.00</div></div>
+      <div style="padding:14px 16px;border-right:1px solid #f0f0f0"><div class="adl">Change</div><div class="cp" style="font-weight:700">+62 (+0.26%)</div></div>
+      <div style="padding:14px 16px;border-right:1px solid #f0f0f0"><div class="adl">Prev Close</div><div>24,218.00</div></div>
+      <div style="padding:14px 16px"><div class="adl">Direction</div><div class="cp" style="font-size:16px">↑ Bullish</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ INDIAN INDICES ══════════════════════════════════════ -->
+<div class="sec" id="s-indian">
+  <div class="stitle">🇮🇳 Indian Indices</div>
+
+  <div class="g2">
+    <div class="tcw">
+      <div class="tch">NSE Sectoral Indices <span class="cnt">18</span></div>
+      <div class="tscr"><table>
+        <thead><tr><th>Index</th><th>Price</th><th>Chg</th><th>% Chg</th><th>52W High</th><th>52W Low</th></tr></thead>
+        <tbody id="nse-sect"></tbody>
+      </table></div>
+    </div>
+    <div class="tcw">
+      <div class="tch">BSE Sectoral Indices <span class="cnt">18</span></div>
+      <div class="tscr"><table>
+        <thead><tr><th>Index</th><th>Price</th><th>Chg</th><th>% Chg</th><th>52W High</th><th>52W Low</th></tr></thead>
+        <tbody id="bse-sect"></tbody>
+      </table></div>
+    </div>
+  </div>
+
+  <div class="tcw">
+    <div class="tch">NIFTY 50 Constituents — Live Prices <span class="cnt">50</span></div>
+    <div class="tscr"><table>
+      <thead><tr><th>Company</th><th>Price ₹</th><th>Chg</th><th>% Chg</th><th>52W High</th><th>52W Low</th></tr></thead>
+      <tbody id="nifty50-stocks"></tbody>
+    </table></div>
+  </div>
+
+  <div class="tcw">
+    <div class="tch">NIFTY 50 — Sector Weights &amp; Symbols</div>
+    <div class="tscr"><table>
+      <thead><tr><th>Company</th><th>Industry</th><th>Symbol</th><th>Weight</th></tr></thead>
+      <tbody id="nifty50-wt"></tbody>
+    </table></div>
+  </div>
+</div>
+
+<!-- ══ MARKET DATA ══════════════════════════════════════════ -->
 <div class="sec" id="s-market">
   <div class="stitle">📈 Market Data — NSE &amp; BSE</div>
-
   <div class="adr">
     <div class="adbox"><div class="adl">BSE Advances</div><div class="adn up">1,982</div></div>
     <div class="adbox"><div class="adl">BSE Declines</div><div class="adn dn">2,049</div></div>
     <div class="adbox"><div class="adl">NSE Advances</div><div class="adn up">1,274</div></div>
     <div class="adbox"><div class="adl">NSE Declines</div><div class="adn dn">1,680</div></div>
   </div>
-
   <div class="g2">
-    <div class="tc-wrap">
-      <div class="tc-hdr">🟢 NIFTY 50 Top Gainers <span class="cnt">5</span></div>
-      <div class="tscr"><table><thead><tr><th>Company</th><th>Price ₹</th><th>Chg</th><th>% Chg</th></tr></thead><tbody id="n50g"></tbody></table></div>
-    </div>
-    <div class="tc-wrap">
-      <div class="tc-hdr">🔴 NIFTY 50 Top Losers <span class="cnt">5</span></div>
-      <div class="tscr"><table><thead><tr><th>Company</th><th>Price ₹</th><th>Chg</th><th>% Chg</th></tr></thead><tbody id="n50l"></tbody></table></div>
-    </div>
+    <div class="tcw"><div class="tch">🟢 NIFTY 50 Gainers <span class="cnt">5</span></div><div class="tscr"><table><thead><tr><th>Company</th><th>Price ₹</th><th>Chg</th><th>%</th></tr></thead><tbody id="n50g"></tbody></table></div></div>
+    <div class="tcw"><div class="tch">🔴 NIFTY 50 Losers <span class="cnt">5</span></div><div class="tscr"><table><thead><tr><th>Company</th><th>Price ₹</th><th>Chg</th><th>%</th></tr></thead><tbody id="n50l"></tbody></table></div></div>
   </div>
-
   <div class="g2">
-    <div class="tc-wrap">
-      <div class="tc-hdr">🟢 All NSE Top Gainers <span class="cnt">5</span></div>
-      <div class="tscr"><table><thead><tr><th>Company</th><th>Price ₹</th><th>Chg</th><th>% Chg</th></tr></thead><tbody id="nseg"></tbody></table></div>
-    </div>
-    <div class="tc-wrap">
-      <div class="tc-hdr">🔴 All NSE Top Losers <span class="cnt">5</span></div>
-      <div class="tscr"><table><thead><tr><th>Company</th><th>Price ₹</th><th>Chg</th><th>% Chg</th></tr></thead><tbody id="nsel"></tbody></table></div>
-    </div>
+    <div class="tcw"><div class="tch">🟢 All NSE Gainers <span class="cnt">5</span></div><div class="tscr"><table><thead><tr><th>Company</th><th>Price ₹</th><th>Chg</th><th>%</th></tr></thead><tbody id="nseg"></tbody></table></div></div>
+    <div class="tcw"><div class="tch">🔴 All NSE Losers <span class="cnt">5</span></div><div class="tscr"><table><thead><tr><th>Company</th><th>Price ₹</th><th>Chg</th><th>%</th></tr></thead><tbody id="nsel"></tbody></table></div></div>
   </div>
-
   <div class="g2">
-    <div class="tc-wrap">
-      <div class="tc-hdr">🟢 All BSE Top Gainers <span class="cnt">5</span></div>
-      <div class="tscr"><table><thead><tr><th>Company</th><th>Price ₹</th><th>% Chg</th></tr></thead><tbody id="bseg"></tbody></table></div>
-    </div>
-    <div class="tc-wrap">
-      <div class="tc-hdr">🔴 All BSE Top Losers <span class="cnt">5</span></div>
-      <div class="tscr"><table><thead><tr><th>Company</th><th>Price ₹</th><th>% Chg</th></tr></thead><tbody id="bsel"></tbody></table></div>
-    </div>
+    <div class="tcw"><div class="tch">🟢 All BSE Gainers <span class="cnt">5</span></div><div class="tscr"><table><thead><tr><th>Company</th><th>Price ₹</th><th>%</th></tr></thead><tbody id="bseg"></tbody></table></div></div>
+    <div class="tcw"><div class="tch">🔴 All BSE Losers <span class="cnt">5</span></div><div class="tscr"><table><thead><tr><th>Company</th><th>Price ₹</th><th>%</th></tr></thead><tbody id="bsel"></tbody></table></div></div>
   </div>
-
-  <div class="tc-wrap">
-    <div class="tc-hdr">🏦 Nifty Bank Stocks</div>
-    <div class="tscr"><table><thead><tr><th>Company</th><th>Price ₹</th><th>Change</th><th>% Chg</th></tr></thead><tbody id="nbank"></tbody></table></div>
-  </div>
-
-  <div class="tc-wrap">
-    <div class="tc-hdr">📊 BSE Extended Movers — Top 20 each</div>
+  <div class="tcw"><div class="tch">🏦 Nifty Bank Stocks</div><div class="tscr"><table><thead><tr><th>Company</th><th>Price ₹</th><th>Change</th><th>% Chg</th></tr></thead><tbody id="nbank"></tbody></table></div></div>
+  <div class="tcw">
+    <div class="tch">📊 BSE Extended Movers — Top 20 each</div>
     <div class="g2" style="margin:0;gap:0">
-      <div class="tscr" style="border-right:1px solid #eee">
-        <table><thead><tr><th>🟢 BSE Gainers</th><th>Price</th><th>%</th></tr></thead><tbody id="bsexg"></tbody></table>
-      </div>
-      <div class="tscr">
-        <table><thead><tr><th>🔴 BSE Losers</th><th>Price</th><th>%</th></tr></thead><tbody id="bsexl"></tbody></table>
+      <div class="tscr" style="border-right:1px solid #eee"><table><thead><tr><th>🟢 BSE Gainers</th><th>Price</th><th>%</th></tr></thead><tbody id="bsexg"></tbody></table></div>
+      <div class="tscr"><table><thead><tr><th>🔴 BSE Losers</th><th>Price</th><th>%</th></tr></thead><tbody id="bsexl"></tbody></table>
       </div>
     </div>
   </div>
 </div>
 
-<!-- ════════════════════════════════ IPO CORNER ════════ -->
+<!-- ══ IPO CORNER ══════════════════════════════════════════ -->
 <div class="sec" id="s-ipo">
   <div class="stitle">🏦 IPO Corner</div>
-
-  <div class="tc-wrap">
-    <div class="tc-hdr">📋 Grey Market Premium (GMP) — 9 May 2026</div>
-    <div class="tscr"><table>
-      <thead><tr><th>IPO Name</th><th>GMP</th><th>Trend</th><th>Price Band</th><th>Est. Listing</th><th>Dates</th><th>Type</th><th>Status</th></tr></thead>
-      <tbody id="gmp"></tbody>
-    </table></div>
-  </div>
-
-  <div class="tc-wrap">
-    <div class="tc-hdr">📈 Recently Listed IPO Performances <span class="cnt">19</span></div>
-    <div class="tscr"><table>
-      <thead><tr><th>Company</th><th>Type</th><th>Listed</th><th>Issue ₹</th><th>Subs</th><th>List Open</th><th>List Close</th><th>List Gain</th><th>LTP ₹</th><th>Today's Gain</th><th>Size</th></tr></thead>
-      <tbody id="ipolst"></tbody>
-    </table></div>
-  </div>
-
-  <div class="tc-wrap">
-    <div class="tc-hdr">📅 IPO Subscription Status (Application-wise) <span class="cnt">Recent 20</span></div>
-    <div class="tscr"><table>
-      <thead><tr><th>IPO</th><th>Type</th><th>Open</th><th>Close</th><th>QIB (x)</th><th>NII (x)</th><th>Retail (x)</th><th>Total (x)</th></tr></thead>
-      <tbody id="iposub"></tbody>
-    </table></div>
-  </div>
+  <div class="tcw"><div class="tch">📋 Grey Market Premium (GMP) — 9 May 2026</div><div class="tscr"><table><thead><tr><th>IPO Name</th><th>GMP</th><th>Trend</th><th>Price Band</th><th>Est. Listing</th><th>Dates</th><th>Type</th><th>Status</th></tr></thead><tbody id="gmp"></tbody></table></div></div>
+  <div class="tcw"><div class="tch">📈 Recently Listed IPO Performances <span class="cnt">19</span></div><div class="tscr"><table><thead><tr><th>Company</th><th>Type</th><th>Listed</th><th>Issue ₹</th><th>Subs</th><th>List Open</th><th>List Close</th><th>List Gain</th><th>LTP ₹</th><th>Today's Gain</th><th>Size</th></tr></thead><tbody id="ipolst"></tbody></table></div></div>
+  <div class="tcw"><div class="tch">📅 IPO Subscription Status <span class="cnt">Recent 20</span></div><div class="tscr"><table><thead><tr><th>IPO</th><th>Type</th><th>Open</th><th>Close</th><th>QIB (x)</th><th>NII (x)</th><th>Retail (x)</th><th>Total (x)</th></tr></thead><tbody id="iposub"></tbody></table></div></div>
 </div>
 
-<!-- ════════════════════════════════ CURRENCIES ════════ -->
+<!-- ══ CURRENCIES ══════════════════════════════════════════ -->
 <div class="sec" id="s-currency">
   <div class="stitle">💱 Currencies &amp; Commodities — 10 May 2026</div>
   <div class="g2">
-    <div class="tc-wrap">
-      <div class="tc-hdr">🌐 Global Currencies vs INR</div>
-      <div class="tscr"><table>
-        <thead><tr><th>Currency</th><th>Code</th><th>Rate (₹)</th></tr></thead>
-        <tbody id="fxtbl"></tbody>
-      </table></div>
-    </div>
-    <div class="tc-wrap">
-      <div class="tc-hdr">🪙 MCX Commodities — Live (10 May 10:27)</div>
-      <div class="tscr"><table>
-        <thead><tr><th>Commodity</th><th>Last</th><th>Chg</th><th>Chg %</th><th>High</th><th>Low</th></tr></thead>
-        <tbody id="comtbl"></tbody>
-      </table></div>
-    </div>
+    <div class="tcw"><div class="tch">🌐 Global Currencies vs INR</div><div class="tscr"><table><thead><tr><th>Currency</th><th>Code</th><th>Rate (₹)</th></tr></thead><tbody id="fxtbl"></tbody></table></div></div>
+    <div class="tcw"><div class="tch">🪙 MCX Commodities — Live (10 May 10:27)</div><div class="tscr"><table><thead><tr><th>Commodity</th><th>Last</th><th>Chg</th><th>Chg %</th><th>High</th><th>Low</th></tr></thead><tbody id="comtbl"></tbody></table></div></div>
   </div>
 </div>
 
-<!-- ════════════════════════════════ ACE INVESTORS ═════ -->
+<!-- ══ ACE INVESTORS ═══════════════════════════════════════ -->
 <div class="sec" id="s-ace">
   <div class="stitle">🧠 Ace Investor Portfolios — Mar 2026</div>
-  <div class="disc">⚠️ <strong>For Investment Study Only.</strong> Holdings reflect publicly disclosed quarterly data. Always verify before any decision. Not investment advice.</div>
+  <div class="disc">⚠️ <strong>For Investment Study Only.</strong> Holdings reflect publicly disclosed quarterly data. Not investment advice.</div>
   <div class="itabs" id="itabs"></div>
   <div id="ipanels"></div>
 </div>
@@ -299,43 +325,196 @@ footer a{color:#6ea8fe}
 
 <footer>
   <p>Data sourced from <a href="https://tinyurl.com/Niveshaka-bandhu" target="_blank">Niveshaka-bandhu Google Sheet</a> &nbsp;|&nbsp; 10 May 2026 &nbsp;|&nbsp; Quotes delayed up to 20 min &nbsp;|&nbsp; Not investment advice</p>
-  <p style="margin-top:5px">© Niveshaka-bandhu &nbsp;|&nbsp; For Investment Use Only</p>
+  <p style="margin-top:4px">© Niveshaka-bandhu</p>
 </footer>
 
 <script>
-/* ── DATA ──────────────────────────────────────────────── */
+/* ══ DATA ═══════════════════════════════════════════════ */
+
+/* --- GLOBAL INDICES --- */
 const ASIA=[
-  {n:'NIFTY 50',    r:'India',     p:'24,176.15',c:'-150.50',pc:'-0.62',hi:'24,254',lo:'24,127',t:'08/05 15:31'},
-  {n:'SENSEX',      r:'India',     p:'77,328.19',c:'-516.34',pc:'-0.66',hi:'77,647',lo:'77,146',t:'08/05 15:30'},
-  {n:'INDIA VIX',   r:'India',     p:'16.84',    c:'+0.22',  pc:'+1.32',hi:'17.43', lo:'16.16', t:'08/05 15:33'},
-  {n:'NIKKEI',      r:'Japan',     p:'62,713.65',c:'-120.19',pc:'-0.19',hi:'62,724',lo:'62,138',t:'08/05 12:15'},
-  {n:'HANG SENG',   r:'Hong Kong', p:'26,393.71',c:'-232.57',pc:'-0.87',hi:'26,470',lo:'26,275',t:'08/05 13:38'},
-  {n:'FTSE CHINA A50',r:'China',   p:'15,693.54',c:'-143.21',pc:'-0.90',hi:'15,838',lo:'15,646',t:'08/05 05:30'},
-  {n:'SHENZEN',     r:'China',     p:'15,563.80',c:'-78.09', pc:'-0.50',hi:'15,639',lo:'15,467',t:'08/05 13:59'},
-  {n:'KOSPI',       r:'Korea',     p:'7,498.00', c:'+7.95',  pc:'+0.11',hi:'7,511', lo:'7,318', t:'08/05 14:35'},
-  {n:'IDX COMPOSITE',r:'Indonesia',p:'6,969.40', c:'-204.92',pc:'-2.86',hi:'7,187', lo:'6,969', t:'08/05 14:30'},
-  {n:'S&P/ASX 200', r:'Australia', p:'8,744.40', c:'-133.70',pc:'-1.51',hi:'8,878', lo:'8,718', t:'08/05 12:44'},
-  {n:'S&P/NZX 50',  r:'New Zealand',p:'13,175.13',c:'-95.48',pc:'-0.72',hi:'13,273',lo:'13,144',t:'08/05 10:27'},
-  {n:'S&P ASIA 50', r:'Pan Asia',  p:'10,979.89',c:'+185.04',pc:'+1.71',hi:'11,082',lo:'10,754',t:'08/05 03:21'},
-  {n:'TASI',        r:'Saudi',     p:'11,031.32',c:'+82.05', pc:'+0.75',hi:'11,045',lo:'10,966',t:'07/05 17:50'},
+  {n:'NIFTY 50',    r:'India',      p:'24,176.15',c:'-150.50',pc:'-0.62',hi:'24,254',lo:'24,127',t:'08/05 15:31'},
+  {n:'SENSEX',      r:'India',      p:'77,328.19',c:'-516.34',pc:'-0.66',hi:'77,647',lo:'77,146',t:'08/05 15:30'},
+  {n:'INDIA VIX',   r:'India',      p:'16.84',    c:'+0.22',  pc:'+1.32',hi:'17.43', lo:'16.16', t:'08/05 15:33'},
+  {n:'NIKKEI',      r:'Japan',      p:'62,713.65',c:'-120.19',pc:'-0.19',hi:'62,724',lo:'62,138',t:'08/05 12:15'},
+  {n:'HANG SENG',   r:'Hong Kong',  p:'26,393.71',c:'-232.57',pc:'-0.87',hi:'26,470',lo:'26,275',t:'08/05 13:38'},
+  {n:'FTSE CHINA A50',r:'China',    p:'15,693.54',c:'-143.21',pc:'-0.90',hi:'15,838',lo:'15,646',t:'08/05 05:30'},
+  {n:'SHENZEN',     r:'China',      p:'15,563.80',c:'-78.09', pc:'-0.50',hi:'15,639',lo:'15,467',t:'08/05 13:59'},
+  {n:'KOSPI',       r:'Korea',      p:'7,498.00', c:'+7.95',  pc:'+0.11',hi:'7,511', lo:'7,318', t:'08/05 14:35'},
+  {n:'IDX COMPOSITE',r:'Indonesia', p:'6,969.40', c:'-204.92',pc:'-2.86',hi:'7,187', lo:'6,969', t:'08/05 14:30'},
+  {n:'S&P/ASX 200', r:'Australia',  p:'8,744.40', c:'-133.70',pc:'-1.51',hi:'8,878', lo:'8,718', t:'08/05 12:44'},
+  {n:'S&P/NZX 50',  r:'New Zealand',p:'13,175.13',c:'-95.48', pc:'-0.72',hi:'13,273',lo:'13,144',t:'08/05 10:27'},
+  {n:'S&P ASIA 50', r:'Pan Asia',   p:'10,979.89',c:'+185.04',pc:'+1.71',hi:'11,082',lo:'10,754',t:'08/05 03:21'},
+  {n:'TASI',        r:'Saudi',      p:'11,031.32',c:'+82.05', pc:'+0.75',hi:'11,045',lo:'10,966',t:'07/05 17:50'},
 ];
 const EURO=[
-  {n:'NASDAQ',   r:'USA',     p:'26,247.08',c:'+440.88',pc:'+1.71',hi:'26,249',lo:'25,945',t:'09/05 02:45'},
-  {n:'DOW JONES',r:'USA',     p:'49,609.16',c:'+12.19', pc:'+0.02',hi:'49,831',lo:'49,487',t:'09/05 02:16'},
-  {n:'S&P 500',  r:'USA',     p:'7,398.93', c:'+61.82', pc:'+0.84',hi:'7,402', lo:'7,363', t:'09/05 02:16'},
-  {n:'TSX',      r:'Canada',  p:'34,077.76',c:'+221.14',pc:'+0.65',hi:'34,123',lo:'33,960',t:'09/05 02:50'},
-  {n:'IBOVESPA', r:'Brazil',  p:'1,84,108', c:'+890',   pc:'+0.49',hi:'1,85,584',lo:'1,83,217',t:'09/05 01:51'},
-  {n:'FTSE 100', r:'UK',      p:'10,233.07',c:'-43.88', pc:'-0.43',hi:'10,279',lo:'10,185',t:'08/05 22:05'},
-  {n:'DAX',      r:'Germany', p:'24,338.63',c:'-324.98',pc:'-1.32',hi:'24,514',lo:'24,290',t:'09/05 00:30'},
-  {n:'CAC 40',   r:'France',  p:'8,112.57', c:'-89.51', pc:'-1.09',hi:'8,159', lo:'8,096', t:'08/05 22:35'},
-  {n:'EURONEXT', r:'EU',      p:'5,911.53', c:'-61.12', pc:'-1.02',hi:'5,950', lo:'5,901', t:'08/05 22:30'},
-  {n:'OMXS30',   r:'Sweden',  p:'3,073.69', c:'-37.63', pc:'-1.21',hi:'3,097', lo:'3,064', t:'08/05 16:04'},
-  {n:'SMI',      r:'Switzerland',p:'13,100.63',c:'-34.80',pc:'-0.26',hi:'13,135',lo:'13,034',t:'08/05 22:00'},
-  {n:'FTSE MIB', r:'Italy',   p:'49,289.54',c:'-1.47',  pc:'0.00', hi:'49,445',lo:'48,949',t:'08/05 22:05'},
-  {n:'AEX',      r:'Neth.',   p:'1,017.50', c:'-1.92',  pc:'-0.19',hi:'1,020', lo:'1,010', t:'08/05 22:35'},
-  {n:'TA 35',    r:'Israel',  p:'4,514.42', c:'+44.73', pc:'+1.00',hi:'4,529', lo:'4,453', t:'08/05 17:14'},
+  {n:'NASDAQ',    r:'USA',       p:'26,247.08',c:'+440.88',pc:'+1.71',hi:'26,249',lo:'25,945',t:'09/05 02:45'},
+  {n:'DOW JONES', r:'USA',       p:'49,609.16',c:'+12.19', pc:'+0.02',hi:'49,831',lo:'49,487',t:'09/05 02:16'},
+  {n:'S&P 500',   r:'USA',       p:'7,398.93', c:'+61.82', pc:'+0.84',hi:'7,402', lo:'7,363', t:'09/05 02:16'},
+  {n:'TSX',       r:'Canada',    p:'34,077.76',c:'+221.14',pc:'+0.65',hi:'34,123',lo:'33,960',t:'09/05 02:50'},
+  {n:'IBOVESPA',  r:'Brazil',    p:'1,84,108', c:'+890',   pc:'+0.49',hi:'1,85,584',lo:'1,83,217',t:'09/05 01:51'},
+  {n:'FTSE 100',  r:'UK',        p:'10,233.07',c:'-43.88', pc:'-0.43',hi:'10,279',lo:'10,185',t:'08/05 22:05'},
+  {n:'DAX',       r:'Germany',   p:'24,338.63',c:'-324.98',pc:'-1.32',hi:'24,514',lo:'24,290',t:'09/05 00:30'},
+  {n:'CAC 40',    r:'France',    p:'8,112.57', c:'-89.51', pc:'-1.09',hi:'8,159', lo:'8,096', t:'08/05 22:35'},
+  {n:'EURONEXT',  r:'EU',        p:'5,911.53', c:'-61.12', pc:'-1.02',hi:'5,950', lo:'5,901', t:'08/05 22:30'},
+  {n:'OMXS30',    r:'Sweden',    p:'3,073.69', c:'-37.63', pc:'-1.21',hi:'3,097', lo:'3,064', t:'08/05 16:04'},
+  {n:'SMI',       r:'Switzerland',p:'13,100.63',c:'-34.80',pc:'-0.26',hi:'13,135',lo:'13,034',t:'08/05 22:00'},
+  {n:'FTSE MIB',  r:'Italy',     p:'49,289.54',c:'-1.47',  pc:'0.00', hi:'49,445',lo:'48,949',t:'08/05 22:05'},
+  {n:'AEX',       r:'Netherlands',p:'1,017.50',c:'-1.92',  pc:'-0.19',hi:'1,020', lo:'1,010', t:'08/05 22:35'},
+  {n:'TA 35',     r:'Israel',    p:'4,514.42', c:'+44.73', pc:'+1.00',hi:'4,529', lo:'4,453', t:'08/05 17:14'},
 ];
-const N50G=[['Titan Company','4,517','209.5','4.86'],['Apollo Hospitals','8,105','268.0','3.42'],['Asian Paints','2,600','69.4','2.74'],['Tata Consumer Products','1,176.6','24.9','2.16'],['Adani Ports','1,760','27.2','1.57']];
+
+/* --- FUTURES --- */
+const FUT_US=[
+  {n:'DOW FUTURES',    r:'USA',    p:'49,691.00',c:'+45.00',   pc:'+0.09%',hi:'49,745',lo:'49,691',t:'Sun 10 May, 13:15 US'},
+  {n:'NASDAQ FUTURES', r:'USA',    p:'29,332.50',c:'+651.50',  pc:'+2.27%',hi:'29,333',lo:'29,332',t:'Sun 10 May, 13:15 US'},
+  {n:'S&P FUTURES',   r:'USA',    p:'7,419.00', c:'+57.50',   pc:'+0.78%',hi:'7,420',lo:'7,419',  t:'Sun 10 May, 13:15 US'},
+  {n:'S&P 500 VIX',   r:'USA',    p:'17.19',    c:'+0.11',    pc:'+0.64%',hi:'17.53',lo:'16.82',  t:'Sun 10 May, 13:15 US'},
+  {n:'US DOLLAR INDEX',r:'USA',   p:'97.84',    c:'-0.224',   pc:'-0.23%',hi:'98.28', lo:'97.83', t:'Sun 10 May, 13:15 US'},
+  {n:'BITCOIN FUTURES',r:'Crypto',p:'80,385.00',c:'+45.00',   pc:'+0.06%',hi:'80,390',lo:'80,385',t:'Sun 10 May, 13:15 US'},
+  {n:'FTSE FUTURES',  r:'UK',     p:'10,227.00',c:'-62.50',   pc:'-0.61%',hi:'10,279',lo:'10,182',t:'Sun 10 May, 18:15 UK'},
+  {n:'CAC FUTURES',   r:'France', p:'8,042.00', c:'-90.00',   pc:'-1.10%',hi:'8,042', lo:'8,042', t:'Sun 10 May, 19:15 FR'},
+  {n:'DAX FUTURES',   r:'Germany',p:'24,358.00',c:'-388.00',  pc:'-1.57%',hi:'24,584',lo:'24,334',t:'Sun 10 May, 19:15 DE'},
+  {n:'EURO STOXX FUT',r:'EU',     p:'5,887.00', c:'-61.00',   pc:'-1.03%',hi:'5,930', lo:'5,880', t:'Sun 10 May, 19:15 EU'},
+];
+const FUT_IN=[
+  {n:'NIFTY FUTURES',      r:'India',p:'24,477.10',c:'-143.20',pc:'-0.58%',hi:'24,535',lo:'24,403',t:'Sun 10 May, 22:45 IST'},
+  {n:'BANK NIFTY FUTURES', r:'India',p:'55,515.80',c:'-775.40',pc:'-1.38%',hi:'56,189',lo:'55,300',t:'Sun 10 May, 22:45 IST'},
+  {n:'GIFT NIFTY FUTURES', r:'India',p:'24,280.00',c:'+62.00', pc:'+0.26%',hi:'24,327',lo:'24,131',t:'Sun 10 May, 22:45 IST'},
+];
+const FUT_AS=[
+  {n:'NIKKEI FUTURES',    r:'Japan',    p:'63,782.50',c:'+1,650.00',pc:'+2.66%',hi:'63,882',lo:'62,000',t:'Mon 11 May, 02:15 JP'},
+  {n:'HANG SENG FUTURES', r:'Hong Kong',p:'26,243.50',c:'-30.50',   pc:'-0.12%',hi:'26,421',lo:'26,154',t:'Mon 11 May, 01:15 HK'},
+];
+
+/* --- INDIAN INDICES --- */
+const NSE_SECT=[
+  ['NIFTY 50','24,176.15','-150.5','-0.62','26,373.2','22,182.55'],
+  ['BANK NIFTY','55,310.55','-736.85','-1.31','61,764.85','49,954.85'],
+  ['NIFTY AUTO','27,259.85','-80.1','-0.29','29,179.1','22,915.65'],
+  ['NIFTY ENERGY','40,795.8','-346.15','-0.84','41,423.35','32,890.3'],
+  ['NIFTY FINANCE','26,011.5','-438','-1.66','28,562.5','23,373.95'],
+  ['NIFTY FMCG','51,165.9','+97.45','+0.19','58,485.05','45,334.15'],
+  ['NIFTY IT','29,394.2','+350.7','+1.21','40,301.4','28,288.05'],
+  ['NIFTY MEDIA','1,472.8','+0.6','+0.04','1,786.15','1,245.05'],
+  ['NIFTY METAL','13,050.95','-114.45','-0.87','13,256.2','8,997.35'],
+  ['NIFTY PHARMA','24,110.3','-25.2','-0.10','24,306.75','21,149.9'],
+  ['NIFTY PSU BANK','8,371.95','-264.65','-3.06','9,918.65','6,606.6'],
+  ['NIFTY PRIVATE BANK','26,561.7','-220.15','-0.82','29,748.45','23,957.45'],
+  ['NIFTY REALTY','823.6','-3.9','-0.47','1,049.7','638.65'],
+  ['NIFTY INFRA','9,497.8','-15.15','-0.16','9,792.6','8,426.65'],
+  ['CPSE','7,331.55','-34.7','-0.47','7,593.35','6,101.9'],
+  ['NIFTY COMMODITIES','10,345.1','-87.45','-0.84','10,491.75','8,476.05'],
+  ['NIFTY NEXT 50','71,495.6','-357.3','-0.50','72,037.6','59,896.1'],
+  ['MIDCAP 50','17,628.2','+10.65','+0.06','17,686.3','14,804.55'],
+];
+const BSE_SECT=[
+  ['BSE 100','25,696.26','-138.44','-0.54','27,621.72','23,249.92'],
+  ['BSE 200','11,274.15','-54.17','-0.48','11,944.41','10,077.77'],
+  ['BSE 500','36,187.29','-146.5','-0.40','37,874.46','31,965.51'],
+  ['BSE MidCap Select','17,598.2','-1.37','-0.01','17,884.64','14,644.25'],
+  ['BSE Realty','6,410.43','-11.21','-0.17','8,165.49','4,956.78'],
+  ['BSE POWER','8,284.94','-36.53','-0.44','8,354.11','5,983.27'],
+  ['BSE Healthcare','46,534.89','+141.74','+0.31','46,794.16','40,239.45'],
+  ['BSE BANKEX','62,353.82','-745.21','-1.18','69,406.97','56,230.38'],
+  ['BSE AUTO','59,963.44','-168.14','-0.28','64,584.14','49,702.24'],
+  ['BSE TECk','14,937.28','+127.32','+0.86','19,167.87','14,523.18'],
+  ['BSE FMCG','18,997.65','+18.86','+0.10','21,490.85','16,740.58'],
+  ['BSE IT','28,584.66','+337.75','+1.20','38,831.45','27,428.32'],
+  ['BSE CAPITAL GOODS','80,125.2','-195.72','-0.24','80,913.9','60,814.78'],
+  ['BSE OIL & GAS','27,413.86','-285.38','-1.03','29,833.46','25,073.03'],
+  ['BSE METAL','42,743.64','-374.8','-0.87','43,289.94','27,908.93'],
+  ['BSE Telecom','3,203.89','-1.85','-0.06','3,216.14','2,676.37'],
+  ['BSE Utilities','6,282.38','-37.65','-0.60','6,419.58','4,789.17'],
+  ['BSE Energy','11,880.45','-109.82','-0.92','12,537.31','10,920.35'],
+];
+const NIFTY50_STOCKS=[
+  ['Adani Ports','1,760.3','27.45','1.58','1,792.35','1,291'],
+  ['Asian Paints','2,600.25','70.8','2.80','2,985.5','2,116'],
+  ['Axis Bank','1,269.4','-22.95','-1.78','1,418.3','1,041.3'],
+  ['Bajaj Finance','955.05','-17.5','-1.80','1,102.45','788.4'],
+  ['Bajaj Finserv','1,816.35','-7.9','-0.43','2,194.65','1,598.15'],
+  ['Bharat Electronics','439.65','-0.05','-0.01','473.25','304.45'],
+  ['Bharti Airtel','1,834','7.55','0.41','2,174.7','1,747.15'],
+  ['Eternal (Zomato)','256.35','-1','-0.39','368.4','212.55'],
+  ['HCL Technologies','1,198.6','15.15','1.28','1,770','1,176.85'],
+  ['HDFC Bank','781.2','-14.65','-1.84','1,020.35','726.75'],
+  ['Hindustan Unilever','2,287.9','15.1','0.66','2,744.77','2,023.05'],
+  ['ICICI Bank','1,264.8','-12.9','-1.01','1,494.1','1,187.55'],
+  ['Infosys','1,179.2','16.7','1.44','1,727.85','1,149.8'],
+  ['ITC','307.4','-0.25','-0.08','444.15','287'],
+  ['Kotak Mahindra Bank','380.55','1.2','0.32','452.98','345.4'],
+  ['Larsen & Toubro','3,973.6','-48.9','-1.22','4,440','3,288.65'],
+  ['Mahindra & Mahindra','3,321.7','-3.45','-1.45','3,840','2,896.3'],
+  ['Maruti Suzuki','13,739.9','-27.05','-0.20','17,371.6','12,019.75'],
+  ['NTPC','402.2','1.75','0.44','414.4','315.55'],
+  ['Power Grid Corp','313.9','0','0.00','324.8','250.05'],
+  ['Reliance Industries','1,435.7','0','0.00','1,611.2','1,290'],
+  ['State Bank of India','1,019.55','-72.25','-6.62','1,234.8','755.25'],
+  ['Sun Pharma','1,847.3','12.9','0.70','1,857.95','1,547.25'],
+  ['TCS','2,394.85','-6.9','-0.29','3,630','2,346.35'],
+  ['Tata Motors','355.35','-3.9','-1.09','418','294.15'],
+  ['Tata Steel','214.45','-2.6','-1.20','218.2','140.4'],
+  ['Tech Mahindra','1,463.05','14.9','1.03','1,850','1,304.25'],
+  ['Titan Company','4,513.4','204.9','4.76','4,601.1','3,301.05'],
+  ['Trent','4,252','-41.1','-0.96','6,259','3,276.1'],
+  ['UltraTech Cement','11,956','-188.45','-1.55','13,104','10,329'],
+];
+const NIFTY50_WT=[
+  ['HDFC Bank Ltd.','Financial Services','HDFCBANK','12.86%'],
+  ['ICICI Bank Ltd.','Financial Services','ICICIBANK','8.59%'],
+  ['Reliance Industries Ltd.','Oil Gas & Consumable Fuels','RELIANCE','8.01%'],
+  ['Infosys Ltd.','Information Technology','INFY','4.57%'],
+  ['Bharti Airtel Ltd.','Telecommunication','BHARTIARTL','4.62%'],
+  ['Larsen & Toubro Ltd.','Construction','LT','3.87%'],
+  ['ITC Ltd.','Fast Moving Consumer Goods','ITC','3.32%'],
+  ['State Bank of India','Financial Services','SBIN','3.16%'],
+  ['Kotak Mahindra Bank','Financial Services','KOTAKBANK','2.72%'],
+  ['Mahindra & Mahindra','Automobile and Auto Components','M&M','2.67%'],
+  ['TCS','Information Technology','TCS','2.61%'],
+  ['Axis Bank Ltd.','Financial Services','AXISBANK','2.88%'],
+  ['Bajaj Finance Ltd.','Financial Services','BAJFINANCE','2.43%'],
+  ['Eternal Ltd','IT Services','Eternal','2.12%'],
+  ['Maruti Suzuki India','Automobile and Auto Components','MARUTI','1.83%'],
+  ['NTPC Ltd.','Power','NTPC','1.38%'],
+  ['HCL Technologies','Information Technology','HCLTECH','1.36%'],
+  ['Titan Company Ltd.','Consumer Durables','TITAN','1.26%'],
+  ['UltraTech Cement Ltd.','Construction Materials','ULTRACEMCO','1.26%'],
+  ['Bharat Electronics','Defence','BEL','1.26%'],
+  ['Sun Pharmaceutical','Healthcare','SUNPHARMA','1.50%'],
+  ['Interglobe Aviation','Airlines','INDIGO','1.10%'],
+  ['Bajaj Finserv Ltd.','Financial Services','BAJAJFINSV','1.02%'],
+  ['Grasim Industries','Construction Materials','GRASIM','0.93%'],
+  ['Asian Paints Ltd.','Consumer Durables','ASIANPAINT','0.92%'],
+  ['Bajaj Auto Ltd.','Automobile and Auto Components','BAJAJ-AUTO','0.86%'],
+  ['Jio Financial Services','Financial Services','JIOFIN','0.88%'],
+  ['Shriram Finance Ltd.','Financial Services','SHRIRAMFIN','0.82%'],
+  ['Eicher Motors Ltd.','Automobile and Auto Components','EICHERMOT','0.82%'],
+  ['Tech Mahindra Ltd.','Information Technology','TECHM','0.80%'],
+  ['Max Healthcare','Healthcare Services','MAXHEALTH','0.74%'],
+  ['Trent','Retailing','Trent','0.90%'],
+  ['Wipro Ltd.','Information Technology','WIPRO','0.61%'],
+  ['Dr. Reddy\'s Lab','Healthcare','DRREDDY','0.65%'],
+  ['Cipla Ltd.','Healthcare','CIPLA','0.75%'],
+  ['Nestle India Ltd.','Fast Moving Consumer Goods','NESTLEIND','0.75%'],
+  ['Coal India Ltd.','Oil Gas & Consumable Fuels','COALINDIA','0.75%'],
+  ['ONGC','Oil Gas & Consumable Fuels','ONGC','0.83%'],
+  ['JSW Steel Ltd.','Metals & Mining','JSWSTEEL','0.94%'],
+  ['Hindalco Industries','Metals & Mining','HINDALCO','0.95%'],
+  ['Tata Steel Ltd.','Metals & Mining','TATASTEEL','1.23%'],
+  ['Power Grid Corp','Power','POWERGRID','1.13%'],
+  ['Adani Enterprises','Metals & Mining','ADANIENT','0.57%'],
+  ['Adani Ports','Services','ADANIPORTS','0.92%'],
+  ['Apollo Hospitals','Healthcare','APOLLOHOSP','0.68%'],
+  ['HDFC Life Insurance','Financial Services','HDFCLIFE','0.70%'],
+  ['SBI Life Insurance','Financial Services','SBILIFE','0.71%'],
+  ['Hindustan Unilever','Fast Moving Consumer Goods','HINDUNILVR','1.92%'],
+  ['Tata Consumer Products','Fast Moving Consumer Goods','TATACONSUM','0.62%'],
+  ['Tata Motor PV','Automobile and Auto Components','TMPV','0.70%'],
+];
+
+/* --- MARKET DATA --- */
+const N50G=[['Titan Company','4,517','209.5','4.86'],['Apollo Hospitals','8,105','268.0','3.42'],['Asian Paints','2,600','69.4','2.74'],['Tata Consumer','1,176.6','24.9','2.16'],['Adani Ports','1,760','27.2','1.57']];
 const N50L=[['State Bank of India','1,018.4','-73.6','-6.74'],['Coal India','457','-9.65','-2.07'],['HDFC Bank','781','-15.05','-1.89'],['Bajaj Finance','954.5','-18.25','-1.88'],['Axis Bank','1,270','-22.7','-1.76']];
 const NSEG=[['Firstsource Solutions','274.26','39.08','16.62'],['Jain Resource Recycling','571.5','67.3','13.35'],['Thermax','4,677.50','495.2','11.84'],['Nuvama Wealth Mgmt','1,631.50','157.0','10.65'],['Sonata Software','297.15','26.4','9.75']];
 const NSEL=[['Dalmia Bharat','1,823.60','-150.7','-7.63'],['CCL Products','1,123.10','-84.7','-7.01'],['State Bank of India','1,019.30','-72.7','-6.66'],['Aditya Birla Real Estate','1,485.80','-105.4','-6.62'],['Escorts Kubota','3,146.60','-199.3','-5.96']];
@@ -343,14 +522,20 @@ const BSEG=[['OnEMI Technology Solutions','208.4','+21.87'],['Naksh Precious Met
 const BSEL=[['Tirupati Innovar','1.22','-39.90'],['Shakti Press','0.95','-39.87'],['Shriram Finance','8,64,010','-20.00'],['Vanta Bioscience','15.58','-15.78'],['Shri Gang Industries','80.21','-15.68']];
 const BANK=[['AU Small Finance Bank','1,051.00','+18.60','+1.80'],['Axis Bank','1,270.00','-22.70','-1.76'],['Bank of Baroda','263.50','-6.85','-2.53'],['Canara Bank','134.13','-1.80','-1.32'],['Federal Bank','297.40','+0.35','+0.12'],['HDFC Bank','781.00','-15.05','-1.89'],['ICICI Bank','1,267.80','-11.20','-0.88'],['IDFC First Bank','71.19','+0.80','+1.14'],['Kotak Mahindra Bank','950.00','+3.05','+0.32'],['Punjab National Bank','107.20','-1.91','-1.75'],['State Bank of India','1,018.40','-73.60','-6.74']];
 const BSEXG=[['OnEMI Technology','208.4','+21.87'],['Naksh Precious Metals','4.5','+20.00'],['Astal Laboratories','89.05','+20.00'],['GlobalSpace Technologies','33.48','+20.00'],['KIFS Financial Services','138.35','+19.99'],['Quick Heal Technologies','215.2','+19.99'],['Maral Overseas','57.02','+19.99'],['Crystal Business System','2.78','+19.83'],['Paramount Communications','55.56','+19.28'],['Shivagrico Implements','27.2','+18.26'],['Share Samadhan','42.95','+17.64'],['Anuroop Packaging','16.14','+17.47'],['Sangam Finserv','46','+16.99'],['Firstsource Solutions','274.2','+16.56'],['We Win','71.8','+15.58'],['Cybertech Systems','143.8','+14.44'],['Siddha Ventures','5.19','+14.07'],['Tiger Logistics','47.18','+13.85'],['Revathi Equipment','695','+13.81'],['Msafe Equipments','157','+13.40']];
-const BSEXL=[['Tirupati Innovar','1.22','-39.90'],['Shakti Press','0.95','-39.87'],['Shriram Finance','8,64,010','-20.00'],['Vanta Bioscience','15.58','-15.78'],['Shri Gang Industries','80.21','-15.68'],['Vertex Securities','0.54','-14.29'],['Rossell Techsys','913.75','-12.86'],['Sammaan Capital','760.5','-12.59'],['Edelweiss Financial','991','-12.15'],['NGL Fine-Chem','2,350','-11.69'],['Globus Spirits','997.05','-11.40'],['Jigar Cables','58','-10.76'],['Mega Nirman & Industries','40.5','-9.98'],['Takyon Networks','34.1','-9.98'],['STL Networks','27.14','-9.98'],['Alan Scott Enterprises','240','-9.91'],['Veejay Lakshmi Engg','35.01','-9.77'],['Shreenath Paper Products','13.55','-9.61'],['Spenta International','102.5','-9.28'],['Team India Guaranty','254.15','-9.23']];
+const BSEXL=[['Tirupati Innovar','1.22','-39.90'],['Shakti Press','0.95','-39.87'],['Shriram Finance','8,64,010','-20.00'],['Vanta Bioscience','15.58','-15.78'],['Shri Gang Industries','80.21','-15.68'],['Vertex Securities','0.54','-14.29'],['Rossell Techsys','913.75','-12.86'],['Sammaan Capital','760.5','-12.59'],['Edelweiss Financial','991','-12.15'],['NGL Fine-Chem','2,350','-11.69'],['Globus Spirits','997.05','-11.40'],['Jigar Cables','58','-10.76'],['Mega Nirman','40.5','-9.98'],['Takyon Networks','34.1','-9.98'],['STL Networks','27.14','-9.98'],['Alan Scott Enterprises','240','-9.91'],['Veejay Lakshmi Engg','35.01','-9.77'],['Shreenath Paper Products','13.55','-9.61'],['Spenta International','102.5','-9.28'],['Team India Guaranty','254.15','-9.23']];
+
+/* --- IPO --- */
 const GMP=[['RFBL Flexi Pack','₹0','🟡','₹50','— (0.00%)','12–14 May','NSE SME','Upcoming'],['Goldline Pharmaceutical','₹8','🟢','₹43','₹51 (18.60%)','12–14 May','BSE SME','Upcoming'],['Simca Advertising','₹11','🟢','₹183','₹194 (6.01%)','8–12 May','NSE SME','Open'],['Recode Studios','₹43','🟢','₹158','₹201 (27.22%)','5–7 May','BSE SME','Closed'],['Bagmane REIT','₹4.5','🟢','₹100','₹104.5 (4.50%)','5–7 May','Mainboard','Closed'],['Value 360 Communications','₹0','🟡','₹98','— (0.00%)','4–6 May','NSE SME','Closed']];
-const IPOLST=[['OnEMI Technology Solutions','Mainline','08 May 26','₹171','9.5x','190','208.63','11.11%','₹208.63','+9.81%','925 Cr'],['Amba Auto Sales','SME','05 May 26','₹135','1.18x','134.5','135.15','-0.37%','₹131.30','-2.38%','65 Cr'],['Adisoft Technologies','SME','30 Apr 26','₹172','72.09x','205','215.25','19.19%','₹227.00','+10.73%','74 Cr'],['Citius TransNet InvIT','Mainline','29 Apr 26','₹100','20.43x','104.6','106.23','4.60%','₹105.04','+0.42%','1,105 Cr'],['Propshare Celestia','Mainline','24 Apr 26','₹10.5L','1.33x','—','—','—','₹10.25L','—','244 Cr'],['Mehul Telecom','SME','24 Apr 26','₹98','41.81x','—','—','—','₹112.00','—','27 Cr'],['Om Power Transmission','Mainline','17 Apr 26','₹175','3.33x','186','193.38','6.29%','₹178.58','-3.99%','150 Cr'],['Emiac Technologies','SME','13 Apr 26','₹98','3.06x','—','—','—','₹107.60','—','31 Cr'],['Safety Controls & Devices','SME','13 Apr 26','₹80','1.26x','—','—','—','₹87.02','—','48 Cr'],['Vivid Electromech','SME','06 Apr 26','₹555','1.05x','565','563.05','1.80%','₹754.30','+33.50%','130 Cr'],['Powerica','Mainline','02 Apr 26','₹395','1.45x','366','390','-7.34%','₹509.50','+39.21%','1,100 Cr'],['Amir Chand Jagdish Kumar','Mainline','02 Apr 26','₹212','3.23x','200','180','-5.66%','₹131.56','-34.22%','440 Cr'],['Highness Microelectronics','SME','02 Apr 26','₹120','180.33x','—','—','—','₹164.55','—','21 Cr'],['Sai Parenterals','Mainline','02 Apr 26','₹392','1.05x','400','405.7','2.04%','₹489.85','+22.46%','408 Cr'],['Tipco Engineering','SME','01 Apr 26','₹89','1.56x','36.5','36.5','-58.99%','₹146.65','+301.78%','60 Cr'],['Speciality Medicines','SME','30 Mar 26','₹124','2.19x','—','—','—','₹315.50','—','29 Cr'],['Central Mine Planning','Mainline','30 Mar 26','₹172','1.05x','160','154.06','-6.98%','₹219.33','+37.08%','1,842 Cr'],['Novus Loyalty','SME','25 Mar 26','₹146','1.51x','—','—','—','₹170.00','—','60 Cr'],['GSP Crop Science','Mainline','24 Mar 26','₹320','1.61x','328','356.25','2.50%','₹421.55','+28.52%','400 Cr']];
+const IPOLST=[['OnEMI Technology','Mainline','08 May 26','₹171','9.5x','190','208.63','11.11%','₹208.63','+9.81%','925 Cr'],['Amba Auto Sales','SME','05 May 26','₹135','1.18x','134.5','135.15','-0.37%','₹131.30','-2.38%','65 Cr'],['Adisoft Technologies','SME','30 Apr 26','₹172','72.09x','205','215.25','19.19%','₹227.00','+10.73%','74 Cr'],['Citius TransNet InvIT','Mainline','29 Apr 26','₹100','20.43x','104.6','106.23','4.60%','₹105.04','+0.42%','1,105 Cr'],['Propshare Celestia','Mainline','24 Apr 26','₹10.5L','1.33x','—','—','—','₹10.25L','—','244 Cr'],['Mehul Telecom','SME','24 Apr 26','₹98','41.81x','—','—','—','₹112.00','—','27 Cr'],['Om Power Transmission','Mainline','17 Apr 26','₹175','3.33x','186','193.38','6.29%','₹178.58','-3.99%','150 Cr'],['Emiac Technologies','SME','13 Apr 26','₹98','3.06x','—','—','—','₹107.60','—','31 Cr'],['Safety Controls & Devices','SME','13 Apr 26','₹80','1.26x','—','—','—','₹87.02','—','48 Cr'],['Vivid Electromech','SME','06 Apr 26','₹555','1.05x','565','563.05','1.80%','₹754.30','+33.50%','130 Cr'],['Powerica','Mainline','02 Apr 26','₹395','1.45x','366','390','-7.34%','₹509.50','+39.21%','1,100 Cr'],['Amir Chand Jagdish Kumar','Mainline','02 Apr 26','₹212','3.23x','200','180','-5.66%','₹131.56','-34.22%','440 Cr'],['Highness Microelectronics','SME','02 Apr 26','₹120','180.33x','—','—','—','₹164.55','—','21 Cr'],['Sai Parenterals','Mainline','02 Apr 26','₹392','1.05x','400','405.7','2.04%','₹489.85','+22.46%','408 Cr'],['Tipco Engineering','SME','01 Apr 26','₹89','1.56x','36.5','36.5','-58.99%','₹146.65','+301.78%','60 Cr'],['Speciality Medicines','SME','30 Mar 26','₹124','2.19x','—','—','—','₹315.50','—','29 Cr'],['Central Mine Planning','Mainline','30 Mar 26','₹172','1.05x','160','154.06','-6.98%','₹219.33','+37.08%','1,842 Cr'],['Novus Loyalty','SME','25 Mar 26','₹146','1.51x','—','—','—','₹170.00','—','60 Cr'],['GSP Crop Science','Mainline','24 Mar 26','₹320','1.61x','328','356.25','2.50%','₹421.55','+28.52%','400 Cr']];
 const IPOSUB=[['RFBL Flexi Pack','SME','May 12','May 14','—','—','—','—'],['Goldline Pharmaceutical','SME','May 12','May 14','—','—','—','—'],['Simca Advertising','SME','May 8','May 12','1.84','0.52','0.23','0.65'],['Recode Studios','SME','May 5','May 7','137.99','404.76','216.64','234.63'],['Bagmane REIT','Mainboard','May 5','May 7','26.58','22.82','0','24.96'],['Value 360 Comms','SME','May 4','May 6','17.00','1.24','0.77','1.20'],['Kissht (OnEMI)','Mainboard','Apr 30','May 5','25.97','6.90','2.13','9.96'],['Amba Auto Sales','SME','Apr 27','Apr 29','1.75','1.47','0.70','1.19'],['Adisoft Technologies','SME','Apr 23','Apr 27','98.23','120.16','47.27','77.45'],['Mehul Telecom','SME','Apr 17','Apr 21','32.50','79.38','37.41','44.91'],['Citius Transnet InvIT','Mainboard','Apr 17','Apr 21','23.21','17.09','0','20.43'],['Propshare Celestia','Mainboard','Apr 10','Apr 16','0.17','4.81','0','1.33'],['Om Power Transmission','Mainboard','Apr 9','Apr 13','3.65','7.06','1.54','3.33'],['Highness Microelectronics','SME','Mar 24','Mar 27','81.95','362.12','185.10','193.91'],['Powerica','Mainboard','Mar 24','Mar 27','4.74','0.47','0.16','1.53'],['Sai Parenterals','Mainboard','Mar 24','Mar 27','1.73','2.45','0.12','1.08'],['Amir Chand','Mainboard','Mar 24','Mar 27','1.18','13.40','1.44','3.41'],['Central Mine Planning','Mainboard','Mar 20','Mar 24','3.48','0.35','0.35','1.05'],['GSP Crop Science','Mainboard','Mar 16','Mar 18','2.66','3.14','0.42','1.64'],['Bharat Coking Coal','Mainboard','Jan 9','Jan 13','310.81','240.49','49.37','143.85']];
-const FX=[['U.S. DOLLAR','USD','₹94.43'],['EUROS','EUR','₹111.31'],['GREAT BRITAIN POUND','GBP','₹128.74'],['AUSTRALIAN DOLLAR','AUD','₹68.48'],['UAE DIRHAM','AED','₹25.71'],['NEW ZEALAND DOLLAR','NZD','₹56.34'],['CANADIAN DOLLAR','CAD','₹69.07'],['SWISS FRANC','CHF','₹121.65'],['JAPANESE YEN','JPY','₹0.60'],['SAUDI RIYAL','SAR','₹25.01'],['QATARI RIAL','QAR','₹25.94'],['OMANI REAL','OMR','₹245.61'],['BAHARAINI DINAR','BHD','₹250.21'],['KUWAIT DINAR','KWD','₹306.78'],['SINGAPORE DOLLAR','SGD','₹74.56'],['MALAYSIAN RINGGIT','MYR','₹24.16'],['SWEDISH KRONA','SEK','₹10.25'],['DANISH KRONA','DKK','₹14.89'],['THAI BAHT','THB','₹2.93'],['HONGKONG DOLLAR','HKD','₹12.06'],['S.A RAND','ZAR','₹5.77'],['CHINESE YUAN','CNY','₹13.89'],['ISRAELI SHEKEL','ILS','₹32.55'],['RUSSIAN RUBLE','RUB','₹1.27'],['SOUTH KOREAN WON','KRW','₹0.06'],['INDONESIAN RUPIAH','IDR','₹0.01']];
+
+/* --- CURRENCIES & COMMODITIES --- */
+const FX=[['U.S. DOLLAR','USD','₹94.43'],['EUROS','EUR','₹111.31'],['GREAT BRITAIN POUND','GBP','₹128.74'],['AUSTRALIAN DOLLAR','AUD','₹68.48'],['UAE DIRHAM','AED','₹25.71'],['NEW ZEALAND DOLLAR','NZD','₹56.34'],['CANADIAN DOLLAR','CAD','₹69.07'],['SWISS FRANC','CHF','₹121.65'],['JAPANESE YEN','JPY','₹0.60'],['SAUDI RIYAL','SAR','₹25.01'],['QATARI RIAL','QAR','₹25.94'],['OMANI REAL','OMR','₹245.61'],['BAHARAINI DINAR','BHD','₹250.21'],['KUWAIT DINAR','KWD','₹306.78'],['SINGAPORE DOLLAR','SGD','₹74.56'],['MALAYSIAN RINGGIT','MYR','₹24.16'],['SWEDISH KRONA','SEK','₹10.25'],['DANISH KRONA','DKK','₹14.89'],['THAI BAHT','THB','₹2.93'],['HONGKONG DOLLAR','HKD','₹12.06'],['S.A RAND','ZAR','₹5.77'],['CHINESE YUAN','CNY','₹13.89'],['ISRAELI SHEKEL','ILS','₹32.55'],['RUSSIAN RUBLE','RUB','₹1.27'],['S. KOREAN WON','KRW','₹0.06'],['INDONESIAN RUPIAH','IDR','₹0.01']];
 const COM=[['MCX Gold','1,52,589','+59.00','+0.04%','1,53,440','1,52,199'],['MCX Gold Mini','1,52,490','+23.00','+0.02%','1,53,350','1,52,200'],['MCX Silver','2,61,999','+3,459','+1.34%','2,65,000','2,58,426'],['MCX Silver Mini','2,64,374','+106','+0.04%','2,66,890','2,60,998'],['MCX Crude Oil','9,022','-2.00','-0.02%','9,137','8,866'],['MCX Natural Gas','260.5','-3.40','-1.29%','269.2','260.2'],['MCX Copper','1,325.4','+0.45','+0.03%','1,328','1,305.5'],['MCX Aluminium','368.3','+1.30','+0.35%','370.2','367.3'],['MCX Lead','200.3','-0.10','-0.05%','200.7','199.5'],['MCX Zinc','348.4','+0.20','+0.06%','349.7','346.8'],['MCX Mentha Oil','989.9','+2.90','+0.29%','990.0','986.0']];
+
+/* --- ACE INVESTORS --- */
 const ACE=[
-  {n:'President of India',v:'₹41,93,326 Cr',h:[['Andrew Yule & Company','89.25','89.25','89.25','89.25','89.25','1,368'],['Balmer Lawrie Investments','59.67','59.67','59.67','59.67','59.67','1,021'],['Bank Of Baroda','63.97','63.97','63.97','63.97','63.97','87,302'],['Bank Of India','73.38','73.38','73.38','73.38','73.38','46,695'],['Bank Of Maharashtra','79.60','79.60','79.60','73.60','73.60','47,496'],['Bharat Dynamics','74.93','74.93','74.93','74.93','74.93','39,785'],['Bharat Electronics','51.14','51.14','51.14','51.14','51.14','1,64,356'],['Bharat Heavy Electricals','63.17','63.17','63.17','63.17','58.17','81,949'],['Bharat Petroleum','52.98','52.98','52.98','52.98','52.98','69,583'],['Canara Bank','62.93','62.93','62.93','62.93','62.93','76,688'],['Coal India','—','63.13','63.13','63.13','63.13','1,77,573'],['Cochin Shipyard','67.91','67.91','67.91','67.91','67.91','31,744'],['GAIL (India)','51.88','51.88','51.88','51.88','51.88','56,399'],['Hindustan Aeronautics','71.64','71.64','71.64','71.64','71.64','2,29,399'],['Life Insurance Corporation','96.50','96.50','96.50','96.50','96.50','4,89,602'],['Mazagon Dock Shipbuilders','84.83','81.22','81.22','81.22','81.22','87,058']]},
+  {n:'President of India',v:'₹41,93,326 Cr',h:[['Andrew Yule & Co','89.25','89.25','89.25','89.25','89.25','1,368'],['Balmer Lawrie Investments','59.67','59.67','59.67','59.67','59.67','1,021'],['Bank Of Baroda','63.97','63.97','63.97','63.97','63.97','87,302'],['Bank Of India','73.38','73.38','73.38','73.38','73.38','46,695'],['Bank Of Maharashtra','79.60','79.60','79.60','73.60','73.60','47,496'],['Bharat Dynamics','74.93','74.93','74.93','74.93','74.93','39,785'],['Bharat Electronics','51.14','51.14','51.14','51.14','51.14','1,64,356'],['Bharat Heavy Electricals','63.17','63.17','63.17','63.17','58.17','81,949'],['Bharat Petroleum','52.98','52.98','52.98','52.98','52.98','69,583'],['Canara Bank','62.93','62.93','62.93','62.93','62.93','76,688'],['Coal India','—','63.13','63.13','63.13','63.13','1,77,573'],['Cochin Shipyard','67.91','67.91','67.91','67.91','67.91','31,744'],['GAIL (India)','51.88','51.88','51.88','51.88','51.88','56,399'],['Hindustan Aeronautics','71.64','71.64','71.64','71.64','71.64','2,29,399'],['Life Insurance Corp','96.50','96.50','96.50','96.50','96.50','4,89,602'],['Mazagon Dock','84.83','81.22','81.22','81.22','81.22','87,058']]},
   {n:'Radhakishan Damani',v:'₹2,25,866 Cr',h:[['Avenue Supermarts (DMart)','57.72','57.72','57.72','57.72','57.60','1,65,313'],['VST Industries','29.10','29.10','29.10','3.15','29.10','1,306'],['Advani Hotels & Resorts','4.18','4.18','4.18','4.18','4.18','21'],['Aptech','3.03','3.03','3.03','3.03','3.03','19'],['BF Utilities','1.01','1.01','1.01','1.01','1.01','22'],['United Breweries','1.23','1.23','1.23','1.23','1.23','461'],['Bhagiradha Chemicals','3.32','3.32','3.32','—','3.32','110'],['Mangalam Organics','2.17','2.17','2.17','—','2.17','11']]},
   {n:'Rekha Jhunjhunwala',v:'₹58,599 Cr',h:[['Aptech','41.41','41.41','—','41.41','41.41','262'],['Canara Bank','1.46','—','—','1.54','1.54','1,879'],['Concord Biotech','8.03','8.03','—','8.03','16.06','1,972'],['CRISIL','5.19','5.19','—','5.19','5.19','1,581'],['Escorts Kubota','3.19','3.19','3.19','3.19','3.19','3,060'],['Indian Hotels','2.54','2.54','2.54','2.54','2.54','4,671'],['Metro Brands','14.43','14.43','14.43','14.43','14.43','2,658'],['Star Health Insurance','17.53','17.53','17.53','17.53','17.53','11,046'],['Tata Motors','1.11','1.11','1.11','1.11','1.11','6,135'],['Titan Company','5.06','5.06','5.06','5.06','5.06','22,836']]},
   {n:'Mukul Agarwal',v:'₹7,227 Cr',h:[['Ami Organics','2.58','2.58','2.58','2.58','2.58','141'],['Cera Sanitaryware','1.97','1.97','1.97','1.97','1.97','191'],['Clean Science & Tech','1.78','1.78','1.78','1.78','1.78','166'],['Galaxy Surfactants','1.67','1.67','1.67','1.67','1.67','164'],['Intellect Design Arena','3.03','3.03','3.03','3.03','3.03','163'],['KPIT Technologies','1.64','1.64','1.64','1.64','1.64','418'],['Praj Industries','2.37','2.37','2.37','2.37','2.37','175'],['Route Mobile','3.67','3.67','3.67','3.67','3.67','155'],['Tarsons Products','5.28','5.28','5.28','5.28','5.28','101']]},
@@ -360,51 +545,60 @@ const ACE=[
   {n:'Mohnish Pabrai',v:'₹182 Cr',h:[['Rain Industries','1.26','1.26','1.26','1.26','1.26','50'],['Edelweiss Financial','2.04','2.04','2.04','2.04','2.04','57'],['Sunteck Realty','2.22','2.22','2.22','2.22','2.22','50']]},
 ];
 
-/* ── HELPERS ───────────────────────────────────────────── */
-const $ = id => document.getElementById(id);
-function cc(v){const n=parseFloat(String(v).replace(/[^0-9.\-]/g,''));return n>0?'cp':n<0?'cn':'';}
-function ic(v){return String(v).startsWith('-')?'cn':parseFloat(v)>0?'cp':'';}
-function r4(data){return data.map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td><td class="${ic(r[2])}">${r[2]}</td><td class="${ic(r[3])}">${r[3]}</td></tr>`).join('');}
-function r3(data){return data.map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td><td class="${ic(r[2])}">${r[2]}</td></tr>`).join('');}
-function icard(d){const pos=!d.c.startsWith('-');return `<div class="icard"><div class="ireg">${d.r}</div><div class="iname">${d.n}</div><div class="iprice">${d.p}</div><div class="ichgs"><span class="${pos?'up':'dn'}">${d.c}</span><span class="${pos?'up':'dn'}">(${d.pc}%)</span></div><div class="ihl">H:${d.hi} L:${d.lo}</div><div class="itm">${d.t} IST</div></div>`;}
+/* ══ HELPERS ════════════════════════════════════════════ */
+const $=id=>document.getElementById(id);
+function ic(v){const s=String(v);if(s.startsWith('-')||s.startsWith('--'))return'cn';if(parseFloat(s)>0||s.startsWith('+'))return'cp';return'';}
+function r4(d){return d.map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td><td class="${ic(r[2])}">${r[2]}</td><td class="${ic(r[3])}">${r[3]}</td></tr>`).join('');}
+function r3(d){return d.map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td><td class="${ic(r[2])}">${r[2]}</td></tr>`).join('');}
+function icard(d){const pos=!d.c.startsWith('-');return`<div class="icard"><div class="ireg">${d.r}</div><div class="iname">${d.n}</div><div class="iprc">${d.p}</div><div class="ichs"><span class="${pos?'up':'dn'}">${d.c}</span><span class="${pos?'up':'dn'}">(${d.pc}%)</span></div><div class="ihl">H:${d.hi} L:${d.lo}</div><div class="itm">${d.t} IST</div></div>`;}
+function fcard(d){const pos=!d.c.startsWith('-');return`<div class="fcard"><div class="fregion">${d.r}</div><div class="fname">${d.n}</div><div class="fprc">${d.p}</div><div class="fchs"><span class="${pos?'up':'dn'}">${d.c}</span><span class="${pos?'up':'dn'}">${d.pc}</span></div><div class="fhl">H:${d.hi} &nbsp; L:${d.lo}</div><div class="ftm">${d.t}</div></div>`;}
 function sbadge(s){return s==='Open'?'<span class="s-op">OPEN</span>':s==='Upcoming'?'<span class="s-up">UPCOMING</span>':'<span class="s-cl">CLOSED</span>';}
 
-/* ── TICKER ────────────────────────────────────────────── */
+/* ══ TICKER ══════════════════════════════════════════════ */
 function buildTick(){
-  const D=[{n:'NIFTY 50',v:'24,176',c:'-0.62%',p:false},{n:'SENSEX',v:'77,328',c:'-0.66%',p:false},{n:'NASDAQ',v:'26,247',c:'+1.71%',p:true},{n:'DOW',v:'49,609',c:'+0.02%',p:true},{n:'S&P 500',v:'7,398',c:'+0.84%',p:true},{n:'USD/INR',v:'94.43',c:'',p:true},{n:'GOLD MCX',v:'1,52,589',c:'+0.04%',p:true},{n:'SILVER MCX',v:'2,61,999',c:'+1.34%',p:true},{n:'GIFT NIFTY',v:'24,280',c:'+0.26%',p:true},{n:'INDIA VIX',v:'16.84',c:'+1.32%',p:true},{n:'CRUDE OIL',v:'9,022',c:'-0.02%',p:false},{n:'NIKKEI',v:'62,713',c:'-0.19%',p:false},{n:'HANG SENG',v:'26,393',c:'-0.87%',p:false}];
+  const D=[{n:'NIFTY 50',v:'24,176',c:'-0.62%',p:false},{n:'SENSEX',v:'77,328',c:'-0.66%',p:false},{n:'NASDAQ',v:'26,247',c:'+1.71%',p:true},{n:'DOW',v:'49,609',c:'+0.02%',p:true},{n:'S&P 500',v:'7,398',c:'+0.84%',p:true},{n:'USD/INR',v:'94.43',c:'',p:true},{n:'GOLD MCX',v:'1,52,589',c:'+0.04%',p:true},{n:'SILVER MCX',v:'2,61,999',c:'+1.34%',p:true},{n:'GIFT NIFTY',v:'24,280',c:'+0.26%',p:true},{n:'INDIA VIX',v:'16.84',c:'+1.32%',p:true},{n:'CRUDE OIL',v:'9,022',c:'-0.02%',p:false},{n:'NIKKEI FUTURES',v:'63,782',c:'+2.66%',p:true},{n:'NASDAQ FUTURES',v:'29,332',c:'+2.27%',p:true},{n:'BANK NIFTY',v:'55,310',c:'-1.31%',p:false}];
   const all=[...D,...D];
   $('tick').innerHTML=all.map(i=>`<div class="ti"><span class="tn">${i.n}</span><span class="tv">${i.v}</span>${i.c?`<span class="tc ${i.p?'up':'dn'}">${i.c}</span>`:''}</div>`).join('');
 }
 
-/* ── RENDER ────────────────────────────────────────────── */
+/* ══ RENDER ══════════════════════════════════════════════ */
 function render(){
-  // Indices
+  // Global
   $('ag').innerHTML=ASIA.map(icard).join('');
   $('eg').innerHTML=EURO.map(icard).join('');
+  // Futures
+  $('fut-us').innerHTML=FUT_US.map(fcard).join('');
+  $('fut-in').innerHTML=FUT_IN.map(fcard).join('');
+  $('fut-as').innerHTML=FUT_AS.map(fcard).join('');
+  // Indian indices
+  $('nse-sect').innerHTML=NSE_SECT.map(r=>`<tr><td><strong>${r[0]}</strong></td><td>${r[1]}</td><td class="${ic(r[2])}">${r[2]}</td><td class="${ic(r[3])}">${r[3]}%</td><td style="color:#aaa">${r[4]}</td><td style="color:#aaa">${r[5]}</td></tr>`).join('');
+  $('bse-sect').innerHTML=BSE_SECT.map(r=>`<tr><td><strong>${r[0]}</strong></td><td>${r[1]}</td><td class="${ic(r[2])}">${r[2]}</td><td class="${ic(r[3])}">${r[3]}%</td><td style="color:#aaa">${r[4]}</td><td style="color:#aaa">${r[5]}</td></tr>`).join('');
+  $('nifty50-stocks').innerHTML=NIFTY50_STOCKS.map(r=>`<tr><td><strong>${r[0]}</strong></td><td>${r[1]}</td><td class="${ic(r[2])}">${r[2]}</td><td class="${ic(r[3])}">${r[3]}%</td><td style="color:#aaa">${r[4]}</td><td style="color:#aaa">${r[5]}</td></tr>`).join('');
+  $('nifty50-wt').innerHTML=NIFTY50_WT.map((r,i)=>`<tr><td><strong>${r[0]}</strong></td><td style="color:#888">${r[1]}</td><td style="font-family:'Teko',sans-serif;font-size:13px">${r[2]}</td><td class="cp">${r[3]}</td></tr>`).join('');
   // Market
-  $('n50g').innerHTML=r4(N50G); $('n50l').innerHTML=r4(N50L);
-  $('nseg').innerHTML=r4(NSEG); $('nsel').innerHTML=r4(NSEL);
-  $('bseg').innerHTML=r3(BSEG); $('bsel').innerHTML=r3(BSEL);
+  $('n50g').innerHTML=r4(N50G);$('n50l').innerHTML=r4(N50L);
+  $('nseg').innerHTML=r4(NSEG);$('nsel').innerHTML=r4(NSEL);
+  $('bseg').innerHTML=r3(BSEG);$('bsel').innerHTML=r3(BSEL);
   $('nbank').innerHTML=BANK.map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td><td class="${ic(r[2])}">${r[2]}</td><td class="${ic(r[3])}">${r[3]}%</td></tr>`).join('');
-  $('bsexg').innerHTML=r3(BSEXG); $('bsexl').innerHTML=r3(BSEXL);
+  $('bsexg').innerHTML=r3(BSEXG);$('bsexl').innerHTML=r3(BSEXL);
   // IPO
   $('gmp').innerHTML=GMP.map(r=>`<tr><td><strong>${r[0]}</strong></td><td class="${r[1]==='₹0'?'nu':'cp'}">${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td><td>${r[4]}</td><td>${r[5]}</td><td>${r[6]}</td><td>${sbadge(r[7])}</td></tr>`).join('');
-  $('ipolst').innerHTML=IPOLST.map(r=>`<tr><td><strong>${r[0]}</strong></td><td><span class="bd ${r[1]==='Mainline'||r[1]==='Mainboard'?'bd-a':'bd-g'}">${r[1]}</span></td><td>${r[2]}</td><td>${r[3]}</td><td>${r[4]}</td><td>${r[5]}</td><td>${r[6]}</td><td class="${ic(r[7])}">${r[7]}</td><td>${r[8]}</td><td class="${ic(r[9])}">${r[9]}</td><td>${r[10]}</td></tr>`).join('');
-  $('iposub').innerHTML=IPOSUB.map(r=>`<tr><td><strong>${r[0]}</strong></td><td><span class="bd ${r[1]==='Mainboard'?'bd-a':'bd-g'}">${r[1]}</span></td><td>${r[2]}</td><td>${r[3]}</td>${[4,5,6,7].map(i=>{const v=parseFloat(r[i]);return `<td class="${v>=10?'cp':v>=1?'':'cn'}">${r[i]}</td>`;}).join('')}</tr>`).join('');
-  // FX & Commodities
-  $('fxtbl').innerHTML=FX.map(r=>`<tr><td>${r[0]}</td><td style="color:#999;font-size:11px">${r[1]}</td><td><strong>${r[2]}</strong></td></tr>`).join('');
-  $('comtbl').innerHTML=COM.map(r=>`<tr><td><strong>${r[0]}</strong></td><td>${r[1]}</td><td class="${ic(r[2])}">${r[2]}</td><td class="${ic(r[3])}">${r[3]}</td><td style="color:#999">${r[4]}</td><td style="color:#999">${r[5]}</td></tr>`).join('');
+  $('ipolst').innerHTML=IPOLST.map(r=>`<tr><td><strong>${r[0]}</strong></td><td><span class="bd ${r[1]==='Mainline'?'bd-a':'bd-g'}">${r[1]}</span></td><td>${r[2]}</td><td>${r[3]}</td><td>${r[4]}</td><td>${r[5]}</td><td>${r[6]}</td><td class="${ic(r[7])}">${r[7]}</td><td>${r[8]}</td><td class="${ic(r[9])}">${r[9]}</td><td>${r[10]}</td></tr>`).join('');
+  $('iposub').innerHTML=IPOSUB.map(r=>`<tr><td><strong>${r[0]}</strong></td><td><span class="bd ${r[1]==='Mainboard'?'bd-a':'bd-g'}">${r[1]}</span></td><td>${r[2]}</td><td>${r[3]}</td>${[4,5,6,7].map(i=>{const v=parseFloat(r[i]);return`<td class="${v>=10?'cp':v>=1?'':'cn'}">${r[i]}</td>`;}).join('')}</tr>`).join('');
+  // FX
+  $('fxtbl').innerHTML=FX.map(r=>`<tr><td>${r[0]}</td><td style="color:#aaa;font-size:11px">${r[1]}</td><td><strong>${r[2]}</strong></td></tr>`).join('');
+  $('comtbl').innerHTML=COM.map(r=>`<tr><td><strong>${r[0]}</strong></td><td>${r[1]}</td><td class="${ic(r[2])}">${r[2]}</td><td class="${ic(r[3])}">${r[3]}</td><td style="color:#aaa">${r[4]}</td><td style="color:#aaa">${r[5]}</td></tr>`).join('');
   // Ace Investors
-  const tabs=$('itabs'), panels=$('ipanels');
+  const tabs=$('itabs'),panels=$('ipanels');
   ACE.forEach((inv,i)=>{
     const id='ip'+i;
     tabs.innerHTML+=`<button class="itb${i===0?' on':''}" onclick="showInv('${id}',this)">${inv.n}</button>`;
-    panels.innerHTML+=`<div class="ipanel${i===0?' on':''}" id="${id}"><div class="pv">Portfolio Value (Mar 2026): <strong>${inv.v}</strong></div><div class="tc-wrap"><div class="tscr"><table><thead><tr><th>#</th><th>Company</th><th>Mar'25%</th><th>Jun'25%</th><th>Sep'25%</th><th>Dec'25%</th><th>Mar'26%</th><th>Value (₹ Cr)</th></tr></thead><tbody>${inv.h.map((h,j)=>`<tr><td style="color:#ccc">${j+1}</td><td><strong>${h[0]}</strong></td><td>${h[1]}</td><td>${h[2]}</td><td>${h[3]}</td><td>${h[4]}</td><td><strong>${h[5]}</strong></td><td class="cp">₹${h[6]}</td></tr>`).join('')}</tbody></table></div></div></div>`;
+    panels.innerHTML+=`<div class="ipanel${i===0?' on':''}" id="${id}"><div class="pv">Portfolio Value (Mar 2026): <strong>${inv.v}</strong></div><div class="tcw"><div class="tscr"><table><thead><tr><th>#</th><th>Company</th><th>Mar'25%</th><th>Jun'25%</th><th>Sep'25%</th><th>Dec'25%</th><th>Mar'26%</th><th>Value ₹ Cr</th></tr></thead><tbody>${inv.h.map((h,j)=>`<tr><td style="color:#ccc">${j+1}</td><td><strong>${h[0]}</strong></td><td>${h[1]}</td><td>${h[2]}</td><td>${h[3]}</td><td>${h[4]}</td><td><strong>${h[5]}</strong></td><td class="cp">₹${h[6]}</td></tr>`).join('')}</tbody></table></div></div></div>`;
   });
 }
 
-/* ── NAVIGATION ────────────────────────────────────────── */
-const SMAP={global:'s-global',market:'s-market',ipo:'s-ipo',currency:'s-currency',ace:'s-ace'};
+/* ══ NAVIGATION ══════════════════════════════════════════ */
+const SMAP={global:'s-global',futures:'s-futures',indian:'s-indian',market:'s-market',ipo:'s-ipo',currency:'s-currency',ace:'s-ace'};
 function showTab(key,btn){
   document.querySelectorAll('.sec').forEach(s=>s.classList.remove('on'));
   document.querySelectorAll('.nb').forEach(b=>b.classList.remove('on'));
@@ -415,7 +609,7 @@ function showTab(key,btn){
 function showInv(id,btn){
   document.querySelectorAll('.ipanel').forEach(p=>p.classList.remove('on'));
   document.querySelectorAll('.itb').forEach(b=>b.classList.remove('on'));
-  $(id).classList.add('on'); btn.classList.add('on');
+  $(id).classList.add('on');btn.classList.add('on');
 }
 
 buildTick();
