@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Niveshaka-bandhu — Investor's Friend</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- GRAIN OVERLAY -->
+  <div class="grain"></div>
+
+  <!-- HEADER -->
+  <header>
+    <div class="header-inner">
+      <div class="logo">
+        <span class="logo-devanagari">निवेशक</span>
+        <div class="logo-text">
+          <span class="logo-main">Niveshaka-bandhu</span>
+          <span class="logo-sub">Investor's Friend</span>
+        </div>
+      </div>
+      <nav>
+        <a href="#global-indices" class="nav-link active" data-tab="global-indices">Global Indices</a>
+        <a href="#market-data" class="nav-link" data-tab="market-data">Market Data</a>
+        <a href="#ipo" class="nav-link" data-tab="ipo">IPO Corner</a>
+        <a href="#currencies" class="nav-link" data-tab="currencies">Currencies</a>
+        <a href="#ace-investors" class="nav-link" data-tab="ace-investors">Ace Investors</a>
+      </nav>
+      <div class="header-right">
+        <span class="live-dot"></span>
+        <span class="live-label">LIVE DATA</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- TICKER BAR -->
+  <div class="ticker-bar">
+    <div class="ticker-track" id="ticker-track">
+      <span class="ticker-item">SENSEX <span class="up" id="t-sensex">—</span></span>
+      <span class="ticker-sep">◆</span>
+      <span class="ticker-item">NIFTY 50 <span id="t-nifty">—</span></span>
+      <span class="ticker-sep">◆</span>
+      <span class="ticker-item">NASDAQ <span class="up" id="t-nasdaq">—</span></span>
+      <span class="ticker-sep">◆</span>
+      <span class="ticker-item">DOW JONES <span id="t-dow">—</span></span>
+      <span class="ticker-sep">◆</span>
+      <span class="ticker-item">USD/INR <span id="t-usdinr">—</span></span>
+      <span class="ticker-sep">◆</span>
+      <span class="ticker-item">GOLD (MCX) <span class="up" id="t-gold">—</span></span>
+      <span class="ticker-sep">◆</span>
+      <span class="ticker-item">GIFT NIFTY <span id="t-giftnifty">—</span></span>
+      <span class="ticker-sep">◆</span>
+      <span class="ticker-item">SENSEX <span class="up" id="t-sensex2">—</span></span>
+      <span class="ticker-sep">◆</span>
+      <span class="ticker-item">NIFTY 50 <span id="t-nifty2">—</span></span>
+      <span class="ticker-sep">◆</span>
+      <span class="ticker-item">NASDAQ <span class="up" id="t-nasdaq2">—</span></span>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <main>
+
+    <!-- SECTION: Global Indices -->
+    <section id="global-indices" class="tab-section active">
+      <div class="section-header">
+        <div class="section-title-block">
+          <span class="section-num">01</span>
+          <h2>Global Indices</h2>
+        </div>
+        <p class="section-desc">World market indices with real-time chart links. Quotes may be delayed up to 20 min.</p>
+      </div>
+      <div class="sheet-embed-wrapper">
+        <div class="embed-label">Live from Google Sheets</div>
+        <iframe
+          src="https://docs.google.com/spreadsheets/d/1xoUJqge0b4SQmZSRLZyoBBcokXrUrFVt8fBFoef28NQ/htmlview#gid=0"
+          class="sheet-embed"
+          title="Global Indices"
+          loading="lazy"
+          allow="fullscreen"
+        ></iframe>
+      </div>
+      <div class="info-cards">
+        <div class="info-card">
+          <span class="ic-icon">🌍</span>
+          <span class="ic-label">Global Markets</span>
+          <span class="ic-val">Major World Indices</span>
+        </div>
+        <div class="info-card">
+          <span class="ic-icon">📊</span>
+          <span class="ic-label">Data Source</span>
+          <span class="ic-val">Google Finance</span>
+        </div>
+        <div class="info-card">
+          <span class="ic-icon">⏱</span>
+          <span class="ic-label">Delay</span>
+          <span class="ic-val">Up to 20 min</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION: Market Data -->
+    <section id="market-data" class="tab-section">
+      <div class="section-header">
+        <div class="section-title-block">
+          <span class="section-num">02</span>
+          <h2>Market Data</h2>
+        </div>
+        <p class="section-desc">Indian markets — top gainers & losers, daily FII & DII data, and Nifty Bank.</p>
+      </div>
+      <div class="market-summary-grid" id="market-summary-grid">
+        <div class="mkt-card sensex-card">
+          <div class="mkt-label">SENSEX</div>
+          <div class="mkt-val" id="ms-sensex">—</div>
+          <div class="mkt-chg" id="ms-sensex-chg">—</div>
+        </div>
+        <div class="mkt-card nifty-card">
+          <div class="mkt-label">NIFTY 50</div>
+          <div class="mkt-val" id="ms-nifty">—</div>
+          <div class="mkt-chg" id="ms-nifty-chg">—</div>
+        </div>
+        <div class="mkt-card">
+          <div class="mkt-label">GIFT NIFTY</div>
+          <div class="mkt-val" id="ms-gift">—</div>
+          <div class="mkt-chg" id="ms-gift-chg">—</div>
+        </div>
+        <div class="mkt-card">
+          <div class="mkt-label">USD / INR</div>
+          <div class="mkt-val" id="ms-usd">—</div>
+          <div class="mkt-chg" id="ms-usd-chg">—</div>
+        </div>
+      </div>
+      <div class="sheet-embed-wrapper mt2">
+        <div class="embed-label">FII / DII & Market Detail — Live Sheet</div>
+        <iframe
+          src="https://docs.google.com/spreadsheets/d/1xoUJqge0b4SQmZSRLZyoBBcokXrUrFVt8fBFoef28NQ/htmlview#gid=0"
+          class="sheet-embed"
+          title="Market Data"
+          loading="lazy"
+        ></iframe>
+      </div>
+    </section>
+
+    <!-- SECTION: IPO Corner -->
+    <section id="ipo" class="tab-section">
+      <div class="section-header">
+        <div class="section-title-block">
+          <span class="section-num">03</span>
+          <h2>IPO Corner</h2>
+        </div>
+        <p class="section-desc">Recent IPO subscription & listing status, and Grey Market Premium (GMP).</p>
+      </div>
+      <div class="ipo-legend">
+        <span class="leg-item"><span class="leg-dot green"></span> Listed / Subscribed</span>
+        <span class="leg-item"><span class="leg-dot amber"></span> Ongoing</span>
+        <span class="leg-item"><span class="leg-dot red"></span> Closed / Below Issue</span>
+      </div>
+      <div class="sheet-embed-wrapper">
+        <div class="embed-label">IPO Tracker — Live Sheet</div>
+        <iframe
+          src="https://docs.google.com/spreadsheets/d/1xoUJqge0b4SQmZSRLZyoBBcokXrUrFVt8fBFoef28NQ/htmlview#gid=0"
+          class="sheet-embed"
+          title="IPO Corner"
+          loading="lazy"
+        ></iframe>
+      </div>
+      <div class="info-cards">
+        <div class="info-card amber">
+          <span class="ic-icon">📋</span>
+          <span class="ic-label">GMP</span>
+          <span class="ic-val">Grey Market Premium tracked</span>
+        </div>
+        <div class="info-card">
+          <span class="ic-icon">🏦</span>
+          <span class="ic-label">Type</span>
+          <span class="ic-val">Mainboard & SME IPOs</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION: Currencies -->
+    <section id="currencies" class="tab-section">
+      <div class="section-header">
+        <div class="section-title-block">
+          <span class="section-num">04</span>
+          <h2>Currencies & Commodities</h2>
+        </div>
+        <p class="section-desc">Major currency pairs and key commodity prices tracked live.</p>
+      </div>
+      <div class="currency-grid">
+        <div class="curr-card">
+          <div class="curr-flag">🇺🇸🇮🇳</div>
+          <div class="curr-pair">USD / INR</div>
+          <div class="curr-val" id="c-usd">₹—</div>
+        </div>
+        <div class="curr-card">
+          <div class="curr-flag">🥇</div>
+          <div class="curr-pair">GOLD (MCX)</div>
+          <div class="curr-val" id="c-gold">—</div>
+        </div>
+        <div class="curr-card">
+          <div class="curr-flag">🥈</div>
+          <div class="curr-pair">SILVER (MCX)</div>
+          <div class="curr-val" id="c-silver">—</div>
+        </div>
+        <div class="curr-card">
+          <div class="curr-flag">📈</div>
+          <div class="curr-pair">USD Index</div>
+          <div class="curr-val" id="c-usdindex">—</div>
+        </div>
+      </div>
+      <div class="sheet-embed-wrapper mt2">
+        <div class="embed-label">Full Currencies & Commodities — Live Sheet</div>
+        <iframe
+          src="https://docs.google.com/spreadsheets/d/1xoUJqge0b4SQmZSRLZyoBBcokXrUrFVt8fBFoef28NQ/htmlview#gid=0"
+          class="sheet-embed"
+          title="Currencies"
+          loading="lazy"
+        ></iframe>
+      </div>
+    </section>
+
+    <!-- SECTION: Ace Investors -->
+    <section id="ace-investors" class="tab-section">
+      <div class="section-header">
+        <div class="section-title-block">
+          <span class="section-num">05</span>
+          <h2>Ace Investor Portfolios</h2>
+        </div>
+        <p class="section-desc">Indian super-investor portfolios with percentage holdings — for study, not advice.</p>
+      </div>
+      <div class="ace-disclaimer">
+        <span>⚠️</span>
+        <p>Portfolio data is for <strong>investment study only</strong>. Do not use for trading. Holdings may change; always verify with official sources.</p>
+      </div>
+      <div class="sheet-embed-wrapper">
+        <div class="embed-label">Ace Investor Holdings — Live Sheet</div>
+        <iframe
+          src="https://docs.google.com/spreadsheets/d/1xoUJqge0b4SQmZSRLZyoBBcokXrUrFVt8fBFoef28NQ/htmlview#gid=0"
+          class="sheet-embed tall"
+          title="Ace Investors"
+          loading="lazy"
+        ></iframe>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <span class="logo-devanagari small">निवेशक</span>
+        <span>Niveshaka-bandhu</span>
+      </div>
+      <div class="footer-links">
+        <a href="https://tinyurl.com/Niveshaka-bandhu" target="_blank">📊 Full Google Sheet</a>
+        <a href="https://docs.google.com/spreadsheets/d/1xoUJqge0b4SQmZSRLZyoBBcokXrUrFVt8fBFoef28NQ" target="_blank">🔗 Source Data</a>
+      </div>
+      <p class="footer-disc">Quotes delayed up to 20 min. Data from Google Finance. For informational purposes only — not investment advice. <br/>© Niveshaka-bandhu · Built with ❤️ for Indian investors.</p>
+    </div>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
