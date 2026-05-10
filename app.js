@@ -130,11 +130,11 @@ function routeFromHash() {
   ...spreadsheets/d/SHEET_ID/edit#gid=XXXXXX
 */
 const TAB_GIDS = {
-  'global-indices': '',        // index / first sheet
-  'market-data':    '',        // update with actual gid
-  'ipo':            '',
-  'currencies':     '',
-  'ace-investors':  '',
+  'global-indices': '572014590',        // index / first sheet
+  'market-data':    '1259430707',        // update with actual gid
+  'ipo':            '536891537',
+  'currencies':     '1847303228',
+  'ace-investors':  '773783735',
 };
 
 function updateIframes() {
