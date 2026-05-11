@@ -15,11 +15,7 @@ table{border-collapse:collapse;width:100%}
 th,td{text-align:left;padding:7px 10px}
 :root{--red:#c0392b;--green:#1a7a4a;--orange:#e07b00;--blue:#0d47a1;--mc:#0060df;--bdr:#e0e0e0;--bgh:#f5f7ff;}
 
-/* TOP BAR */
 .topbar{background:#0d47a1;color:#cfe2ff;font-size:11px;padding:5px 16px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:4px}
-.topbar a{color:#90c4ff;margin-left:10px}
-
-/* HEADER */
 header{background:#fff;border-bottom:3px solid var(--mc);box-shadow:0 2px 6px rgba(0,0,0,.1);position:sticky;top:0;z-index:300}
 .hdr{max-width:1360px;margin:0 auto;display:flex;align-items:center;gap:10px;padding:0 14px;height:54px}
 .logo{display:flex;align-items:center;gap:8px;flex-shrink:0}
@@ -28,34 +24,28 @@ header{background:#fff;border-bottom:3px solid var(--mc);box-shadow:0 2px 6px rg
 .lsl{font-size:9px;color:#999;letter-spacing:.5px;text-transform:uppercase}
 nav{display:flex;gap:2px;flex:1;flex-wrap:wrap}
 .nb{padding:6px 10px;border-radius:3px;font-size:11px;font-weight:600;color:#444;cursor:pointer;border:none;background:none;transition:.2s;white-space:nowrap;font-family:'Inter',sans-serif}
-.nb:hover{background:#e8f0ff;color:var(--mc)}
-.nb.on{background:var(--mc);color:#fff}
+.nb:hover{background:#e8f0ff;color:var(--mc)}.nb.on{background:var(--mc);color:#fff}
 .rbtn{padding:5px 10px;border-radius:3px;font-size:11px;font-weight:600;color:var(--mc);cursor:pointer;border:1px solid var(--mc);background:#fff;font-family:'Inter',sans-serif;flex-shrink:0;transition:.2s}
-.rbtn:hover{background:var(--mc);color:#fff}
-.rbtn:disabled{opacity:.5;cursor:not-allowed}
+.rbtn:hover{background:var(--mc);color:#fff}.rbtn:disabled{opacity:.5;cursor:not-allowed}
 
-/* TICKER */
 .ticker{background:#fff;border-bottom:1px solid #e8e8e8;overflow:hidden;height:30px;display:flex;align-items:center}
 .tscrl{display:flex;align-items:center;animation:tsc 60s linear infinite;white-space:nowrap}
 .tscrl:hover{animation-play-state:paused}
 @keyframes tsc{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
 .ti{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;padding:0 16px;border-right:1px solid #f0f0f0}
 .tn{color:#666;font-weight:500}.tv{font-weight:700;color:#111}.tc{font-size:10.5px}
-.up{color:var(--green)}.dn{color:var(--red)}.nu{color:#999}
+.up{color:var(--green)}.dn{color:var(--red)}
 
-/* LAYOUT */
 .wrap{max-width:1360px;margin:0 auto;padding:12px 14px}
 .sec{display:none}.sec.on{display:block}
 .stitle{font-family:'Teko',sans-serif;font-size:21px;font-weight:600;color:var(--blue);border-bottom:2px solid var(--mc);padding-bottom:5px;margin-bottom:12px}
-.stitle-sm{font-size:15px;border-bottom:1px solid #ddd;margin-top:10px;margin-bottom:10px;color:var(--blue);font-family:'Teko',sans-serif;font-weight:600}
+.stitle-sm{font-family:'Teko',sans-serif;font-size:16px;font-weight:600;color:var(--blue);border-bottom:1px solid #ddd;padding-bottom:4px;margin:10px 0 8px}
 
-/* LOADING / ERROR */
 .loading{display:flex;align-items:center;justify-content:center;gap:10px;padding:50px;color:#999;font-size:13px}
 .spin{width:20px;height:20px;border:2px solid #ddd;border-top-color:var(--mc);border-radius:50%;animation:sp .8s linear infinite;flex-shrink:0}
 @keyframes sp{to{transform:rotate(360deg)}}
-.errbox{background:#fff3f3;border:1px solid #f5c6cb;border-radius:5px;padding:12px 16px;color:#721c24;font-size:12px;margin-bottom:12px;line-height:1.6}
+.errbox{background:#fff3f3;border:1px solid #f5c6cb;border-radius:5px;padding:12px 16px;color:#721c24;font-size:12px;margin-bottom:12px}
 
-/* TABLE CARD */
 .tcw{background:#fff;border:1px solid var(--bdr);border-radius:5px;margin-bottom:12px;overflow:hidden}
 .tch{background:var(--bgh);padding:8px 12px;font-size:12px;font-weight:700;color:var(--blue);border-bottom:1px solid #dce6ff;display:flex;justify-content:space-between;align-items:center;gap:6px;flex-wrap:wrap}
 .cnt{font-size:10px;background:var(--mc);color:#fff;padding:1px 8px;border-radius:10px;font-weight:600}
@@ -69,17 +59,7 @@ tbody td{font-size:12px;color:#222;padding:7px 10px;white-space:nowrap}
 .bd{display:inline-block;padding:1px 7px;border-radius:3px;font-size:10px;font-weight:700}
 .bd-g{background:#e6f4ee;color:#1a7a4a}.bd-a{background:#fff3e0;color:#e07b00}
 
-/* CARDS */
-.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;margin-bottom:12px}
-.mcard{background:#fff;border:1px solid var(--bdr);border-radius:5px;padding:11px 14px;position:relative;overflow:hidden}
-.mcard::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--mc)}
-.mcard.r::before{background:var(--red)}.mcard.g::before{background:var(--green)}
-.mcl{font-size:10px;color:#999;font-weight:600;letter-spacing:.4px;text-transform:uppercase;margin-bottom:3px}
-.mcv{font-family:'Teko',sans-serif;font-size:24px;font-weight:600;line-height:1;color:#111}
-.mcc{font-size:11px;margin-top:2px}
-
-/* INDEX / FUTURES GRID */
-.igrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px;margin-bottom:12px}
+.igrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(185px,1fr));gap:8px;margin-bottom:12px}
 .icard{background:#fff;border:1px solid var(--bdr);border-radius:5px;padding:10px 12px;transition:.2s}
 .icard:hover{border-color:var(--mc);box-shadow:0 2px 10px rgba(0,96,223,.1)}
 .iname{font-size:12px;font-weight:700;color:#222;margin-bottom:3px;line-height:1.3;white-space:normal}
@@ -88,39 +68,30 @@ tbody td{font-size:12px;color:#222;padding:7px 10px;white-space:nowrap}
 .ihl{font-size:10px;color:#bbb;margin-top:3px}
 .itm{font-size:9px;color:#ccc;margin-top:1px}
 
-/* 2-COL */
 .g2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
 @media(max-width:650px){.g2{grid-template-columns:1fr}}
 
-/* ADV/DEC */
 .adrow{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px}
 @media(max-width:500px){.adrow{grid-template-columns:repeat(2,1fr)}}
 .adbox{background:#fff;border:1px solid var(--bdr);border-radius:5px;padding:10px;text-align:center}
 .adlbl{font-size:10px;color:#999;text-transform:uppercase;letter-spacing:.4px;margin-bottom:2px}
 .adnum{font-family:'Teko',sans-serif;font-size:26px;line-height:1}
 
-/* IPO STATUS */
 .sop{background:#e6f4ee;color:#1a7a4a;padding:2px 7px;border-radius:3px;font-size:10px;font-weight:700}
 .scl{background:#fdecea;color:#c0392b;padding:2px 7px;border-radius:3px;font-size:10px;font-weight:700}
 .sup{background:#fff8e1;color:#b45309;padding:2px 7px;border-radius:3px;font-size:10px;font-weight:700}
 
-/* ACE INVESTOR TABS */
 .itabs{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px}
 .itb{padding:5px 12px;border:1px solid #ddd;border-radius:3px;font-size:11px;font-weight:600;cursor:pointer;background:#fff;color:#555;transition:.15s;font-family:'Inter',sans-serif}
-.itb:hover{border-color:var(--mc);color:var(--mc)}
-.itb.on{background:var(--mc);color:#fff;border-color:var(--mc)}
+.itb:hover{border-color:var(--mc);color:var(--mc)}.itb.on{background:var(--mc);color:#fff;border-color:var(--mc)}
 .ipanel{display:none}.ipanel.on{display:block}
 .pvlbl{font-size:11px;color:#888;margin-bottom:8px}
 .pvlbl strong{color:var(--blue);font-size:13px}
-
-/* DISC */
 .disc{background:#fffde7;border:1px solid #ffe082;border-radius:5px;padding:10px 14px;font-size:11px;color:#6d4c00;margin-bottom:12px}
 
-/* FOOTER */
 footer{background:#1a1a2e;color:#777;text-align:center;padding:16px;font-size:11px;margin-top:16px}
 footer a{color:#6ea8fe}
 
-/* MOBILE */
 @media(max-width:768px){
   .hdr{height:auto;padding:8px 12px;flex-wrap:wrap;gap:8px}
   nav{gap:3px;order:3;width:100%;padding-bottom:4px}
@@ -128,13 +99,10 @@ footer a{color:#6ea8fe}
   .wrap{padding:10px}
   .stitle{font-size:18px}
   .igrid{grid-template-columns:repeat(2,1fr)}
-  .cards{grid-template-columns:repeat(2,1fr)}
   thead th,tbody td{padding:6px 8px;font-size:11px}
-  .mcv{font-size:20px}.iprc{font-size:18px}
+  .iprc{font-size:18px}
 }
-@media(max-width:380px){
-  .nb{font-size:10px;padding:4px 7px}
-}
+@media(max-width:380px){.nb{font-size:10px;padding:4px 7px}}
 </style>
 </head>
 <body>
@@ -163,16 +131,16 @@ footer a{color:#6ea8fe}
   </div>
 </header>
 
-<div class="ticker"><div class="tscrl" id="tick"><div class="ti"><span class="tn">Loading live data from Google Sheets…</span></div></div></div>
+<div class="ticker"><div class="tscrl" id="tick"><div class="ti"><span class="tn">Loading live data…</span></div></div></div>
 
 <div class="wrap">
-  <div class="sec on" id="s-global"><div class="loading"><div class="spin"></div>Loading Global Indices…</div></div>
-  <div class="sec"    id="s-futures"><div class="loading"><div class="spin"></div>Loading Futures…</div></div>
-  <div class="sec"    id="s-indian"><div class="loading"><div class="spin"></div>Loading Indian Indices…</div></div>
-  <div class="sec"    id="s-market"><div class="loading"><div class="spin"></div>Loading Market Data…</div></div>
-  <div class="sec"    id="s-ipo"><div class="loading"><div class="spin"></div>Loading IPO Data…</div></div>
-  <div class="sec"    id="s-currency"><div class="loading"><div class="spin"></div>Loading Currencies…</div></div>
-  <div class="sec"    id="s-ace"><div class="loading"><div class="spin"></div>Loading Ace Investors…</div></div>
+  <div class="sec on" id="s-global"><div class="loading"><div class="spin"></div>Loading…</div></div>
+  <div class="sec"    id="s-futures"><div class="loading"><div class="spin"></div>Loading…</div></div>
+  <div class="sec"    id="s-indian"><div class="loading"><div class="spin"></div>Loading…</div></div>
+  <div class="sec"    id="s-market"><div class="loading"><div class="spin"></div>Loading…</div></div>
+  <div class="sec"    id="s-ipo"><div class="loading"><div class="spin"></div>Loading…</div></div>
+  <div class="sec"    id="s-currency"><div class="loading"><div class="spin"></div>Loading…</div></div>
+  <div class="sec"    id="s-ace"><div class="loading"><div class="spin"></div>Loading…</div></div>
 </div>
 
 <footer>
@@ -181,107 +149,66 @@ footer a{color:#6ea8fe}
 </footer>
 
 <script>
-/* ═══════════════════════════════════════════════════
-   SHEET CONFIG
-═══════════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════
+   CONFIG
+═══════════════════════════════════════════════ */
 const SID = '1xoUJqge0b4SQmZSRLZyoBBcokXrUrFVt8fBFoef28NQ';
 const GIDS = {
-  global:   572014590,
-  futures:  2063758158,
-  indian:   139113774,
-  market:   1259430707,
-  ipo:      536891537,
-  currency: 1847303228,
-  ace:      773783735
+  global:572014590, futures:2063758158, indian:139113774,
+  market:1259430707, ipo:536891537, currency:1847303228, ace:773783735
 };
 
-/* ═══════════════════════════════════════════════════
-   JSONP FETCH — works from file:// and any domain
-   Uses Google's gviz/tq endpoint with callback
-═══════════════════════════════════════════════════ */
-let _cbCount = 0;
-function fetchGViz(gid) {
-  return new Promise((resolve, reject) => {
-    const cbName = '__gviz_cb_' + (++_cbCount);
-    const timeout = setTimeout(() => {
-      delete window[cbName];
-      reject(new Error('Timeout fetching GID ' + gid));
-    }, 15000);
-
-    window[cbName] = function(data) {
-      clearTimeout(timeout);
-      delete window[cbName];
-      try {
-        const rows = parseGViz(data);
-        resolve(rows);
-      } catch(e) {
-        reject(e);
-      }
+/* ═══════════════════════════════════════════════
+   JSONP FETCH via gviz — works on any host incl file://
+═══════════════════════════════════════════════ */
+let _n = 0;
+function fetchSheet(gid){
+  return new Promise((res,rej)=>{
+    const cb = '__gs_'+(++_n);
+    const t = setTimeout(()=>{ delete window[cb]; rej(new Error('Timeout GID '+gid)); }, 20000);
+    window[cb] = data=>{
+      clearTimeout(t); delete window[cb];
+      try { res(gvizToRows(data)); } catch(e){ rej(e); }
     };
-
-    const script = document.createElement('script');
-    script.src = `https://docs.google.com/spreadsheets/d/${SID}/gviz/tq?gid=${gid}&tqx=out:json;responseHandler:${cbName}&t=${Date.now()}`;
-    script.onerror = () => { clearTimeout(timeout); delete window[cbName]; reject(new Error('Script load failed for GID ' + gid)); };
-    document.head.appendChild(script);
-    // Remove script tag after load to keep DOM clean
-    script.onload = () => { try { document.head.removeChild(script); } catch(e){} };
+    const s = document.createElement('script');
+    s.onerror = ()=>{ clearTimeout(t); delete window[cb]; rej(new Error('Load failed GID '+gid)); };
+    s.src = `https://docs.google.com/spreadsheets/d/${SID}/gviz/tq?gid=${gid}&tqx=out:json;responseHandler:${cb}&t=${Date.now()}`;
+    document.head.appendChild(s);
+    s.onload = ()=>{ try{document.head.removeChild(s);}catch(e){} };
   });
 }
 
-/* Parse gviz JSON response into array of string arrays */
-function parseGViz(data) {
+function gvizToRows(data){
   const rows = [];
-  if (!data || !data.table || !data.table.rows) return rows;
-  const cols = data.table.cols || [];
-  for (const row of data.table.rows) {
-    if (!row || !row.c) continue;
-    const cells = row.c.map((c, i) => {
-      if (!c) return '';
-      // Use formatted value (f) if available, else raw value (v)
-      const val = (c.f !== undefined && c.f !== null) ? String(c.f) : (c.v !== undefined && c.v !== null) ? String(c.v) : '';
-      return val.trim();
-    });
-    rows.push(cells);
+  if(!data||!data.table||!data.table.rows) return rows;
+  for(const row of data.table.rows){
+    if(!row||!row.c) continue;
+    rows.push(row.c.map(c=>{
+      if(!c) return '';
+      // prefer formatted value (shows ₹, commas, %) over raw
+      const v = (c.f!=null) ? String(c.f) : (c.v!=null) ? String(c.v) : '';
+      return v.trim();
+    }));
   }
   return rows;
 }
 
-/* ═══════════════════════════════════════════════════
+/* ═══════════════════════════════════════════════
    HELPERS
-═══════════════════════════════════════════════════ */
-const $  = id => document.getElementById(id);
-const f  = v  => (String(v||'').trim()) || '—';
+═══════════════════════════════════════════════ */
+const $ = id => document.getElementById(id);
+const f = v  => String(v||'').trim() || '—';
 
-function ic(v) {
-  const s = String(v || '').trim().replace(/,/g,'');
-  if (!s || s === '—' || s === '-') return '';
+function ic(v){
+  const s = String(v||'').replace(/,/g,'').trim();
+  if(!s||s==='—'||s==='-') return '';
   const n = parseFloat(s);
-  if (isNaN(n)) return '';
+  if(isNaN(n)) return '';
   return n < 0 ? 'cn' : n > 0 ? 'cp' : '';
 }
 
-function sbadge(s) {
-  const l = (s||'').toLowerCase();
-  if (l.includes('open'))     return '<span class="sop">OPEN</span>';
-  if (l.includes('upcoming')) return '<span class="sup">UPCOMING</span>';
-  if (l.includes('clos'))     return '<span class="scl">CLOSED</span>';
-  return s ? `<span class="bd bd-g">${s}</span>` : '—';
-}
-function tbadge(t) {
-  const s = (t||'').trim();
-  return `<span class="bd ${/main/i.test(s)?'bd-a':'bd-g'}">${s||'—'}</span>`;
-}
-
-function errBox(tab, msg) {
-  return `<div class="errbox">
-    ⚠️ <strong>${tab}:</strong> ${msg}<br>
-    Make sure the sheet is shared as <strong>"Anyone with the link — Viewer"</strong>.<br>
-    <a href="https://docs.google.com/spreadsheets/d/${SID}" target="_blank">Open Sheet →</a>
-  </div>`;
-}
-
-function icard(name, price, chg, pct, hi, lo, tm) {
-  const pos = !String(chg).trim().startsWith('-');
+function icard(name,price,chg,pct,hi,lo,tm){
+  const pos = !String(chg||'').trim().startsWith('-');
   return `<div class="icard">
     <div class="iname">${f(name)}</div>
     <div class="iprc">${f(price)}</div>
@@ -294,433 +221,468 @@ function icard(name, price, chg, pct, hi, lo, tm) {
   </div>`;
 }
 
-/* Filter out completely blank rows and header rows */
-function dataRows(rows, skipWords=[]) {
-  return rows.filter(r => {
-    if (!r || !r[0] || !r[0].trim()) return false;
-    const t = r[0].toLowerCase();
-    if (skipWords.some(w => t.includes(w))) return false;
-    return true;
-  });
+function sbadge(s){
+  const l=(s||'').toLowerCase();
+  if(l.includes('open'))     return '<span class="sop">OPEN</span>';
+  if(l.includes('upcoming')) return '<span class="sup">UPCOMING</span>';
+  if(l.includes('clos'))     return '<span class="scl">CLOSED</span>';
+  return s?`<span class="bd bd-g">${s}</span>`:'—';
+}
+function tbadge(t){
+  return `<span class="bd ${/main/i.test(t||'')?'bd-a':'bd-g'}">${t||'—'}</span>`;
 }
 
-/* ═══════════════════════════════════════════════════
-   RENDER: GLOBAL INDICES
-═══════════════════════════════════════════════════ */
-function renderGlobal(rows) {
-  // Expected cols: Symbol | (blank) | Last | Change | % | High | Low | (blank) | Time
-  const skip = ['symbol','index name','name'];
-  const dr = dataRows(rows, skip).filter(r => r[2] && r[2] !== '—' && r[2].trim());
+/* ═══════════════════════════════════════════════
+   GLOBAL INDICES
+   CSV cols: [0]blank [1]blank [2]NAME [3]Price [4]Change [5]%Chg [6]High [7]Low [8]Time
+═══════════════════════════════════════════════ */
+function renderGlobal(rows){
+  // Data rows have name in col[2], numeric price in col[3]
+  const dr = rows.filter(r => r[2]&&r[2].trim() && r[3]&&r[3].trim() && r[2]!=='INDEX NAME' && !isNaN(parseFloat(String(r[3]).replace(/,/g,''))));
 
-  if (!dr.length) {
-    $('s-global').innerHTML = errBox('Global Indices', 'No data rows found. Check sheet tab name/GID.');
-    return;
+  if(!dr.length){ $('s-global').innerHTML=`<div class="errbox">⚠️ Global: No data. Sheet public? <a href="https://docs.google.com/spreadsheets/d/${SID}" target="_blank">Check →</a></div>`; return; }
+
+  // Split: NIFTY/SENSEX/VIX at top = India; rest = world
+  // Find first row that's clearly not Indian
+  const indiaNames = ['NIFTY','SENSEX','VIX','BSE'];
+  let splitAt = dr.length;
+  for(let i=0;i<dr.length;i++){
+    const n = (dr[i][2]||'').toUpperCase();
+    if(i>3 && !indiaNames.some(x=>n.includes(x))){
+      splitAt = i; break;
+    }
   }
+  // Actually just split first 3 as India, rest as world
+  const india = dr.slice(0,3);
+  const world = dr.slice(3);
 
-  // Try to split Asia vs Euro by checking if there's a blank separator row
-  let splitIdx = Math.ceil(dr.length / 2);
-  // Look for a row where col0 contains "europe" or "america" or "us"
-  const euroStart = dr.findIndex(r => /europe|america|nasdaq|dow|s&p|ftse|dax|cac/i.test(r[0]));
-  if (euroStart > 2) splitIdx = euroStart;
-
-  const asiaCards = dr.slice(0, splitIdx).map(r => icard(r[0],r[2],r[3],r[4],r[5],r[6],r[8]||r[7])).join('');
-  const euroCards  = dr.slice(splitIdx).map(r => icard(r[0],r[2],r[3],r[4],r[5],r[6],r[8]||r[7])).join('');
+  const mkCards = arr => arr.map(r=>icard(r[2],r[3],r[4],r[5],r[6],r[7],r[8])).join('');
 
   $('s-global').innerHTML = `
     <div class="stitle">🌍 Global Indices</div>
-    <div class="stitle-sm">Asia Pacific &amp; India</div>
-    <div class="igrid">${asiaCards}</div>
-    ${euroCards ? `<div class="stitle-sm">Europe &amp; Americas</div><div class="igrid">${euroCards}</div>` : ''}
+    <div class="stitle-sm">🇮🇳 India</div>
+    <div class="igrid">${mkCards(india)}</div>
+    <div class="stitle-sm">🌐 World Markets</div>
+    <div class="igrid">${mkCards(world)}</div>
     <p style="font-size:10px;color:#bbb;margin-top:6px">⚠️ Quotes delayed up to 20 min. Source: Google Finance. Not investment advice.</p>
   `;
 }
 
-/* ═══════════════════════════════════════════════════
-   RENDER: FUTURES
-═══════════════════════════════════════════════════ */
-function renderFutures(rows) {
-  const skip = ['symbol','futures','name'];
-  const dr = dataRows(rows, skip).filter(r => r[2] && r[2] !== '—' && r[2].trim() && !r[0].toLowerCase().includes('gift nifty'));
+/* ═══════════════════════════════════════════════
+   FUTURES
+   CSV cols: [0]Symbol [1]blank [2]Last [3]Change [4]% [5]High [6]Low
+   After each data row: a "Close,,,Time..." row
+═══════════════════════════════════════════════ */
+function renderFutures(rows){
+  const cards = [];
+  for(let i=0;i<rows.length;i++){
+    const r = rows[i];
+    const name = (r[0]||'').trim();
+    if(!name || name.toLowerCase()==='symbol' || name.toLowerCase()==='close') continue;
+    if(!r[2]||!r[2].trim()) continue;
 
-  // Gift Nifty special section
-  const giftIdx = rows.findIndex(r => r[3] && r[3].toLowerCase().includes('gift nifty'));
-  let giftHtml = '';
-  if (giftIdx >= 0) {
-    const g1 = rows[giftIdx]   || [];
-    const g2 = rows[giftIdx+1] || [];
-    const g3 = rows[giftIdx+2] || [];
-    const gPrice = f(g1[5] || g1[4] || '—');
-    const gDir   = f(g1[6] || '↑');
-    const gChg   = f(g2[3] || '—');
-    const gPct   = f(g2[4] || '—');
-    const gPrev  = f(g2[5] || '—');
-    const gDt    = f(g1[4] || '—');
-    giftHtml = `
-      <div class="stitle-sm">🎁 GIFT NIFTY — Live</div>
-      <div class="tcw">
-        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr))">
-          <div style="padding:12px 14px;border-right:1px solid #f0f0f0"><div class="adlbl">Price</div><div style="font-family:'Teko',sans-serif;font-size:24px;font-weight:600">${gPrice}</div></div>
-          <div style="padding:12px 14px;border-right:1px solid #f0f0f0"><div class="adlbl">Change</div><div class="cp" style="font-weight:700">+${gChg} (${gPct})</div></div>
-          <div style="padding:12px 14px;border-right:1px solid #f0f0f0"><div class="adlbl">Prev Close</div><div>${gPrev}</div></div>
-          <div style="padding:12px 14px;border-right:1px solid #f0f0f0"><div class="adlbl">As of</div><div style="font-size:11px">${gDt}</div></div>
-          <div style="padding:12px 14px"><div class="adlbl">Direction</div><div class="cp" style="font-size:16px">${gDir} Bullish</div></div>
-        </div>
-      </div>`;
+    // Time is in next row col[3]: "US Time : ..."
+    const nextRow = rows[i+1]||[];
+    const tm = (nextRow[3]||nextRow[2]||'').trim();
+
+    cards.push({name, price:r[2], chg:r[3], pct:r[4], hi:r[5], lo:r[6], tm});
   }
 
-  if (!dr.length && !giftHtml) {
-    $('s-futures').innerHTML = errBox('Futures', 'No data found.');
-    return;
-  }
+  if(!cards.length){ $('s-futures').innerHTML=`<div class="errbox">⚠️ Futures: No data.</div>`; return; }
 
-  const cards = dr.map(r => icard(r[0], r[2], r[3], r[4], r[5], r[6], r[8]||r[7])).join('');
+  const html = cards.map(c=>icard(c.name,c.price,c.chg,c.pct,c.hi,c.lo,c.tm)).join('');
   $('s-futures').innerHTML = `
     <div class="stitle">📉 Index Futures</div>
-    <div class="disc">ℹ️ Futures prices sourced live from your sheet (Investing.com). Session close times vary by exchange.</div>
-    <div class="igrid">${cards}</div>
-    ${giftHtml}
+    <div class="disc">ℹ️ Source: Investing.com via your sheet. Session close times vary by exchange.</div>
+    <div class="igrid">${html}</div>
   `;
 }
 
-/* ═══════════════════════════════════════════════════
-   RENDER: INDIAN INDICES
-═══════════════════════════════════════════════════ */
-function renderIndian(rows) {
-  // Expected: INDEX NAME | Price | CHANGE | % CHANGE | 52W HIGH | 52W LOW | TIME | ...
-  const skip = ['index name','name'];
-
-  // Find NSE section start
-  const nseI = rows.findIndex(r => r.some(c => /nse sectoral/i.test(c||'')));
-  const bseI = rows.findIndex(r => r.some(c => /bse sectoral/i.test(c||'')));
-  const niftyStockI = rows.findIndex(r => r.some(c => /bom:/i.test(c||'')));
-  const nseWeightI  = rows.findIndex(r => r.some(c => /nse:/i.test(c||'')));
-
-  const slice = (start, end, skip_kw=[]) =>
-    (start < 0 ? [] : rows.slice(start+1, end > start ? end : start+30))
-      .filter(r => r[0] && r[0].trim() && !skip_kw.some(w => r[0].toLowerCase().includes(w)));
-
-  const nseRows    = slice(nseI, bseI,        ['index name','nse']);
-  const bseRows    = slice(bseI, niftyStockI < 0 ? bseI+25 : niftyStockI, ['index name','bse']);
-  const stockRows  = niftyStockI >= 0
-    ? rows.slice(niftyStockI, niftyStockI+35).filter(r => r[0] && r[0].trim() && r[1] && !r[0].toLowerCase().includes('adani') === false || true).filter(r => r[0] && r[1] && r[2])
-    : [];
-  const weightRows = nseWeightI >= 0
-    ? rows.slice(nseWeightI+2, nseWeightI+55).filter(r => r[7] && r[7].trim() && r[8])
-    : [];
-
-  const sectTH = `<thead><tr><th>Index</th><th>Price</th><th>Chg</th><th>% Chg</th><th>52W High</th><th>52W Low</th></tr></thead>`;
-  const sectR = r => `<tr>
+/* ═══════════════════════════════════════════════
+   INDIAN INDICES
+   CSV cols: [0]INDEX NAME [1]Price [2]CHANGE [3]%CHANGE [4]52W HIGH [5]52W LOW [6]TIME
+   Row 0: header "INDEX NAME,Price,CHANGE,..."
+   Row 1: ",NSE Sectoral Indices,..."  ← section header (col0 blank)
+   Rows 2–21: NSE data (col0 = name, col1 = price, ...)
+   Row 22: blank
+   Row 23: ",BSE Sectoral Indices,..."
+   Rows 24+: BSE data
+═══════════════════════════════════════════════ */
+function renderIndian(rows){
+  const sectTH = `<thead><tr><th>Index</th><th>Price</th><th>Chg</th><th>%Chg</th><th>52W High</th><th>52W Low</th></tr></thead>`;
+  const sectRow = r=>`<tr>
     <td><strong>${f(r[0])}</strong></td><td>${f(r[1])}</td>
     <td class="${ic(r[2])}">${f(r[2])}</td>
     <td class="${ic(r[3])}">${f(r[3])}%</td>
     <td style="color:#aaa">${f(r[4])}</td><td style="color:#aaa">${f(r[5])}</td>
   </tr>`;
 
+  // Find section boundaries
+  const nseHeaderI = rows.findIndex(r=> !r[0] && (r[1]||'').toLowerCase().includes('nse'));
+  const bseHeaderI = rows.findIndex(r=> !r[0] && (r[1]||'').toLowerCase().includes('bse'));
+
+  // Data rows: col[0] has name AND col[1] has numeric price
+  const isData = r => r[0]&&r[0].trim() && r[1]&&!isNaN(parseFloat(String(r[1]).replace(/,/g,'')));
+
+  let nseRows=[], bseRows=[];
+  if(nseHeaderI>=0){
+    const end = bseHeaderI>nseHeaderI ? bseHeaderI : nseHeaderI+25;
+    nseRows = rows.slice(nseHeaderI+1, end).filter(isData);
+  }
+  if(bseHeaderI>=0){
+    bseRows = rows.slice(bseHeaderI+1, bseHeaderI+30).filter(isData);
+  }
+
+  // Nifty 50 stocks: find rows that have INDEXNSE: or INDEXBOM: in col[7] with "NSE:" or "BSE:" prefix
+  // Actually from CSV: col[0]=name, col[1]=price, col[2]=chg, col[3]=%chg, col[4]=52whigh, col[5]=52wlow
+  // after bse section there's nifty 50 stocks
+  const niftyStockStart = rows.findIndex(r=> (r[7]||'').includes('INDEXNSE:') || (r[7]||'').includes('INDEXBOM:'));
+  // Stocks are rows where col[7] has NSE: or BOM: — i.e. actual stock data rows
+  const stockRows = rows.filter(r=> r[0]&&r[0].trim() && r[1]&&!isNaN(parseFloat(String(r[1]).replace(/,/g,''))) && (r[7]||'').length>2);
+
+  // Nifty 50 weights: look for rows where col[7] starts with INDEXNSE: without comma
+  // From CSV structure, the weights table has NSE: in col[8] actually
+  // Let's look for rows after a blank block that have col[7]="NSE:" pattern
+  const wtStart = rows.findIndex(r=> (r[8]||'').toLowerCase().includes('nse:') || (r[7]||'').toLowerCase().includes('nse:'));
+  const weightRows = wtStart>=0
+    ? rows.slice(wtStart+2, wtStart+55).filter(r=> r[7]&&r[7].trim() && r[8]&&r[8].trim())
+    : [];
+
   $('s-indian').innerHTML = `
     <div class="stitle">🇮🇳 Indian Indices</div>
     <div class="g2">
       <div class="tcw">
         <div class="tch">NSE Sectoral Indices <span class="cnt">${nseRows.length}</span></div>
-        <div class="tscr"><table>${sectTH}<tbody>${nseRows.map(sectR).join('')}</tbody></table></div>
+        <div class="tscr"><table>${sectTH}<tbody>${nseRows.map(sectRow).join('')||'<tr><td colspan="6" style="color:#aaa;padding:12px">No data</td></tr>'}</tbody></table></div>
       </div>
       <div class="tcw">
         <div class="tch">BSE Sectoral Indices <span class="cnt">${bseRows.length}</span></div>
-        <div class="tscr"><table>${sectTH}<tbody>${bseRows.map(sectR).join('')}</tbody></table></div>
+        <div class="tscr"><table>${sectTH}<tbody>${bseRows.map(sectRow).join('')||'<tr><td colspan="6" style="color:#aaa;padding:12px">No data</td></tr>'}</tbody></table></div>
       </div>
     </div>
-    ${stockRows.length ? `
+    ${weightRows.length?`
     <div class="tcw">
-      <div class="tch">NIFTY 50 Constituents — Live Prices <span class="cnt">${stockRows.length}</span></div>
-      <div class="tscr"><table>
-        <thead><tr><th>Company</th><th>Price ₹</th><th>Chg</th><th>% Chg</th><th>52W High</th><th>52W Low</th></tr></thead>
-        <tbody>${stockRows.map(r=>`<tr>
-          <td><strong>${f(r[0])}</strong></td><td>${f(r[1])}</td>
-          <td class="${ic(r[2])}">${f(r[2])}</td>
-          <td class="${ic(r[3])}">${f(r[3])}%</td>
-          <td style="color:#aaa">${f(r[4])}</td><td style="color:#aaa">${f(r[5])}</td>
-        </tr>`).join('')}</tbody>
-      </table></div>
-    </div>` : ''}
-    ${weightRows.length ? `
-    <div class="tcw">
-      <div class="tch">NIFTY 50 — Sector Weights &amp; Symbols</div>
+      <div class="tch">NIFTY 50 — Weights &amp; Symbols</div>
       <div class="tscr"><table>
         <thead><tr><th>Company</th><th>Industry</th><th>Symbol</th><th>Weight</th></tr></thead>
         <tbody>${weightRows.map(r=>`<tr>
           <td><strong>${f(r[7])}</strong></td>
           <td style="color:#888">${f(r[8])}</td>
-          <td style="font-family:'Teko',sans-serif;font-size:13px">${f(r[9])}</td>
+          <td style="font-family:'Teko',sans-serif">${f(r[9])}</td>
           <td class="cp">${f(r[10])}</td>
         </tr>`).join('')}</tbody>
       </table></div>
-    </div>` : ''}
+    </div>`:''}
   `;
 }
 
-/* ═══════════════════════════════════════════════════
-   RENDER: MARKET DATA
-   Sheet has sections separated by header rows.
-   We scan for headers and collect data blocks.
-═══════════════════════════════════════════════════ */
-function renderMarket(rows) {
-  // Identify header rows (section titles) vs data rows
-  const sections = [];
-  let cur = null;
+/* ═══════════════════════════════════════════════
+   MARKET DATA
+   Layout (from CSV analysis):
+   Col 1-4: Nifty50 Gainers/Losers + BSE (left block)
+   Col 6-11: ALL NSE / ALL BSE (right block)
+   Advance/Decline in col 6-8 further down
+   Nifty Bank stocks: col 1-4 in lower section
+═══════════════════════════════════════════════ */
+function renderMarket(rows){
+  // LEFT BLOCK: cols [1]Company [2]Price [3]Change [4]%Change
+  // RIGHT BLOCK: cols [6]Company [9]Price [10]Change [11]%Change
+  // Section headers detected by col[1] or col[6] text
 
-  for (let i = 0; i < rows.length; i++) {
+  let n50g=[], n50l=[], bseGl=[], bseLl=[], nseGl=[], nseLl=[], bank=[];
+  let bseAdv='', bseDec='', nseAdv='', nseDec='';
+  let section='';
+
+  for(let i=0;i<rows.length;i++){
     const r = rows[i];
-    const txt = (r[0]||'').trim();
-    if (!txt) continue;
+    const lbl1 = (r[1]||'').trim().toLowerCase();
+    const lbl6 = (r[6]||'').trim().toLowerCase();
 
-    // Is it a section header? (no numeric in col1, or col1 blank)
-    const col1 = (r[1]||'').trim().replace(/,/g,'');
-    const isHeader = !col1 || isNaN(parseFloat(col1));
+    // Detect section headers
+    if(lbl1==='nifty 50') { section='n50'; continue; }
+    if(lbl1==='top gainers' && section==='n50') { section='n50g'; continue; }
+    if(lbl1==='top losers'  && section==='n50') { section='n50l'; continue; }
+    if(lbl1==='top gainers' && section==='bsegl') { section='bseg'; continue; }
+    if(lbl1==='top losers'  && section==='bsegl') { section='bsel'; continue; }
+    if(lbl1==='company' || lbl1==='symbol') continue; // skip header rows
 
-    if (isHeader && txt.length > 2) {
-      if (cur && cur.data.length) sections.push(cur);
-      cur = { label: r.filter(c=>c).join(' ').trim(), data: [] };
-    } else if (cur && txt && col1 && !isNaN(parseFloat(col1))) {
-      cur.data.push(r);
+    // BSE section header in col1
+    if((r[1]||'').trim()==='ALL BSE') { section='bsegl'; continue; }
+
+    // Nifty Bank: col1 has "AU Small Finance" etc, below "Company,Price,Change,% Change" row in bank section
+    if(lbl1==='nifty bank' || (r[1]&&r[1].toLowerCase().includes('nifty bank'))) { section='bank'; continue; }
+    if(section==='bank' && lbl1==='company') continue;
+
+    // NSE section in col6
+    if(lbl6==='all nse') continue;
+    if(lbl6==='top gainers' && (section==='nseg'||true)) { section='nseg'; continue; }
+    if(lbl6==='top losers') { section='nsel'; continue; }
+    if(lbl6==='all bse') { section='bseg2'; continue; }
+    if(lbl6==='top gainers' && section==='bseg2') { section='bseg'; continue; }
+    if(lbl6==='top losers'  && section==='bseg2') { section='bsel'; continue; }
+
+    // Advance/Decline
+    if(lbl6==='advance/decline'||lbl6==='advance / decline') { section='adv'; continue; }
+    if(section==='adv'){
+      if((r[6]||'').includes('BSE')||(r[7]||'').includes('Adv')){ bseAdv=r[8]||''; continue; }
+      if((r[7]||'').includes('Dec')){ bseDec=r[8]||''; continue; }
+      if((r[6]||'').includes('NSE')||(r[7]||'').includes('Adv')){ nseAdv=r[8]||''; }
+      if((r[7]||'').includes('Dec')){ nseDec=r[8]||''; }
+    }
+
+    // Collect data rows - left block: col[1]=name, col[2]=price, col[3]=chg, col[4]=%
+    const lname = (r[1]||'').trim();
+    const lprice = (r[2]||'').trim();
+    const lchg  = (r[3]||'').trim();
+    const lpct  = (r[4]||'').trim();
+    const hasLeft = lname && lprice && !isNaN(parseFloat(String(lprice).replace(/,/g,'')));
+
+    // Right block: col[6]=name, col[9]=price, col[10]=chg, col[11]=%
+    const rname  = (r[6]||'').trim();
+    const rprice = (r[9]||'').trim();
+    const rchg   = (r[10]||'').trim();
+    const rpct   = (r[11]||'').trim();
+    const hasRight = rname && rprice && !isNaN(parseFloat(String(rprice).replace(/,/g,'')));
+
+    if(hasLeft){
+      if(section==='n50g') n50g.push([lname,lprice,lchg,lpct]);
+      else if(section==='n50l') n50l.push([lname,lprice,lchg,lpct]);
+      else if(section==='bseg') bseGl.push([lname,lprice,lchg,lpct]);
+      else if(section==='bsel') bseLl.push([lname,lprice,lchg,lpct]);
+      else if(section==='bank') bank.push([lname,lprice,lchg,lpct]);
+    }
+    if(hasRight){
+      if(section==='nseg') nseGl.push([rname,rprice,rchg,rpct]);
+      else if(section==='nsel') nseLl.push([rname,rprice,rchg,rpct]);
+      else if(section==='bseg'){
+        // BSE right block col[6]=name col[9]=price col[10]=%change (no separate chg)
+        bseGl.push([rname, rprice, rchg, rpct]);
+      }
+      else if(section==='bsel') bseLl.push([rname, rprice, rchg, rpct]);
     }
   }
-  if (cur && cur.data.length) sections.push(cur);
 
-  if (!sections.length) {
-    // Flat fallback
-    const dr = rows.filter(r => r[0] && r[1] && !isNaN(parseFloat((r[1]||'').replace(/,/g,''))));
-    $('s-market').innerHTML = `<div class="stitle">📈 Market Data</div>
-      <div class="tcw"><div class="tch">Market Data</div>
-      <div class="tscr"><table>
-        <thead><tr><th>Name</th><th>Price ₹</th><th>Change</th><th>%</th></tr></thead>
-        <tbody>${dr.map(r=>`<tr>
-          <td>${f(r[0])}</td><td>${f(r[1])}</td>
-          <td class="${ic(r[2])}">${f(r[2])}</td>
-          <td class="${ic(r[3])}">${f(r[3])}</td>
-        </tr>`).join('')}</tbody>
-      </table></div></div>`;
-    return;
+  // Detect adv/dec from rows more reliably
+  // "BSE,Adv:,1982" pattern: col[6]='BSE', col[7]='Adv:', col[8]=number
+  for(const r of rows){
+    if((r[6]||'').trim()==='BSE' && (r[7]||'').includes('Adv')) bseAdv = r[8]||bseAdv;
+    if((r[7]||'').includes('Dec') && bseAdv && !bseDec) bseDec = r[8]||'';
+    if((r[6]||'').trim()==='NSE' && (r[7]||'').includes('Adv')) nseAdv = r[8]||nseAdv;
+    if((r[6]||'').trim()==='NSE' && (r[7]||'').includes('Dec')) nseDec = r[8]||'';
   }
 
-  // Advance/Decline boxes: look for section with advance/decline in label
-  let advHtml = '';
-  const adSec = sections.find(s => /advance|decline/i.test(s.label));
-  if (adSec) {
-    advHtml = `<div class="adrow">${adSec.data.slice(0,4).map(r=>`
-      <div class="adbox">
-        <div class="adlbl">${f(r[0])}</div>
-        <div class="adnum ${ic(r[1])}">${f(r[1])}</div>
-      </div>`).join('')}</div>`;
-  }
+  const t4 = rows => rows.map(r=>`<tr>
+    <td><strong>${f(r[0])}</strong></td><td>${f(r[1])}</td>
+    <td class="${ic(r[2])}">${f(r[2])}</td>
+    <td class="${ic(r[3])}">${f(r[3])}</td>
+  </tr>`).join('');
 
-  // Render remaining sections in pairs (2-col layout)
-  const mainSecs = sections.filter(s => !/advance|decline/i.test(s.label));
-  let html = '';
-  for (let i = 0; i < mainSecs.length; i += 2) {
-    const pair = mainSecs.slice(i, i+2);
-    html += `<div class="g2">${pair.map(sec => {
-      const hasPct = sec.data[0] && sec.data[0][3] && sec.data[0][3].trim();
-      return `<div class="tcw">
-        <div class="tch">${sec.label} <span class="cnt">${sec.data.length}</span></div>
-        <div class="tscr"><table>
-          <thead><tr><th>Name</th><th>Price ₹</th><th>Chg</th>${hasPct?'<th>%</th>':''}</tr></thead>
-          <tbody>${sec.data.map(r=>`<tr>
-            <td><strong>${f(r[0])}</strong></td>
-            <td>${f(r[1])}</td>
-            <td class="${ic(r[2])}">${f(r[2])}</td>
-            ${hasPct?`<td class="${ic(r[3])}">${f(r[3])}</td>`:''}
-          </tr>`).join('')}</tbody>
-        </table></div>
-      </div>`;
-    }).join('')}</div>`;
-  }
+  const advHtml = (bseAdv||nseAdv) ? `<div class="adrow">
+    ${bseAdv?`<div class="adbox"><div class="adlbl">BSE Advances</div><div class="adnum up">${bseAdv}</div></div>`:''}
+    ${bseDec?`<div class="adbox"><div class="adlbl">BSE Declines</div><div class="adnum dn">${bseDec}</div></div>`:''}
+    ${nseAdv?`<div class="adbox"><div class="adlbl">NSE Advances</div><div class="adnum up">${nseAdv}</div></div>`:''}
+    ${nseDec?`<div class="adbox"><div class="adlbl">NSE Declines</div><div class="adnum dn">${nseDec}</div></div>`:''}
+  </div>` : '';
+
+  const th4 = `<thead><tr><th>Company</th><th>Price ₹</th><th>Chg</th><th>%</th></tr></thead>`;
 
   $('s-market').innerHTML = `
     <div class="stitle">📈 Market Data — NSE &amp; BSE</div>
-    ${advHtml}${html}
+    ${advHtml}
+    <div class="g2">
+      <div class="tcw"><div class="tch">🟢 NIFTY 50 Gainers <span class="cnt">${n50g.length}</span></div>
+        <div class="tscr"><table>${th4}<tbody>${t4(n50g)||'<tr><td colspan="4" style="color:#aaa;padding:10px">No data</td></tr>'}</tbody></table></div></div>
+      <div class="tcw"><div class="tch">🔴 NIFTY 50 Losers <span class="cnt">${n50l.length}</span></div>
+        <div class="tscr"><table>${th4}<tbody>${t4(n50l)||'<tr><td colspan="4" style="color:#aaa;padding:10px">No data</td></tr>'}</tbody></table></div></div>
+    </div>
+    <div class="g2">
+      <div class="tcw"><div class="tch">🟢 All NSE Gainers <span class="cnt">${nseGl.length}</span></div>
+        <div class="tscr"><table>${th4}<tbody>${t4(nseGl)||'<tr><td colspan="4" style="color:#aaa;padding:10px">No data</td></tr>'}</tbody></table></div></div>
+      <div class="tcw"><div class="tch">🔴 All NSE Losers <span class="cnt">${nseLl.length}</span></div>
+        <div class="tscr"><table>${th4}<tbody>${t4(nseLl)||'<tr><td colspan="4" style="color:#aaa;padding:10px">No data</td></tr>'}</tbody></table></div></div>
+    </div>
+    <div class="g2">
+      <div class="tcw"><div class="tch">🟢 All BSE Gainers <span class="cnt">${bseGl.length}</span></div>
+        <div class="tscr"><table>${th4}<tbody>${t4(bseGl)||'<tr><td colspan="4" style="color:#aaa;padding:10px">No data</td></tr>'}</tbody></table></div></div>
+      <div class="tcw"><div class="tch">🔴 All BSE Losers <span class="cnt">${bseLl.length}</span></div>
+        <div class="tscr"><table>${th4}<tbody>${t4(bseLl)||'<tr><td colspan="4" style="color:#aaa;padding:10px">No data</td></tr>'}</tbody></table></div></div>
+    </div>
+    ${bank.length?`<div class="tcw"><div class="tch">🏦 Nifty Bank Stocks</div>
+      <div class="tscr"><table>${th4}<tbody>${t4(bank)}</tbody></table></div></div>`:''}
   `;
 }
 
-/* ═══════════════════════════════════════════════════
-   RENDER: IPO CORNER
-═══════════════════════════════════════════════════ */
-function renderIPO(rows) {
-  // Find section boundaries
-  const gmpI    = rows.findIndex(r => r.some(c => /gmp|grey market/i.test(c||'')));
-  const listI   = rows.findIndex(r => r.some(c => /listed|listing performance/i.test(c||'')));
-  const subI    = rows.findIndex(r => r.some(c => /subscription|qib/i.test(c||'')));
+/* ═══════════════════════════════════════════════
+   IPO CORNER
+   Section markers in col[0] or col[2]
+═══════════════════════════════════════════════ */
+function renderIPO(rows){
+  const gmpI  = rows.findIndex(r=> /gmp|grey market/i.test((r[0]||r[1]||r[2]||'')));
+  const lstI  = rows.findIndex(r=> /listed|listing performance/i.test((r[0]||r[1]||r[2]||'')));
+  const subI  = rows.findIndex(r=> /subscription|qib/i.test((r[0]||r[1]||r[2]||'')));
 
-  function getBlock(start, end, maxRows=30) {
-    if (start < 0) return [];
-    const e = end > start ? end : start + maxRows;
-    return rows.slice(start+1, e).filter(r => r[0] && r[0].trim() && !/^(ipo|company|name|sl\.)/i.test(r[0].trim()));
+  function block(start,end,max=30){
+    if(start<0) return [];
+    const e = end>start ? end : start+max;
+    return rows.slice(start+1,e).filter(r=>{
+      const n=(r[0]||'').trim();
+      return n && n.length>1 && !/^(ipo|company|name|sl\.|#|grey|listed|sub)/i.test(n);
+    });
   }
 
-  const gmpRows  = getBlock(gmpI,  listI  > gmpI  ? listI  : -1, 20);
-  const listRows = getBlock(listI, subI   > listI ? subI   : -1, 30);
-  const subRows  = getBlock(subI,  -1, 25);
+  const gmpRows = block(gmpI, lstI>gmpI?lstI:-1, 20);
+  const lstRows = block(lstI, subI>lstI?subI:-1, 30);
+  const subRows = block(subI, -1, 25);
 
-  const gmpHtml = gmpRows.length
-    ? `<div class="tscr"><table>
-        <thead><tr><th>IPO Name</th><th>GMP</th><th>Trend</th><th>Price Band</th><th>Est. Listing</th><th>Dates</th><th>Type</th><th>Status</th></tr></thead>
-        <tbody>${gmpRows.map(r=>`<tr>
-          <td><strong>${f(r[0])}</strong></td>
-          <td class="${ic(r[1])}">${f(r[1])}</td>
-          <td>${f(r[2])}</td><td>${f(r[3])}</td><td>${f(r[4])}</td>
-          <td>${f(r[5])}</td><td>${f(r[6])}</td><td>${sbadge(r[7])}</td>
-        </tr>`).join('')}</tbody>
-      </table></div>`
-    : '<p style="padding:10px;color:#aaa;font-size:12px">No GMP data in sheet</p>';
+  const gmpHtml = gmpRows.length ? `<div class="tscr"><table>
+    <thead><tr><th>IPO Name</th><th>GMP</th><th>Trend</th><th>Price Band</th><th>Est. Listing</th><th>Dates</th><th>Type</th><th>Status</th></tr></thead>
+    <tbody>${gmpRows.map(r=>`<tr>
+      <td><strong>${f(r[0])}</strong></td>
+      <td class="${ic(r[1])}">${f(r[1])}</td>
+      <td>${f(r[2])}</td><td>${f(r[3])}</td><td>${f(r[4])}</td>
+      <td>${f(r[5])}</td><td>${f(r[6])}</td><td>${sbadge(r[7])}</td>
+    </tr>`).join('')}</tbody>
+  </table></div>` : '<p style="padding:10px;color:#aaa;font-size:12px">No GMP data</p>';
 
-  const listHtml = listRows.length
-    ? `<div class="tscr"><table>
-        <thead><tr><th>Company</th><th>Type</th><th>Listed</th><th>Issue ₹</th><th>Subs</th><th>List Open</th><th>List Close</th><th>List Gain</th><th>LTP ₹</th><th>Today's Gain</th><th>Size</th></tr></thead>
-        <tbody>${listRows.map(r=>`<tr>
-          <td><strong>${f(r[0])}</strong></td><td>${tbadge(r[1])}</td>
-          <td>${f(r[2])}</td><td>${f(r[3])}</td><td>${f(r[4])}</td>
-          <td>${f(r[5])}</td><td>${f(r[6])}</td>
-          <td class="${ic(r[7])}">${f(r[7])}</td>
-          <td>${f(r[8])}</td>
-          <td class="${ic(r[9])}">${f(r[9])}</td>
-          <td>${f(r[10])}</td>
-        </tr>`).join('')}</tbody>
-      </table></div>`
-    : '<p style="padding:10px;color:#aaa;font-size:12px">No listed IPO data</p>';
+  const lstHtml = lstRows.length ? `<div class="tscr"><table>
+    <thead><tr><th>Company</th><th>Type</th><th>Listed</th><th>Issue ₹</th><th>Subs</th><th>List Open</th><th>List Close</th><th>List Gain</th><th>LTP ₹</th><th>Today</th><th>Size</th></tr></thead>
+    <tbody>${lstRows.map(r=>`<tr>
+      <td><strong>${f(r[0])}</strong></td><td>${tbadge(r[1])}</td>
+      <td>${f(r[2])}</td><td>${f(r[3])}</td><td>${f(r[4])}</td>
+      <td>${f(r[5])}</td><td>${f(r[6])}</td>
+      <td class="${ic(r[7])}">${f(r[7])}</td>
+      <td>${f(r[8])}</td><td class="${ic(r[9])}">${f(r[9])}</td><td>${f(r[10])}</td>
+    </tr>`).join('')}</tbody>
+  </table></div>` : '<p style="padding:10px;color:#aaa;font-size:12px">No listing data</p>';
 
-  const subHtml = subRows.length
-    ? `<div class="tscr"><table>
-        <thead><tr><th>IPO</th><th>Type</th><th>Open</th><th>Close</th><th>QIB (x)</th><th>NII (x)</th><th>Retail (x)</th><th>Total (x)</th></tr></thead>
-        <tbody>${subRows.map(r=>`<tr>
-          <td><strong>${f(r[0])}</strong></td><td>${tbadge(r[1])}</td>
-          <td>${f(r[2])}</td><td>${f(r[3])}</td>
-          ${[4,5,6,7].map(i=>{const v=parseFloat(r[i]);return`<td class="${v>=10?'cp':v>=1?'':'cn'}">${f(r[i])}</td>`;}).join('')}
-        </tr>`).join('')}</tbody>
-      </table></div>`
-    : '<p style="padding:10px;color:#aaa;font-size:12px">No subscription data</p>';
+  const subHtml = subRows.length ? `<div class="tscr"><table>
+    <thead><tr><th>IPO</th><th>Type</th><th>Open</th><th>Close</th><th>QIB (x)</th><th>NII (x)</th><th>Retail (x)</th><th>Total (x)</th></tr></thead>
+    <tbody>${subRows.map(r=>`<tr>
+      <td><strong>${f(r[0])}</strong></td><td>${tbadge(r[1])}</td>
+      <td>${f(r[2])}</td><td>${f(r[3])}</td>
+      ${[4,5,6,7].map(i=>{const v=parseFloat(r[i]);return`<td class="${v>=10?'cp':v>=1?'':'cn'}">${f(r[i])}</td>`;}).join('')}
+    </tr>`).join('')}</tbody>
+  </table></div>` : '<p style="padding:10px;color:#aaa;font-size:12px">No subscription data</p>';
 
   $('s-ipo').innerHTML = `
     <div class="stitle">🏦 IPO Corner</div>
     <div class="tcw"><div class="tch">📋 Grey Market Premium (GMP) <span class="cnt">${gmpRows.length}</span></div>${gmpHtml}</div>
-    <div class="tcw"><div class="tch">📈 Recently Listed IPO Performances <span class="cnt">${listRows.length}</span></div>${listHtml}</div>
+    <div class="tcw"><div class="tch">📈 Recently Listed IPOs <span class="cnt">${lstRows.length}</span></div>${lstHtml}</div>
     <div class="tcw"><div class="tch">📅 Subscription Status <span class="cnt">${subRows.length}</span></div>${subHtml}</div>
   `;
 }
 
-/* ═══════════════════════════════════════════════════
-   RENDER: CURRENCY & COMMODITY
-═══════════════════════════════════════════════════ */
-function renderCurrency(rows) {
-  const currI = rows.findIndex(r => r.some(c => /currency|currencies/i.test(c||'')));
-  const commI = rows.findIndex(r => r.some(c => /mcx|commodity|commodities/i.test(c||'')));
+/* ═══════════════════════════════════════════════
+   CURRENCY & COMMODITY
+   CSV structure (two side-by-side tables):
+   LEFT:  [1]Currency [2]Rate in INR [3]Code
+   RIGHT: [5]Symbol [6]Last [7]Change [8]Change% [9]Close [10]High [11]Low [12]Last Trade
+   Row 0: headers
+   Rows 1+: data
+═══════════════════════════════════════════════ */
+function renderCurrency(rows){
+  // Skip header row (row[1]='Currency')
+  const dataRows = rows.filter(r => r[1]&&r[1].trim() && r[1]!=='Currency' && r[2]&&r[2].trim());
+  const commRows = rows.filter(r => r[5]&&r[5].trim() && r[5]!=='Symbol' && r[6]&&r[6].trim() && r[5]!=='#N/A');
 
-  function getBlock(start, end, maxRows=35) {
-    if (start < 0) return [];
-    const e = end > start ? end : start + maxRows;
-    return rows.slice(start+1, e).filter(r => r[0] && r[0].trim() && !/^(currency|commodity|name)/i.test(r[0].trim()));
-  }
+  const currHtml = dataRows.length ? `<div class="tscr"><table>
+    <thead><tr><th>Currency</th><th>Code</th><th>Rate (₹)</th></tr></thead>
+    <tbody>${dataRows.map(r=>`<tr>
+      <td>${f(r[1])}</td>
+      <td style="color:#aaa;font-size:11px">${f(r[3])}</td>
+      <td><strong>${f(r[2])}</strong></td>
+    </tr>`).join('')}</tbody>
+  </table></div>` : '<p style="padding:10px;color:#aaa">No currency data</p>';
 
-  const currRows = getBlock(currI, commI > currI ? commI : -1, 30);
-  const commRows = getBlock(commI, -1, 20);
-
-  const currHtml = currRows.length
-    ? `<div class="tscr"><table>
-        <thead><tr><th>Currency</th><th>Code</th><th>Rate (₹)</th></tr></thead>
-        <tbody>${currRows.map(r=>`<tr>
-          <td>${f(r[0])}</td>
-          <td style="color:#aaa;font-size:11px">${f(r[1])}</td>
-          <td><strong>${f(r[2])}</strong></td>
-        </tr>`).join('')}</tbody>
-      </table></div>`
-    : '<p style="padding:10px;color:#aaa;font-size:12px">No currency data</p>';
-
-  const commHtml = commRows.length
-    ? `<div class="tscr"><table>
-        <thead><tr><th>Commodity</th><th>Last</th><th>Chg</th><th>Chg %</th><th>High</th><th>Low</th></tr></thead>
-        <tbody>${commRows.map(r=>`<tr>
-          <td><strong>${f(r[0])}</strong></td><td>${f(r[1])}</td>
-          <td class="${ic(r[2])}">${f(r[2])}</td>
-          <td class="${ic(r[3])}">${f(r[3])}</td>
-          <td style="color:#aaa">${f(r[4])}</td>
-          <td style="color:#aaa">${f(r[5])}</td>
-        </tr>`).join('')}</tbody>
-      </table></div>`
-    : '<p style="padding:10px;color:#aaa;font-size:12px">No commodity data</p>';
+  const commHtml = commRows.length ? `<div class="tscr"><table>
+    <thead><tr><th>Commodity</th><th>Last</th><th>Chg</th><th>Chg%</th><th>High</th><th>Low</th></tr></thead>
+    <tbody>${commRows.map(r=>`<tr>
+      <td><strong>${f(r[5])}</strong></td>
+      <td>${f(r[6])}</td>
+      <td class="${ic(r[7])}">${f(r[7])}</td>
+      <td class="${ic(r[8])}">${f(r[8])}</td>
+      <td style="color:#aaa">${f(r[10])}</td>
+      <td style="color:#aaa">${f(r[11])}</td>
+    </tr>`).join('')}</tbody>
+  </table></div>` : '<p style="padding:10px;color:#aaa">No commodity data</p>';
 
   $('s-currency').innerHTML = `
     <div class="stitle">💱 Currencies &amp; Commodities</div>
     <div class="g2">
-      <div class="tcw"><div class="tch">🌐 Global Currencies vs INR</div>${currHtml}</div>
-      <div class="tcw"><div class="tch">🪙 MCX Commodities</div>${commHtml}</div>
+      <div class="tcw"><div class="tch">🌐 Global Currencies vs INR <span class="cnt">${dataRows.length}</span></div>${currHtml}</div>
+      <div class="tcw"><div class="tch">🪙 MCX Commodities <span class="cnt">${commRows.length}</span></div>${commHtml}</div>
     </div>
   `;
 }
 
-/* ═══════════════════════════════════════════════════
-   RENDER: ACE INVESTORS
-═══════════════════════════════════════════════════ */
-function renderAce(rows) {
+/* ═══════════════════════════════════════════════
+   ACE INVESTORS
+   CSV structure:
+   col[0]=S.No.  col[1]=Company  col[2]=Mar25%  col[3]=Jun25%
+   col[4]=Sep25%  col[5]=Dec25%  col[6]=Mar26%  col[7]=ValueCr
+   Investor name rows: col[0] blank, col[1] = "PRESIDENT OF INDIA" etc
+   Portfolio value: same row col[6]='Portfolio Value:' col[7]=amount
+═══════════════════════════════════════════════ */
+function renderAce(rows){
+  const NAMES = [
+    ['PRESIDENT OF INDIA','President of India'],
+    ['RADHAKISHAN','Radhakishan Damani'],
+    ['REKHA JHUNJHUNWALA','Rekha Jhunjhunwala'],
+    ['MUKUL AGARWAL','Mukul Agarwal'],
+    ['SUNIL SINGHANIA','Sunil Singhania'],
+    ['ASHISH DHAWAN','Ashish Dhawan'],
+    ['ASHISH KACHOLIA','Ashish Kacholia'],
+    ['ANIL KUMAR GOEL','Anil Kumar Goel'],
+    ['MOHNISH PABRAI','Mohnish Pabrai'],
+    ['DILIPKUMAR LAKHI','Dilipkumar Lakhi'],
+    ['DOLLY RAJEEV KHANNA','Dolly Khanna'],
+    ['VIJAY KEDIA','Vijay Kedia'],
+  ];
+
   const investors = [];
   let cur = null;
 
-  // Investor name markers (appear in col2 of their header row)
-  const NAMES = [
-    'PRESIDENT OF INDIA','RADHAKISHAN','REKHA JHUNJHUNWALA','MUKUL AGARWAL',
-    'SUNIL SINGHANIA','ASHISH DHAWAN','ASHISH KACHOLIA','ANIL KUMAR GOEL',
-    'MOHNISH PABRAI','DILIPKUMAR LAKHI','DOLLY RAJEEV KHANNA','VIJAY KEDIA'
-  ];
-  const DISPLAY = {
-    'PRESIDENT OF INDIA':'President of India',
-    'RADHAKISHAN':'Radhakishan Damani',
-    'REKHA JHUNJHUNWALA':'Rekha Jhunjhunwala',
-    'MUKUL AGARWAL':'Mukul Agarwal',
-    'SUNIL SINGHANIA':'Sunil Singhania',
-    'ASHISH DHAWAN':'Ashish Dhawan',
-    'ASHISH KACHOLIA':'Ashish Kacholia',
-    'ANIL KUMAR GOEL':'Anil Kumar Goel',
-    'MOHNISH PABRAI':'Mohnish Pabrai',
-    'DILIPKUMAR LAKHI':'Dilipkumar Lakhi',
-    'DOLLY RAJEEV KHANNA':'Dolly Khanna',
-    'VIJAY KEDIA':'Vijay Kedia'
-  };
+  for(const r of rows){
+    // Check col[2] for investor name (from CSV: col0=blank, col1=blank, col2=NAME)
+    const c2 = (r[2]||'').trim().toUpperCase();
+    const match = NAMES.find(([key])=> c2.includes(key));
 
-  for (let i = 0; i < rows.length; i++) {
-    const r = rows[i];
-    const rowStr = r.join(' ').toUpperCase();
-    const matched = NAMES.find(n => rowStr.includes(n));
-
-    if (matched) {
-      if (cur && cur.holdings.length) investors.push(cur);
-      // Portfolio value is usually in the same row
-      const pvIdx = r.findIndex(c => /portfolio value/i.test(c||''));
-      const pv = pvIdx >= 0 ? f(r[pvIdx+1]) : '';
-      cur = { name: DISPLAY[matched]||matched, pv, holdings: [] };
-    } else if (cur) {
-      // Holding row: col2=company, cols 3-8 = quarterly data
-      const company = (r[2]||'').trim();
-      if (company && company.length > 2 && !/portfolio|company|sl\.|#/i.test(company)) {
-        cur.holdings.push(r);
+    if(match){
+      if(cur&&cur.h.length) investors.push(cur);
+      // Portfolio value in same row: col[6]='Portfolio Value:' col[7]=amount
+      const pv = f(r[7]);
+      cur = {name: match[1], pv, h:[]};
+    } else if(cur){
+      // Holdings: col[1]=Company, col[2]=Mar25%, col[3]=Jun25%, col[4]=Sep25%, col[5]=Dec25%, col[6]=Mar26%, col[7]=ValueCr
+      const company = (r[1]||'').trim();
+      if(company && company.length>2 && !/^(company|s\.no\.|#|portfolio|super)/i.test(company) && !isNaN(parseInt(r[0]||'x'))){
+        cur.h.push(r);
       }
     }
   }
-  if (cur && cur.holdings.length) investors.push(cur);
+  if(cur&&cur.h.length) investors.push(cur);
 
-  if (!investors.length) {
-    $('s-ace').innerHTML = `<div class="stitle">🧠 Ace Investors</div>
-      ${errBox('Ace Investors','Could not parse investor sections. Check sheet structure.')}`;
+  if(!investors.length){
+    $('s-ace').innerHTML=`<div class="stitle">🧠 Ace Investors</div>
+      <div class="errbox">⚠️ Could not parse investor data. <a href="https://docs.google.com/spreadsheets/d/${SID}" target="_blank">Check Sheet →</a></div>`;
     return;
   }
 
-  const tabsHtml   = investors.map((inv,i)=>`<button class="itb${i===0?' on':''}" onclick="showInv('ip${i}',this)">${inv.name}</button>`).join('');
+  const tabsHtml = investors.map((inv,i)=>
+    `<button class="itb${i===0?' on':''}" onclick="showInv('ip${i}',this)">${inv.name}</button>`
+  ).join('');
+
   const panelsHtml = investors.map((inv,i)=>`
     <div class="ipanel${i===0?' on':''}" id="ip${i}">
-      ${inv.pv?`<div class="pvlbl">Portfolio Value (Mar 2026): <strong>₹${inv.pv} Cr</strong></div>`:''}
+      ${inv.pv&&inv.pv!=='—'?`<div class="pvlbl">Portfolio Value (Mar 2026): <strong>₹${inv.pv} Cr</strong></div>`:''}
       <div class="tcw"><div class="tscr"><table>
         <thead><tr><th>#</th><th>Company</th><th>Mar'25%</th><th>Jun'25%</th><th>Sep'25%</th><th>Dec'25%</th><th>Mar'26%</th><th>Value ₹Cr</th></tr></thead>
-        <tbody>${inv.holdings.map((h,j)=>`<tr>
+        <tbody>${inv.h.map((h,j)=>`<tr>
           <td style="color:#ccc">${j+1}</td>
-          <td><strong>${f(h[2])}</strong></td>
-          <td>${f(h[3])}</td><td>${f(h[4])}</td><td>${f(h[5])}</td>
-          <td>${f(h[6])}</td><td><strong>${f(h[7])}</strong></td>
-          <td class="cp">${f(h[8])}</td>
+          <td><strong>${f(h[1])}</strong></td>
+          <td>${f(h[2])}</td><td>${f(h[3])}</td><td>${f(h[4])}</td>
+          <td>${f(h[5])}</td><td><strong>${f(h[6])}</strong></td>
+          <td class="cp">${f(h[7])}</td>
         </tr>`).join('')}</tbody>
       </table></div></div>
     </div>`).join('');
@@ -733,85 +695,72 @@ function renderAce(rows) {
   `;
 }
 
-/* ═══════════════════════════════════════════════════
-   TICKER — built from live global + futures data
-═══════════════════════════════════════════════════ */
-function buildTicker(gRows, fRows) {
-  const skip = ['symbol','index'];
-  const gd = dataRows(gRows, skip).filter(r => r[2] && r[2].trim() && r[2] !== '—').slice(0,10);
-  const fd = dataRows(fRows, skip).filter(r => r[2] && r[2].trim() && r[2] !== '—').slice(0,6);
-
-  const items = [...gd, ...fd].map(r => {
-    const pos = !String(r[3]||'').trim().startsWith('-');
-    return `<div class="ti">
-      <span class="tn">${f(r[0])}</span>
-      <span class="tv">${f(r[2])}</span>
-      ${r[4]&&r[4].trim()&&r[4]!=='—'?`<span class="tc ${pos?'up':'dn'}">${f(r[4])}</span>`:''}
-    </div>`;
+/* ═══════════════════════════════════════════════
+   TICKER — from global (col2=name, col3=price, col5=%chg)
+   and futures (col0=name, col2=price, col4=%)
+═══════════════════════════════════════════════ */
+function buildTicker(gRows, fRows){
+  const items = [];
+  // Global: col2=name, col3=price, col5=%chg
+  gRows.filter(r=>r[2]&&r[3]&&r[2]!=='INDEX NAME').slice(0,8).forEach(r=>{
+    const pos=!(String(r[4]||'').startsWith('-'));
+    items.push(`<div class="ti"><span class="tn">${f(r[2])}</span><span class="tv">${f(r[3])}</span><span class="tc ${pos?'up':'dn'}">${f(r[5])}</span></div>`);
   });
-
+  // Futures: col0=name, col2=price, col4=%
+  fRows.filter(r=>r[0]&&r[2]&&r[0]!=='Symbol'&&r[0]!=='Close').slice(0,6).forEach(r=>{
+    const pos=!(String(r[3]||'').startsWith('-'));
+    items.push(`<div class="ti"><span class="tn">${f(r[0])}</span><span class="tv">${f(r[2])}</span><span class="tc ${pos?'up':'dn'}">${f(r[4])}</span></div>`);
+  });
   const doubled = [...items,...items].join('');
-  $('tick').innerHTML = doubled || '<div class="ti"><span class="tn">Live data loaded</span></div>';
+  $('tick').innerHTML = doubled||'<div class="ti"><span class="tn">Live</span></div>';
 }
 
-/* ═══════════════════════════════════════════════════
-   MAIN LOAD
-═══════════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════
+   LOAD ALL
+═══════════════════════════════════════════════ */
 const DATA = {};
 
-async function loadAll() {
-  const btn = $('rbtn');
-  btn.textContent = '⟳ Loading…';
-  btn.disabled = true;
+async function loadAll(){
+  const btn=$('rbtn'); btn.textContent='⟳ Loading…'; btn.disabled=true;
 
-  const keys = Object.keys(GIDS);
-  await Promise.allSettled(keys.map(async key => {
-    try {
-      DATA[key] = await fetchGViz(GIDS[key]);
-    } catch(e) {
-      console.error(key, e);
-      DATA[key] = [];
-      $('s-'+key).innerHTML = errBox(key, e.message);
-    }
+  await Promise.allSettled(Object.entries(GIDS).map(async([key,gid])=>{
+    try { DATA[key] = await fetchSheet(gid); }
+    catch(e){ console.error(key,e.message); DATA[key]=[]; }
   }));
 
-  if (DATA.global?.length)   { try { renderGlobal(DATA.global);     } catch(e){ $('s-global').innerHTML   = errBox('Global',e.message); } }
-  if (DATA.futures?.length)  { try { renderFutures(DATA.futures);   } catch(e){ $('s-futures').innerHTML  = errBox('Futures',e.message); } }
-  if (DATA.indian?.length)   { try { renderIndian(DATA.indian);     } catch(e){ $('s-indian').innerHTML   = errBox('Indian',e.message); } }
-  if (DATA.market?.length)   { try { renderMarket(DATA.market);     } catch(e){ $('s-market').innerHTML   = errBox('Market',e.message); } }
-  if (DATA.ipo?.length)      { try { renderIPO(DATA.ipo);           } catch(e){ $('s-ipo').innerHTML      = errBox('IPO',e.message); } }
-  if (DATA.currency?.length) { try { renderCurrency(DATA.currency); } catch(e){ $('s-currency').innerHTML = errBox('Currency',e.message); } }
-  if (DATA.ace?.length)      { try { renderAce(DATA.ace);           } catch(e){ $('s-ace').innerHTML      = errBox('Ace',e.message); } }
+  if(DATA.global?.length)   try{renderGlobal(DATA.global);}   catch(e){$('s-global').innerHTML=`<div class="errbox">⚠️ Global: ${e.message}</div>`;}
+  if(DATA.futures?.length)  try{renderFutures(DATA.futures);}  catch(e){$('s-futures').innerHTML=`<div class="errbox">⚠️ Futures: ${e.message}</div>`;}
+  if(DATA.indian?.length)   try{renderIndian(DATA.indian);}   catch(e){$('s-indian').innerHTML=`<div class="errbox">⚠️ Indian: ${e.message}</div>`;}
+  if(DATA.market?.length)   try{renderMarket(DATA.market);}   catch(e){$('s-market').innerHTML=`<div class="errbox">⚠️ Market: ${e.message}</div>`;}
+  if(DATA.ipo?.length)      try{renderIPO(DATA.ipo);}         catch(e){$('s-ipo').innerHTML=`<div class="errbox">⚠️ IPO: ${e.message}</div>`;}
+  if(DATA.currency?.length) try{renderCurrency(DATA.currency);}catch(e){$('s-currency').innerHTML=`<div class="errbox">⚠️ Currency: ${e.message}</div>`;}
+  if(DATA.ace?.length)      try{renderAce(DATA.ace);}         catch(e){$('s-ace').innerHTML=`<div class="errbox">⚠️ Ace: ${e.message}</div>`;}
 
-  try { buildTicker(DATA.global||[], DATA.futures||[]); } catch(e){}
+  try{buildTicker(DATA.global||[],DATA.futures||[]);}catch(e){}
 
-  const now = new Date();
-  $('ts').textContent = `Live · Updated ${now.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'})} IST`;
-  btn.textContent = '⟳ Refresh';
-  btn.disabled = false;
+  const now=new Date();
+  $('ts').textContent=`Live · Updated ${now.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'})} IST`;
+  btn.textContent='⟳ Refresh'; btn.disabled=false;
 }
 
-/* ═══════════════════════════════════════════════════
+/* ═══════════════════════════════════════════════
    NAV
-═══════════════════════════════════════════════════ */
-function showTab(key, btn) {
-  document.querySelectorAll('.sec').forEach(s => s.classList.remove('on'));
-  document.querySelectorAll('.nb').forEach(b => b.classList.remove('on'));
-  $('s-'+key).classList.add('on');
-  btn.classList.add('on');
+═══════════════════════════════════════════════ */
+function showTab(key,btn){
+  document.querySelectorAll('.sec').forEach(s=>s.classList.remove('on'));
+  document.querySelectorAll('.nb').forEach(b=>b.classList.remove('on'));
+  $('s-'+key).classList.add('on'); btn.classList.add('on');
   window.scrollTo({top:0,behavior:'smooth'});
 }
-function showInv(id, btn) {
-  document.querySelectorAll('.ipanel').forEach(p => p.classList.remove('on'));
-  document.querySelectorAll('.itb').forEach(b => b.classList.remove('on'));
-  $(id).classList.add('on');
-  btn.classList.add('on');
+function showInv(id,btn){
+  document.querySelectorAll('.ipanel').forEach(p=>p.classList.remove('on'));
+  document.querySelectorAll('.itb').forEach(b=>b.classList.remove('on'));
+  $(id).classList.add('on'); btn.classList.add('on');
 }
-function refreshAll() { loadAll(); }
+function refreshAll(){ loadAll(); }
 
-/* Start + auto-refresh every 5 min */
 loadAll();
-setInterval(loadAll, 5 * 60 * 1000);
+setInterval(loadAll, 5*60*1000);
 </script>
 </body>
 </html>
