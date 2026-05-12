@@ -39,12 +39,13 @@ nav{display:flex;gap:2px;flex:1;flex-wrap:wrap}
 .wrap{max-width:1360px;margin:0 auto;padding:12px 14px}
 .sec{display:none}.sec.on{display:block}
 .stitle{font-family:'Teko',sans-serif;font-size:21px;font-weight:600;color:var(--blue);border-bottom:2px solid var(--mc);padding-bottom:5px;margin-bottom:12px}
-.stitle-sm{font-family:'Teko',sans-serif;font-size:16px;font-weight:600;color:var(--blue);border-bottom:1px solid #ddd;padding-bottom:3px;margin:10px 0 8px}
+.stitle-sm{font-family:'Teko',sans-serif;font-size:16px;font-weight:600;color:var(--blue);border-bottom:1px solid #ddd;padding-bottom:3px;margin:12px 0 8px}
 
 .loading{display:flex;align-items:center;justify-content:center;gap:10px;padding:50px;color:#999;font-size:13px}
 .spin{width:20px;height:20px;border:2px solid #ddd;border-top-color:var(--mc);border-radius:50%;animation:sp .8s linear infinite;flex-shrink:0}
 @keyframes sp{to{transform:rotate(360deg)}}
 
+/* TABLE CARD */
 .tcw{background:#fff;border:1px solid var(--bdr);border-radius:5px;margin-bottom:12px;overflow:hidden}
 .tch{background:var(--bgh);padding:8px 12px;font-size:12px;font-weight:700;color:var(--blue);border-bottom:1px solid #dce6ff;display:flex;justify-content:space-between;align-items:center;gap:6px;flex-wrap:wrap}
 .cnt{font-size:10px;background:var(--mc);color:#fff;padding:1px 8px;border-radius:10px;font-weight:600}
@@ -58,6 +59,7 @@ tbody td{font-size:12px;color:#222;padding:7px 10px;white-space:nowrap}
 .bd{display:inline-block;padding:1px 7px;border-radius:3px;font-size:10px;font-weight:700}
 .bd-g{background:#e6f4ee;color:#1a7a4a}.bd-a{background:#fff3e0;color:#e07b00}
 
+/* INDEX CARDS */
 .igrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(185px,1fr));gap:8px;margin-bottom:12px}
 .icard{background:#fff;border:1px solid var(--bdr);border-radius:5px;padding:10px 12px;transition:.2s}
 .icard:hover{border-color:var(--mc);box-shadow:0 2px 10px rgba(0,96,223,.1)}
@@ -67,19 +69,30 @@ tbody td{font-size:12px;color:#222;padding:7px 10px;white-space:nowrap}
 .ihl{font-size:10px;color:#bbb;margin-top:3px}
 .itm{font-size:9px;color:#ccc;margin-top:1px}
 
+/* GIFT NIFTY CARD */
+.gift-card{background:#fff;border:1px solid var(--bdr);border-radius:5px;padding:14px 18px;display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:0;margin-bottom:12px}
+.gift-col{padding:10px 14px;border-right:1px solid #f0f0f0}
+.gift-col:last-child{border-right:none}
+.gift-lbl{font-size:10px;color:#999;text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px}
+.gift-val{font-family:'Teko',sans-serif;font-size:22px;font-weight:600;line-height:1}
+
+/* 2-COL */
 .g2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
 @media(max-width:650px){.g2{grid-template-columns:1fr}}
 
+/* ADV/DEC */
 .adrow{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px}
 @media(max-width:500px){.adrow{grid-template-columns:repeat(2,1fr)}}
 .adbox{background:#fff;border:1px solid var(--bdr);border-radius:5px;padding:10px;text-align:center}
 .adlbl{font-size:10px;color:#999;text-transform:uppercase;letter-spacing:.4px;margin-bottom:2px}
 .adnum{font-family:'Teko',sans-serif;font-size:26px;line-height:1}
 
+/* IPO BADGES */
 .sop{background:#e6f4ee;color:#1a7a4a;padding:2px 7px;border-radius:3px;font-size:10px;font-weight:700}
 .scl{background:#fdecea;color:#c0392b;padding:2px 7px;border-radius:3px;font-size:10px;font-weight:700}
 .sup{background:#fff8e1;color:#b45309;padding:2px 7px;border-radius:3px;font-size:10px;font-weight:700}
 
+/* INVESTOR TABS */
 .itabs{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px}
 .itb{padding:5px 12px;border:1px solid #ddd;border-radius:3px;font-size:11px;font-weight:600;cursor:pointer;background:#fff;color:#555;transition:.15s;font-family:'Inter',sans-serif}
 .itb:hover{border-color:var(--mc);color:var(--mc)}.itb.on{background:var(--mc);color:#fff;border-color:var(--mc)}
@@ -145,10 +158,10 @@ footer a{color:#6ea8fe}
 </footer>
 
 <script>
-const SID = '1xoUJqge0b4SQmZSRLZyoBBcokXrUrFVt8fBFoef28NQ';
-const GIDS = {global:572014590,futures:2063758158,indian:139113774,market:1259430707,ipo:536891537,currency:1847303228,ace:773783735};
+const SID='1xoUJqge0b4SQmZSRLZyoBBcokXrUrFVt8fBFoef28NQ';
+const GIDS={global:572014590,futures:2063758158,indian:139113774,market:1259430707,ipo:536891537,currency:1847303228,ace:773783735};
 
-/* ── JSONP fetch (works on file:// and any host) ── */
+/* ── JSONP fetch ── */
 let _n=0;
 function fetchSheet(gid){
   return new Promise((res,rej)=>{
@@ -156,7 +169,7 @@ function fetchSheet(gid){
     const t=setTimeout(()=>{delete window[cb];rej(new Error('Timeout'));},20000);
     window[cb]=data=>{clearTimeout(t);delete window[cb];try{res(toRows(data));}catch(e){rej(e);}};
     const s=document.createElement('script');
-    s.onerror=()=>{clearTimeout(t);delete window[cb];rej(new Error('Load failed'));};
+    s.onerror=()=>{clearTimeout(t);delete window[cb];rej(new Error('Load failed GID '+gid));};
     s.src=`https://docs.google.com/spreadsheets/d/${SID}/gviz/tq?gid=${gid}&tqx=out:json;responseHandler:${cb}&t=${Date.now()}`;
     document.head.appendChild(s);
     s.onload=()=>{try{document.head.removeChild(s);}catch(e){}};
@@ -165,18 +178,14 @@ function fetchSheet(gid){
 function toRows(data){
   if(!data||!data.table||!data.table.rows) return [];
   return data.table.rows.map(row=>
-    (row&&row.c?row.c:[]).map(c=>{
-      if(!c) return '';
-      // Use formatted value first (preserves ₹, commas, %) then raw
-      return String(c.f!=null?c.f:c.v!=null?c.v:'').trim();
-    })
+    (row&&row.c?row.c:[]).map(c=>c?(c.f!=null?String(c.f):c.v!=null?String(c.v):'').trim():'')
   );
 }
 
 /* ── Helpers ── */
 const $=id=>document.getElementById(id);
 const f=v=>String(v||'').trim()||'—';
-const clean=v=>String(v||'').replace(/\*/g,'').trim(); // strip * markdown bold
+const clean=v=>String(v||'').replace(/\*/g,'').trim();
 function ic(v){
   const s=String(v||'').replace(/,/g,'').replace(/\*/g,'').trim();
   if(!s||s==='—'||s==='-') return '';
@@ -201,80 +210,100 @@ function sbadge(s){
   return s?`<span class="bd bd-g">${s}</span>`:'—';
 }
 function tbadge(t){return `<span class="bd ${/main/i.test(t||'')?'bd-a':'bd-g'}">${clean(t)||'—'}</span>`;}
-const th4=`<thead><tr><th>Company</th><th>Price ₹</th><th>Change</th><th>% Chg</th></tr></thead>`;
-const th3=`<thead><tr><th>Company</th><th>Price ₹</th><th>% Chg</th></tr></thead>`;
-function row4(r0,r1,r2,r3){return `<tr><td>${f(r0)}</td><td>${f(r1)}</td><td class="${ic(r2)}">${f(r2)}</td><td class="${ic(r3)}">${f(r3)}</td></tr>`;}
-function row3(r0,r1,r2){return `<tr><td>${f(r0)}</td><td>${f(r1)}</td><td class="${ic(r2)}">${f(r2)}</td></tr>`;}
 
-/* ══════════════════════════════════════════════════
-   GLOBAL INDICES
-   Row structure (0-indexed cols):
-   [2]=Name [3]=Price [4]=Change [5]=%Chg [6]=High [7]=Low [8]=Time
-══════════════════════════════════════════════════ */
+const SECT_TH=`<thead><tr><th>Index</th><th>Price</th><th>Chg</th><th>%Chg</th><th>52W High</th><th>52W Low</th></tr></thead>`;
+const STOCK_TH=`<thead><tr><th>Company</th><th>Price ₹</th><th>Chg</th><th>%Chg</th><th>52W High</th><th>52W Low</th></tr></thead>`;
+const MKT_TH4=`<thead><tr><th>Company</th><th>Price ₹</th><th>Change</th><th>% Chg</th></tr></thead>`;
+const MKT_TH3=`<thead><tr><th>Company</th><th>Price ₹</th><th>% Chg</th></tr></thead>`;
+
+/* ══════════════════════════════════════════════
+   FIX 2: GLOBAL INDICES
+   Cols: [2]=Name [3]=Price [4]=Change [5]=%Chg [6]=High [7]=Low [8]=Time
+   First 3 rows after header = India (NIFTY, SENSEX, VIX)
+   Row 0 (index 0) is the header row — skip it
+   DOW is at row index 4 (after NIFTY,SENSEX,VIX) → World, NOT India
+══════════════════════════════════════════════ */
 function renderGlobal(rows){
-  // Skip row[0] (header). Data rows have r[2] = index name, r[3] = numeric price
-  const dr=rows.slice(1).filter(r=>r[2]&&r[2].trim()&&r[3]&&parseFloat(String(r[3]).replace(/,/g,''))>0);
-
-  // India = first 3 rows (NIFTY, SENSEX, VIX); World = rest
-  const india=dr.slice(0,3);
-  const world=dr.slice(3);
-
-  const mkCards=arr=>arr.map(r=>icard(r[2],r[3],r[4],r[5],r[6],r[7],r[8])).join('');
+  // row[0] = header ",,INDEX NAME,Price,..." → skip
+  // row[1] = NIFTY 50, row[2] = SENSEX, row[3] = INDIA VIX → India
+  // row[4]+ = DOW, NASDAQ etc → World
+  const dr=rows.slice(1).filter(r=>
+    r[2]&&r[2].trim()&&r[3]&&parseFloat(String(r[3]).replace(/,/g,''))>0
+  );
+  const india=dr.slice(0,3);   // NIFTY 50, SENSEX, INDIA VIX
+  const world=dr.slice(3);     // DOW, NASDAQ, S&P, TSX, ...
 
   $('s-global').innerHTML=`
     <div class="stitle">🌍 Global Indices</div>
     <div class="stitle-sm">🇮🇳 India</div>
-    <div class="igrid">${mkCards(india)}</div>
+    <div class="igrid">${india.map(r=>icard(r[2],r[3],r[4],r[5],r[6],r[7],r[8])).join('')}</div>
     <div class="stitle-sm">🌐 World Markets</div>
-    <div class="igrid">${mkCards(world)}</div>
+    <div class="igrid">${world.map(r=>icard(r[2],r[3],r[4],r[5],r[6],r[7],r[8])).join('')}</div>
     <p style="font-size:10px;color:#bbb;margin-top:6px">⚠️ Quotes delayed up to 20 min. Source: Google Finance. Not investment advice.</p>`;
 }
 
-/* ══════════════════════════════════════════════════
-   FUTURES
-   Data rows: [0]=Symbol [2]=Last [3]=Change [4]=% [5]=High [6]=Low
-   Next row: [0]='Close' [3]='US Time : ...'  ← time
-   GIFT NIFTY block starts at row with 'Gift Nifty' in col[0]:
-     +1: [3]=Name [4]=DateTime [5]=Price [6]=Direction
-     +2: [3]=Change label [4]=Change% label [5]=PrevClose label
-     +3: [3]=change value [4]=pct value [5]=prevclose value
-══════════════════════════════════════════════════ */
+/* ══════════════════════════════════════════════
+   FIX 3: FUTURES
+   Alternating rows: data row then 'Close,,,Time...' row
+   Col [0]=Symbol [2]=Last [3]=Change [4]=% [5]=High [6]=Low
+   Next row col[3] = time string e.g. "US Time : Mon May 11..."
+   GIFT NIFTY block:
+     Row with col[0]='Gift Nifty' is section header
+     +1: col[3]=Name, col[4]=DateTime, col[5]=Price, col[6]=Direction
+     +2: col[3]='Change', col[4]='Change in %', col[5]='Previous Close'
+     +3: col[3]=changeVal, col[4]=pctVal, col[5]=prevCloseVal
+   FIX: Show GIFT NIFTY in the main futures grid too (it IS in the data rows)
+   FIX: Remove gift emoji, use 🇮🇳 flag for GIFT NIFTY section
+══════════════════════════════════════════════ */
 function renderFutures(rows){
   const cards=[];
+  let giftBlock=null;
+
   let i=0;
   while(i<rows.length){
     const r=rows[i];
     const name=(r[0]||'').trim();
+
+    // GIFT NIFTY info block (not the data row)
+    if(name.toLowerCase()==='gift nifty'){
+      const g1=rows[i+1]||[];
+      const g2=rows[i+3]||[];
+      giftBlock={
+        name: f(g1[3]),
+        dt:   f(g1[4]),
+        price:f(g1[5]),
+        dir:  f(g1[6]),
+        chg:  f(g2[3]),
+        pct:  f(g2[4]),
+        prev: f(g2[5])
+      };
+      i+=5; continue;
+    }
+
+    // Skip header, blank, 'Close' rows
     if(!name||name==='Symbol'||name==='Close'||!r[2]||!r[2].trim()){i++;continue;}
-    if(name.toLowerCase().includes('gift nifty')||name.toLowerCase()===''){i++;continue;}
-    // next row has time
+
+    // Next row has time
     const next=rows[i+1]||[];
     const tm=(next[3]||'').trim();
     cards.push(icard(name,r[2],r[3],r[4],r[5],r[6],tm));
-    i+=2; // skip Close row
+    i+=2;
   }
 
-  // GIFT NIFTY special block
-  const giIdx=rows.findIndex(r=>(r[0]||'').toLowerCase().includes('gift nifty'));
+  // Build GIFT NIFTY section
   let giftHtml='';
-  if(giIdx>=0){
-    const g1=rows[giIdx+1]||[];
-    const g2=rows[giIdx+3]||[];
-    const gPrice=f(g1[5]);
-    const gDir=f(g1[6]);
-    const gChg=f(g2[3]);
-    const gPct=f(g2[4]);
-    const gPrev=f(g2[5]);
-    const gDt=f(g1[4]);
+  if(giftBlock){
+    const pos=!String(giftBlock.chg||'').startsWith('-');
     giftHtml=`
-      <div class="stitle-sm">🎁 GIFT NIFTY — Live</div>
-      <div class="tcw"><div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr))">
-        <div style="padding:12px 14px;border-right:1px solid #f0f0f0"><div class="adlbl">Price</div><div style="font-family:'Teko',sans-serif;font-size:24px;font-weight:600">${gPrice}</div></div>
-        <div style="padding:12px 14px;border-right:1px solid #f0f0f0"><div class="adlbl">Change</div><div class="cp" style="font-weight:700">+${gChg} (${gPct})</div></div>
-        <div style="padding:12px 14px;border-right:1px solid #f0f0f0"><div class="adlbl">Prev Close</div><div>${gPrev}</div></div>
-        <div style="padding:12px 14px;border-right:1px solid #f0f0f0"><div class="adlbl">As of</div><div style="font-size:11px">${gDt}</div></div>
-        <div style="padding:12px 14px"><div class="adlbl">Direction</div><div class="cp" style="font-size:18px">${gDir} Bullish</div></div>
-      </div></div>`;
+      <div class="stitle-sm">🇮🇳 GIFT NIFTY — Live</div>
+      <div class="gift-card">
+        <div class="gift-col"><div class="gift-lbl">Price</div><div class="gift-val">${giftBlock.price}</div></div>
+        <div class="gift-col"><div class="gift-lbl">Change</div><div class="gift-val ${pos?'up':'dn'}">${giftBlock.chg}</div></div>
+        <div class="gift-col"><div class="gift-lbl">Change %</div><div class="gift-val ${pos?'up':'dn'}">${giftBlock.pct}</div></div>
+        <div class="gift-col"><div class="gift-lbl">Prev Close</div><div class="gift-val" style="font-size:18px">${giftBlock.prev}</div></div>
+        <div class="gift-col"><div class="gift-lbl">As of</div><div style="font-size:11px;color:#666;margin-top:4px">${giftBlock.dt}</div></div>
+        <div class="gift-col"><div class="gift-lbl">Direction</div><div class="${pos?'up':'dn'}" style="font-size:16px;font-weight:700;margin-top:4px">${giftBlock.dir} ${pos?'Bullish':'Bearish'}</div></div>
+      </div>`;
   }
 
   $('s-futures').innerHTML=`
@@ -284,178 +313,213 @@ function renderFutures(rows){
     ${giftHtml}`;
 }
 
-/* ══════════════════════════════════════════════════
-   INDIAN INDICES
-   Row structure: [0]=INDEX NAME [1]=Price [2]=CHANGE [3]=%CHANGE [4]=52W HIGH [5]=52W LOW [6]=Time
-   Section header rows: [0]='' [1]='NSE Sectoral Indices' or 'BSE Sectoral Indices'
-   NSE Constituents (Nifty50 stocks) cols: [0]=Name [1]=Price [2]=Chg [3]=%Chg [4]=52WH [5]=52WL
-   Nifty50 weights cols: [7]=Company [8]=Industry [9]=Symbol [10]=Weight%
-══════════════════════════════════════════════════ */
+/* ══════════════════════════════════════════════
+   FIX 1: INDIAN INDICES
+   Exact CSV structure:
+   Row 0: "INDEX NAME,Price,CHANGE,% CHANGE,52 WEEK HIGH,52 WEEK LOW,LAST UPDATED TIME,..."
+   Row 1: ",NSE Sectoral Indices,..." → NSE section header (col[0]='' col[1]='NSE Sectoral Indices')
+   Rows 2–19: NSE data [0]=name [1]=price [2]=chg [3]=%chg [4]=52whi [5]=52wlo
+   Row 20: blank
+   Row 21: ",BSE Sectoral Indices,..." → BSE section header
+   Rows 22–38: BSE data same structure
+   Row 39+: blank rows
+   Rows ~41+: Nifty50 stocks [0]=stock [1]=price [2]=chg [3]=%chg [4]=52whi [5]=52wlo [6]=datetime
+              AND col[7]=Company [8]=Industry [9]=Symbol [10]=Weight (weights table)
+   FIX: 4 tables (NSE, BSE, Stocks, Weights) each get their OWN separate table card with header
+   FIX: No duplicate headers inside tables
+══════════════════════════════════════════════ */
 function renderIndian(rows){
-  const sectTH=`<thead><tr><th>Index</th><th>Price</th><th>Chg</th><th>%Chg</th><th>52W High</th><th>52W Low</th></tr></thead>`;
-  const sectRow=r=>`<tr>
+  // Find NSE header: row where col[0]=='' and col[1] contains 'NSE'
+  const nseHdrI=rows.findIndex(r=>r[0]===''&&(r[1]||'').includes('NSE'));
+  // Find BSE header: row where col[0]=='' and col[1] contains 'BSE'
+  const bseHdrI=rows.findIndex(r=>r[0]===''&&(r[1]||'').includes('BSE'));
+
+  // Data row = col[0] has text AND col[1] is numeric
+  const isData=r=>r[0]&&r[0].trim()&&r[1]&&!isNaN(parseFloat(String(r[1]).replace(/,/g,'')));
+
+  // NSE data: rows from nseHdrI+1 until bseHdrI (exclusive)
+  const nseRows=nseHdrI>=0
+    ? rows.slice(nseHdrI+1, bseHdrI>nseHdrI?bseHdrI:nseHdrI+25).filter(isData)
+    : [];
+
+  // BSE data: rows from bseHdrI+1 until first blank block
+  const bseRaw=bseHdrI>=0?rows.slice(bseHdrI+1,bseHdrI+30):[];
+  const bseRows=bseRaw.filter(isData);
+
+  // Nifty50 stock rows: have a datetime in col[6] (format contains '/')
+  // These appear AFTER the BSE section blank rows
+  const stockRows=rows.filter(r=>
+    r[0]&&r[0].trim()&&r[1]&&!isNaN(parseFloat(String(r[1]).replace(/,/g,'')))
+    &&r[6]&&r[6].includes('/')
+  );
+
+  // Weight rows: col[7]=Company, col[8]=Industry, col[9]=Symbol, col[10]=Weight
+  // These appear on the SAME rows as stockRows (side by side in the sheet)
+  const weightRows=rows.filter(r=>r[7]&&r[7].trim()&&r[8]&&r[8].trim()&&r[9]&&r[9].trim()&&r[10]);
+
+  const sectR=r=>`<tr>
     <td><strong>${f(r[0])}</strong></td><td>${f(r[1])}</td>
     <td class="${ic(r[2])}">${f(r[2])}</td>
     <td class="${ic(r[3])}">${f(r[3])}%</td>
-    <td style="color:#aaa">${f(r[4])}</td><td style="color:#aaa">${f(r[5])}</td></tr>`;
-
-  // Header row at index 0: "INDEX NAME,Price,CHANGE,% CHANGE,52 WEEK HIGH,52 WEEK LOW,LAST UPDATED TIME"
-  // NSE section starts after row containing "NSE Sectoral Indices"
-  const nseHdrI=rows.findIndex(r=>!r[0]&&(r[1]||'').includes('NSE Sectoral'));
-  const bseHdrI=rows.findIndex(r=>!r[0]&&(r[1]||'').includes('BSE Sectoral'));
-
-  const isDataRow=r=>r[0]&&r[0].trim()&&r[1]&&!isNaN(parseFloat(String(r[1]).replace(/,/g,'')));
-
-  // NSE rows: from nseHdrI+1 until bseHdrI
-  const nseRows=nseHdrI>=0?rows.slice(nseHdrI+1,bseHdrI>0?bseHdrI:nseHdrI+25).filter(isDataRow):[];
-  // BSE rows: from bseHdrI+1
-  const bseRows=bseHdrI>=0?rows.slice(bseHdrI+1,bseHdrI+25).filter(isDataRow):[];
-
-  // Nifty50 stocks: rows where col[0]=stockname, col[1]=price, col[6]=datetime AND col[7] starts with "NSE:" or company name for weights
-  // Weight rows have data in col[7-10]
-  const stockRows=rows.filter(r=>r[0]&&r[1]&&!isNaN(parseFloat(String(r[1]).replace(/,/g,'')))&&r[6]&&r[6].includes('/'));
-  const weightRows=rows.filter(r=>r[7]&&r[7].trim()&&r[8]&&r[8].trim()&&r[9]&&r[10]);
+    <td style="color:#aaa">${f(r[4])}</td>
+    <td style="color:#aaa">${f(r[5])}</td></tr>`;
 
   $('s-indian').innerHTML=`
     <div class="stitle">🇮🇳 Indian Indices</div>
+
     <div class="g2">
       <div class="tcw">
         <div class="tch">NSE Sectoral Indices <span class="cnt">${nseRows.length}</span></div>
-        <div class="tscr"><table>${sectTH}<tbody>${nseRows.map(sectRow).join('')}</tbody></table></div>
+        <div class="tscr"><table>
+          ${SECT_TH}
+          <tbody>${nseRows.map(sectR).join('')}</tbody>
+        </table></div>
       </div>
       <div class="tcw">
         <div class="tch">BSE Sectoral Indices <span class="cnt">${bseRows.length}</span></div>
-        <div class="tscr"><table>${sectTH}<tbody>${bseRows.map(sectRow).join('')}</tbody></table></div>
+        <div class="tscr"><table>
+          ${SECT_TH}
+          <tbody>${bseRows.map(sectR).join('')}</tbody>
+        </table></div>
       </div>
     </div>
-    ${stockRows.length?`<div class="tcw">
+
+    ${stockRows.length?`
+    <div class="tcw">
       <div class="tch">NIFTY 50 Constituents — Live Prices <span class="cnt">${stockRows.length}</span></div>
       <div class="tscr"><table>
-        <thead><tr><th>Company</th><th>Price ₹</th><th>Chg</th><th>%Chg</th><th>52W High</th><th>52W Low</th></tr></thead>
+        ${STOCK_TH}
         <tbody>${stockRows.map(r=>`<tr>
           <td><strong>${f(r[0])}</strong></td><td>${f(r[1])}</td>
           <td class="${ic(r[2])}">${f(r[2])}</td>
           <td class="${ic(r[3])}">${f(r[3])}%</td>
-          <td style="color:#aaa">${f(r[4])}</td><td style="color:#aaa">${f(r[5])}</td>
-        </tr>`).join('')}</tbody>
+          <td style="color:#aaa">${f(r[4])}</td>
+          <td style="color:#aaa">${f(r[5])}</td></tr>`).join('')}
+        </tbody>
       </table></div>
     </div>`:''}
-    ${weightRows.length?`<div class="tcw">
-      <div class="tch">NIFTY 50 — Weights &amp; Symbols</div>
+
+    ${weightRows.length?`
+    <div class="tcw">
+      <div class="tch">NIFTY 50 — Sector Weights &amp; Symbols <span class="cnt">${weightRows.length}</span></div>
       <div class="tscr"><table>
         <thead><tr><th>Company</th><th>Industry</th><th>Symbol</th><th>Weight</th></tr></thead>
         <tbody>${weightRows.map(r=>`<tr>
           <td><strong>${f(r[7])}</strong></td>
           <td style="color:#888">${f(r[8])}</td>
           <td style="font-family:'Teko',sans-serif">${f(r[9])}</td>
-          <td class="cp">${f(r[10])}</td>
-        </tr>`).join('')}</tbody>
+          <td class="cp">${f(r[10])}</td></tr>`).join('')}
+        </tbody>
       </table></div>
     </div>`:''}`;
 }
 
-/* ══════════════════════════════════════════════════
-   MARKET DATA — exact col mapping from CSV:
-   LEFT BLOCK:
-     Section headers: r[1] = 'Nifty 50'/'TOP GAINERS'/'TOP LOSERS'/'ALL BSE' etc
-     Data: [1]=Company [2]=Price [3]=Change [4]=%Change
-   RIGHT BLOCK:
-     Section headers: r[6] = 'ALL NSE'/'TOP GAINERS'/'TOP LOSERS'/'ALL BSE' etc
-     Data: [6]=Company [9]=Price [10]=Change [11]=%Change  (BSE right has [9]=Price [10]=%Change)
-   NIFTY BANK:
-     Detected by label r[1]='AU Small Finance Bank Ltd' after "Company,Price,Change,% Change" header
-     which appears after an Adv/Dec block
-   BSE EXTENDED (rows 100+):
-     [2]=BSE Gainer [3]=Last Price [4]=% [5]=BSE Loser [6]=Last Price [7]=%
-   ADV/DECLINE:
-     r[6]='BSE' r[7]='Adv:' r[8]=count
-══════════════════════════════════════════════════ */
+/* ══════════════════════════════════════════════
+   MARKET DATA
+   Left block: col[1]=Company, col[2]=Price, col[3]=Change, col[4]=%
+   Right block (NSE): col[6]=Company, col[9]=Price, col[10]=Change, col[11]=%
+   Right block (BSE ext): col[2]=Gainer, col[3]=Price, col[4]=%, col[5]=Loser, col[6]=Price, col[7]=%
+   Section headers detected by col[1] or col[6] text values
+   Adv/Dec: col[6]='BSE'/'NSE', col[7]='Adv:'/'Dec:', col[8]=count
+══════════════════════════════════════════════ */
 function renderMarket(rows){
   let n50g=[],n50l=[],nseG=[],nseL=[],bse5g=[],bse5l=[],bank=[];
   let bseAdv='',bseDec='',nseAdv='',nseDec='';
   let bseExtG=[],bseExtL=[];
-  let leftSection='',rightSection='';
+  let lSec='',rSec='';
 
   for(let i=0;i<rows.length;i++){
     const r=rows[i];
     const l1=(r[1]||'').trim();
     const l6=(r[6]||'').trim();
 
-    // Advance/Decline detection
-    if(l6==='BSE'&&(r[7]||'').includes('Adv')) bseAdv=f(r[8]);
-    if((r[6]||'')==='BSE'&&(r[7]||'').includes('Dec')) bseDec=f(r[8]);
-    if(l6==='NSE'&&(r[7]||'').includes('Adv')) nseAdv=f(r[8]);
-    if(l6==='NSE'&&(r[7]||'').includes('Dec')) nseDec=f(r[8]);
+    // Adv/Dec
+    if(r[6]==='BSE'&&(r[7]||'').includes('Adv:')) bseAdv=f(r[8]);
+    if(r[6]==='BSE'&&(r[7]||'').includes('Dec:')) bseDec=f(r[8]);
+    if(r[6]==='NSE'&&(r[7]||'').includes('Adv:')) nseAdv=f(r[8]);
+    if(r[6]==='NSE'&&(r[7]||'').includes('Dec:')) nseDec=f(r[8]);
 
     // Left section headers
-    if(l1==='Nifty 50'){leftSection='n50';continue;}
-    if(l1==='TOP GAINERS'&&leftSection==='n50'){leftSection='n50g';continue;}
-    if(l1==='TOP LOSERS'&&leftSection==='n50'){leftSection='n50l';continue;}
-    if(l1==='ALL BSE'){leftSection='bse5';continue;}
-    if(l1==='TOP GAINERS'&&leftSection==='bse5'){leftSection='bse5g';continue;}
-    if(l1==='TOP LOSERS'&&leftSection==='bse5'){leftSection='bse5l';continue;}
-    if(l1==='Company'&&(r[2]||'').trim()==='Price'){
-      // Nifty Bank header
-      if(leftSection===''||leftSection==='adv') leftSection='bank';
-      continue;
+    if(l1==='Nifty 50'){lSec='n50';continue;}
+    if(l1==='TOP GAINERS'&&lSec==='n50'){lSec='n50g';continue;}
+    if(l1==='TOP LOSERS'&&lSec==='n50'){lSec='n50l';continue;}
+    if(l1==='ALL BSE'){lSec='bse5';continue;}
+    if(l1==='TOP GAINERS'&&lSec==='bse5'){lSec='bse5g';continue;}
+    if(l1==='TOP LOSERS'&&lSec==='bse5'){lSec='bse5l';continue;}
+    if(l1==='FII & DII DAILY TRADING ACTIVITY') break;
+    // Skip header rows inside sections
+    if(l1==='Company'||l1==='Stocks'){continue;}
+
+    // Nifty Bank: appears after adv/dec section with label "Company,Price,Change,% Change"
+    // Detect: col[1] has bank stock name AND col[2] has price AND lSec is reset after bse5
+    if(lSec===''&&l1&&l1.length>2&&r[2]&&!isNaN(parseFloat(String(r[2]).replace(/,/g,'')))){
+      lSec='bank';
     }
-    if(l1==='FII & DII DAILY TRADING ACTIVITY') break; // stop here
+    if(l1==='AU Small Finance Bank Ltd') lSec='bank';
 
     // Right section headers
-    if(l6==='ALL NSE'){rightSection='nse';continue;}
-    if(l6==='TOP GAINERS'&&rightSection==='nse'){rightSection='nseG';continue;}
-    if(l6==='TOP LOSERS'&&rightSection==='nse'){rightSection='nseL';continue;}
-    if(l6==='ALL BSE'&&rightSection!==''){rightSection='bseR';continue;}
-    if(l6==='TOP GAINERS'&&rightSection==='bseR'){rightSection='bseRg';continue;}
-    if(l6==='TOP LOSERS'&&rightSection==='bseR'){rightSection='bseRl';continue;}
-    if(l6==='Advance/Decline'||(l6==='BSE'&&(r[7]||'').trim())){rightSection='adv';}
+    if(l6==='ALL NSE'){rSec='nse';continue;}
+    if(l6==='TOP GAINERS'&&rSec==='nse'){rSec='nseG';continue;}
+    if(l6==='TOP LOSERS'&&rSec==='nse'){rSec='nseL';continue;}
+    if(l6==='ALL BSE'&&(rSec==='nseG'||rSec==='nseL')){rSec='bseR';continue;}
+    if(l6==='TOP GAINERS'&&rSec==='bseR'){rSec='bseRg';continue;}
+    if(l6==='TOP LOSERS'&&rSec==='bseR'){rSec='bseRl';continue;}
+    if(l6==='Advance/Decline'){rSec='adv';continue;}
+    if(l6==='Company'||l6==='Stocks'){continue;}
 
-    // BSE Extended block: col[2]=Gainer name, col[3]=price, col[4]=%, col[5]=Loser name, col[6]=price, col[7]=%
-    if((r[1]||'').trim()==='BSE Gainers'||(r[2]||'').trim()==='BSE Gainers'){continue;}
-    if((r[2]||'').trim()==='Company'||(r[2]||'').trim()==='Stocks'){continue;}
-
-    // Collect left data
-    const lname=(r[1]||'').trim();
-    const lp=(r[2]||'').trim();
-    if(lname&&lp&&!isNaN(parseFloat(String(lp).replace(/,/g,'')))){
-      if(leftSection==='n50g') n50g.push([lname,lp,r[3],r[4]]);
-      else if(leftSection==='n50l') n50l.push([lname,lp,r[3],r[4]]);
-      else if(leftSection==='bse5g') bse5g.push([lname,lp,r[3],r[4]]);
-      else if(leftSection==='bse5l') bse5l.push([lname,lp,r[3],r[4]]);
-      else if(leftSection==='bank') bank.push([lname,lp,r[3],r[4]]);
+    // Collect LEFT data (col[1]=name, col[2]=price, col[3]=chg, col[4]=%)
+    const ln=(r[1]||'').trim();
+    const lp=String(r[2]||'').replace(/,/g,'');
+    if(ln&&lp&&!isNaN(parseFloat(lp))&&parseFloat(lp)>0){
+      const row=[ln,r[2],r[3],r[4]];
+      if(lSec==='n50g') n50g.push(row);
+      else if(lSec==='n50l') n50l.push(row);
+      else if(lSec==='bse5g') bse5g.push(row);
+      else if(lSec==='bse5l') bse5l.push(row);
+      else if(lSec==='bank') bank.push(row);
     }
 
-    // Collect right data (NSE: col6=name, col9=price, col10=chg, col11=%)
-    const rname=(r[6]||'').trim();
-    const rp=(r[9]||'').trim();
-    if(rname&&rp&&!isNaN(parseFloat(String(rp).replace(/,/g,'')))){
-      if(rightSection==='nseG') nseG.push([rname,rp,r[10],r[11]]);
-      else if(rightSection==='nseL') nseL.push([rname,rp,r[10],r[11]]);
-    }
-    // BSE right (col6=name, col9=price, col10=%)
-    if((rightSection==='bseRg'||rightSection==='bseRl')&&rname&&rp){
-      if(rightSection==='bseRg') bse5g.push([rname,rp,r[10],'']);
-      else bse5l.push([rname,rp,r[10],'']);
+    // Collect RIGHT data NSE (col[6]=name, col[9]=price, col[10]=chg, col[11]=%)
+    const rn=(r[6]||'').trim();
+    const rp=String(r[9]||'').replace(/,/g,'');
+    if(rn&&rp&&!isNaN(parseFloat(rp))&&parseFloat(rp)>0&&rn!=='BSE'&&rn!=='NSE'){
+      if(rSec==='nseG') nseG.push([rn,r[9],r[10],r[11]]);
+      else if(rSec==='nseL') nseL.push([rn,r[9],r[10],r[11]]);
     }
 
-    // BSE Extended: col[2]=gainerName col[3]=gPrice col[4]=gPct, col[5]=loserName col[6]=lPrice col[7]=lPct
-    const eg=(r[2]||'').trim();
-    const el=(r[5]||'').trim();
-    if(eg&&(r[3]||'')&&!isNaN(parseFloat(String(r[3]).replace(/,/g,'')))&&
-       eg!=='Company'&&eg!=='BSE Gainers'&&eg!=='Stocks'){
+    // BSE RIGHT data (col[6]=bse name, col[9]=price, col[10]=%)
+    if((rSec==='bseRg'||rSec==='bseRl')&&rn&&rp&&!isNaN(parseFloat(rp))){
+      if(rSec==='bseRg') bse5g.push([rn,r[9],r[10],'']);
+      else bse5l.push([rn,r[9],r[10],'']);
+    }
+
+    // BSE Extended movers: col[2]=gName, col[3]=gPrice, col[4]=gPct, col[5]=lName, col[6]=lPrice, col[7]=lPct
+    const eg=(r[2]||'').trim(), el=(r[5]||'').trim();
+    const egp=String(r[3]||'').replace(/,/g,''), elp=String(r[6]||'').replace(/,/g,'');
+    if(eg&&egp&&!isNaN(parseFloat(egp))&&parseFloat(egp)>0&&eg!=='Company'&&eg!=='BSE Gainers'&&eg!=='Stocks'&&eg!=='COMPANY'){
       bseExtG.push([eg,r[3],r[4]]);
     }
-    if(el&&(r[6]||'')&&!isNaN(parseFloat(String(r[6]).replace(/,/g,'')))&&
-       el!=='Company'&&el!=='BSE Losers'){
+    if(el&&elp&&!isNaN(parseFloat(elp))&&parseFloat(elp)>0&&el!=='Company'&&el!=='BSE Losers'){
       bseExtL.push([el,r[6],r[7]]);
     }
   }
 
-  const tbl=(title,rows3or4,is4=true)=>`<div class="tcw">
-    <div class="tch">${title} <span class="cnt">${rows3or4.length}</span></div>
-    <div class="tscr"><table>${is4?th4:th3}<tbody>
-      ${rows3or4.map(r=>is4?row4(r[0],r[1],r[2],r[3]):row3(r[0],r[1],r[2])).join('')}
+  const tbl4=(title,data)=>`<div class="tcw">
+    <div class="tch">${title} <span class="cnt">${data.length}</span></div>
+    <div class="tscr"><table>${MKT_TH4}<tbody>${data.map(r=>`<tr>
+      <td>${f(r[0])}</td><td>${f(r[1])}</td>
+      <td class="${ic(r[2])}">${f(r[2])}</td>
+      <td class="${ic(r[3])}">${f(r[3])}</td></tr>`).join('')||noData(4)}
     </tbody></table></div></div>`;
+
+  const tbl3=(title,data)=>`<div class="tcw">
+    <div class="tch">${title} <span class="cnt">${data.length}</span></div>
+    <div class="tscr"><table>${MKT_TH3}<tbody>${data.map(r=>`<tr>
+      <td>${f(r[0])}</td><td>${f(r[1])}</td>
+      <td class="${ic(r[2])}">${f(r[2])}</td></tr>`).join('')||noData(3)}
+    </tbody></table></div></div>`;
+
+  const noData=c=>`<tr><td colspan="${c}" style="color:#aaa;padding:10px;text-align:center">No data</td></tr>`;
 
   $('s-market').innerHTML=`
     <div class="stitle">📈 Market Data — NSE &amp; BSE</div>
@@ -465,137 +529,171 @@ function renderMarket(rows){
       ${nseAdv?`<div class="adbox"><div class="adlbl">NSE Advances</div><div class="adnum up">${nseAdv}</div></div>`:''}
       ${nseDec?`<div class="adbox"><div class="adlbl">NSE Declines</div><div class="adnum dn">${nseDec}</div></div>`:''}
     </div>`:''}
-    <div class="g2">${tbl('🟢 NIFTY 50 Gainers',n50g)}${tbl('🔴 NIFTY 50 Losers',n50l)}</div>
-    <div class="g2">${tbl('🟢 All NSE Gainers',nseG)}${tbl('🔴 All NSE Losers',nseL)}</div>
-    <div class="g2">${tbl('🟢 All BSE Gainers',bse5g,false)}${tbl('🔴 All BSE Losers',bse5l,false)}</div>
-    ${bank.length?tbl('🏦 Nifty Bank Stocks',bank):''}
+    <div class="g2">${tbl4('🟢 NIFTY 50 Gainers',n50g)}${tbl4('🔴 NIFTY 50 Losers',n50l)}</div>
+    <div class="g2">${tbl4('🟢 All NSE Gainers',nseG)}${tbl4('🔴 All NSE Losers',nseL)}</div>
+    <div class="g2">${tbl3('🟢 All BSE Gainers',bse5g)}${tbl3('🔴 All BSE Losers',bse5l)}</div>
+    ${bank.length?tbl4('🏦 Nifty Bank Stocks',bank):''}
     ${bseExtG.length?`<div class="tcw">
-      <div class="tch">📊 BSE Extended Movers <span class="cnt">Top ${bseExtG.length} each</span></div>
+      <div class="tch">📊 BSE Extended Movers <span class="cnt">Top ${Math.max(bseExtG.length,bseExtL.length)} each</span></div>
       <div class="g2" style="margin:0;gap:0">
         <div class="tscr" style="border-right:1px solid #eee"><table>
           <thead><tr><th>🟢 BSE Gainers</th><th>Price</th><th>%</th></tr></thead>
-          <tbody>${bseExtG.map(r=>row3(r[0],r[1],r[2])).join('')}</tbody>
+          <tbody>${bseExtG.map(r=>`<tr><td>${f(r[0])}</td><td>${f(r[1])}</td><td class="${ic(r[2])}">${f(r[2])}</td></tr>`).join('')}</tbody>
         </table></div>
         <div class="tscr"><table>
           <thead><tr><th>🔴 BSE Losers</th><th>Price</th><th>%</th></tr></thead>
-          <tbody>${bseExtL.map(r=>row3(r[0],r[1],r[2])).join('')}</tbody>
+          <tbody>${bseExtL.map(r=>`<tr><td>${f(r[0])}</td><td>${f(r[1])}</td><td class="${ic(r[2])}">${f(r[2])}</td></tr>`).join('')}</tbody>
         </table></div>
       </div>
     </div>`:''}`;
 }
 
-/* ══════════════════════════════════════════════════
-   IPO CORNER
-   Listed IPOs: rows 2-21, cols [0]=Name [1]=Type [2]=Date [3]=IssuePrice [4]=Subs
-                [5]=ListOpen [6]=ListClose [7]=ListGain [8]=LTP [9]=TodayGain [10]=Size
-   GMP: starts at row with "Grey Market Premium" in col[1], data from next row
-        cols [0]=Name [1]=GMP [2]=Trend [3]=PriceBand [4]=EstListing [5]=Date [6]=Type [7]=Status
-   Subscription: starts at row with "IPO Subscription Status"
-        cols [0]=IPO [1]=Type [2]=Open [3]=Close [4]=QIB [5]=NII [6]=Retail [7]=Total
-══════════════════════════════════════════════════ */
+/* ══════════════════════════════════════════════
+   FIX 4: IPO CORNER
+   Three completely SEPARATE tables — must not merge:
+   1) Listed IPOs:  rows 2..N, cols [0]=Name [1]=Type [2]=Date [3]=IssuePrice [4]=Subs [5]=ListOpen [6]=ListClose [7]=ListGain [8]=LTP [9]=TodayGain [10]=Size
+   2) GMP: starts after row where col[1]="Grey Market Premium"
+            header row: col[0]="*IPO Name*" etc
+            data: col[0]=Name [1]=GMP [2]=Trend [3]=PriceBand [4]=EstListing [5]=Date [6]=Type [7]=Status
+   3) Subscription: starts after row where col[1]="IPO Subscription Status Application-wise"
+            header: col[0]="IPO" col[1]="Type" col[2]="Opening Date"...
+            data: col[0]=IPO [1]=Type [2]=Open [3]=Close [4]=QIB [5]=NII [6]=Retail [7]=Total
+   KEY FIX: Use SEPARATE section detection — stop each section at next blank block
+══════════════════════════════════════════════ */
 function renderIPO(rows){
-  // Listed IPOs: rows 2 onwards until blank block (row[0] empty)
-  const listedRows=rows.slice(2).filter(r=>r[0]&&r[0].trim()&&r[1]&&r[0].trim()!=='Company Name');
-  // Stop at first completely blank row
-  const listedEnd=listedRows.findIndex(r=>!r.some(c=>c&&c.trim()));
-  const listed=listedEnd>0?listedRows.slice(0,listedEnd):listedRows;
+  // 1. Listed IPOs — rows 2 onwards (row 0=section header, row 1=col headers)
+  // Stop at first row where all cells empty
+  const listedData=[];
+  for(let i=2;i<rows.length;i++){
+    const r=rows[i];
+    if(!r[0]||!r[0].trim()) break; // stop at blank
+    if(r[0].trim()==='Company Name') continue;
+    listedData.push(r);
+  }
 
-  // GMP section
-  const gmpHdrI=rows.findIndex(r=>(r[1]||'').includes('Grey Market Premium'));
-  const gmpDataStart=gmpHdrI+2; // skip header row with column labels
-  const gmpRows=gmpHdrI>=0?rows.slice(gmpDataStart,gmpDataStart+20).filter(r=>r[0]&&r[0].trim()&&!r[0].includes('IPO Name')):[];
+  // 2. GMP — find row with "Grey Market Premium" in col[1]
+  const gmpHdrI=rows.findIndex(r=>(r[1]||'').trim()==='Grey Market Premium');
+  const gmpData=[];
+  if(gmpHdrI>=0){
+    for(let i=gmpHdrI+2;i<rows.length;i++){ // +2 to skip column header row
+      const r=rows[i];
+      if(!r[0]||!r[0].trim()) break;
+      if((r[0]||'').includes('IPO Name')) continue;
+      gmpData.push(r);
+    }
+  }
 
-  // Subscription
+  // 3. Subscription — find row with "IPO Subscription Status" in col[1]
   const subHdrI=rows.findIndex(r=>(r[1]||'').includes('IPO Subscription Status'));
-  const subRows=subHdrI>=0?rows.slice(subHdrI+2,subHdrI+40).filter(r=>r[0]&&r[0].trim()&&r[0]!=='IPO'):[];
-
-  const gmpHtml=gmpRows.length?`<div class="tscr"><table>
-    <thead><tr><th>IPO Name</th><th>GMP</th><th>Trend</th><th>Price Band</th><th>Est. Listing</th><th>Date</th><th>Type</th><th>Status</th></tr></thead>
-    <tbody>${gmpRows.map(r=>`<tr>
-      <td><strong>${clean(r[0])}</strong></td>
-      <td class="${ic(clean(r[1]))}">${clean(r[1])}</td>
-      <td>${f(r[2])}</td><td>${clean(r[3])}</td><td>${clean(r[4])}</td>
-      <td>${clean(r[5])}</td><td>${clean(r[6])}</td><td>${sbadge(clean(r[7]))}</td>
-    </tr>`).join('')}</tbody>
-  </table></div>`:'<p style="padding:10px;color:#aaa">No GMP data</p>';
-
-  const listHtml=listed.length?`<div class="tscr"><table>
-    <thead><tr><th>Company</th><th>Type</th><th>Listed</th><th>Issue ₹</th><th>Subs</th><th>List Open</th><th>List Close</th><th>List Gain</th><th>LTP ₹</th><th>Today's Gain</th><th>Size</th></tr></thead>
-    <tbody>${listed.map(r=>`<tr>
-      <td><strong>${f(r[0])}</strong></td><td>${tbadge(r[1])}</td>
-      <td>${f(r[2])}</td><td>${f(r[3])}</td><td>${f(r[4])}</td>
-      <td>${f(r[5])}</td><td>${f(r[6])}</td>
-      <td class="${ic(r[7])}">${f(r[7])}</td>
-      <td>${f(r[8])}</td><td class="${ic(r[9])}">${f(r[9])}</td><td>${f(r[10])}</td>
-    </tr>`).join('')}</tbody>
-  </table></div>`:'<p style="padding:10px;color:#aaa">No data</p>';
-
-  const subHtml=subRows.length?`<div class="tscr"><table>
-    <thead><tr><th>IPO</th><th>Type</th><th>Open</th><th>Close</th><th>QIB (x)</th><th>NII (x)</th><th>Retail (x)</th><th>Total (x)</th></tr></thead>
-    <tbody>${subRows.map(r=>`<tr>
-      <td><strong>${f(r[0])}</strong></td><td>${tbadge(r[1])}</td>
-      <td>${f(r[2])}</td><td>${f(r[3])}</td>
-      ${[4,5,6,7].map(i=>{const v=parseFloat(r[i]);return`<td class="${v>=10?'cp':v>=1?'':'cn'}">${f(r[i])}</td>`;}).join('')}
-    </tr>`).join('')}</tbody>
-  </table></div>`:'<p style="padding:10px;color:#aaa">No data</p>';
+  const subData=[];
+  if(subHdrI>=0){
+    for(let i=subHdrI+2;i<rows.length;i++){ // +2 to skip column header row
+      const r=rows[i];
+      if(!r[0]||!r[0].trim()) break;
+      if(r[0].trim()==='IPO') continue;
+      subData.push(r);
+    }
+  }
 
   $('s-ipo').innerHTML=`
     <div class="stitle">🏦 IPO Corner</div>
-    <div class="tcw"><div class="tch">📋 Grey Market Premium (GMP) <span class="cnt">${gmpRows.length}</span></div>${gmpHtml}</div>
-    <div class="tcw"><div class="tch">📈 Recently Listed IPO Performances <span class="cnt">${listed.length}</span></div>${listHtml}</div>
-    <div class="tcw"><div class="tch">📅 Subscription Status <span class="cnt">${subRows.length}</span></div>${subHtml}</div>`;
+
+    <div class="tcw">
+      <div class="tch">📋 Grey Market Premium (GMP) <span class="cnt">${gmpData.length}</span></div>
+      <div class="tscr"><table>
+        <thead><tr><th>IPO Name</th><th>GMP</th><th>Trend</th><th>Price Band</th><th>Est. Listing</th><th>Date</th><th>Type</th><th>Status</th></tr></thead>
+        <tbody>${gmpData.length?gmpData.map(r=>`<tr>
+          <td><strong>${clean(r[0])}</strong></td>
+          <td class="${ic(clean(r[1]))}">${clean(r[1])}</td>
+          <td>${f(r[2])}</td><td>${clean(r[3])}</td><td>${clean(r[4])}</td>
+          <td>${clean(r[5])}</td><td>${clean(r[6])}</td>
+          <td>${sbadge(clean(r[7]))}</td></tr>`).join('')
+          :'<tr><td colspan="8" style="color:#aaa;padding:10px;text-align:center">No GMP data</td></tr>'}
+        </tbody>
+      </table></div>
+    </div>
+
+    <div class="tcw">
+      <div class="tch">📈 Recently Listed IPO Performances <span class="cnt">${listedData.length}</span></div>
+      <div class="tscr"><table>
+        <thead><tr><th>Company</th><th>Type</th><th>Listed</th><th>Issue ₹</th><th>Subs</th><th>List Open</th><th>List Close</th><th>List Gain</th><th>LTP ₹</th><th>Today's Gain</th><th>Size</th></tr></thead>
+        <tbody>${listedData.length?listedData.map(r=>`<tr>
+          <td><strong>${f(r[0])}</strong></td><td>${tbadge(r[1])}</td>
+          <td>${f(r[2])}</td><td>${f(r[3])}</td><td>${f(r[4])}</td>
+          <td>${f(r[5])}</td><td>${f(r[6])}</td>
+          <td class="${ic(r[7])}">${f(r[7])}</td>
+          <td>${f(r[8])}</td>
+          <td class="${ic(r[9])}">${f(r[9])}</td>
+          <td>${f(r[10])}</td></tr>`).join('')
+          :'<tr><td colspan="11" style="color:#aaa;padding:10px;text-align:center">No data</td></tr>'}
+        </tbody>
+      </table></div>
+    </div>
+
+    <div class="tcw">
+      <div class="tch">📅 IPO Subscription Status <span class="cnt">${subData.length}</span></div>
+      <div class="tscr"><table>
+        <thead><tr><th>IPO</th><th>Type</th><th>Open</th><th>Close</th><th>QIB (x)</th><th>NII (x)</th><th>Retail (x)</th><th>Total (x)</th></tr></thead>
+        <tbody>${subData.length?subData.map(r=>`<tr>
+          <td><strong>${f(r[0])}</strong></td><td>${tbadge(r[1])}</td>
+          <td>${f(r[2])}</td><td>${f(r[3])}</td>
+          ${[4,5,6,7].map(i=>{const v=parseFloat(r[i]);return`<td class="${v>=10?'cp':v>=1?'':'cn'}">${f(r[i])}</td>`;}).join('')}
+          </tr>`).join('')
+          :'<tr><td colspan="8" style="color:#aaa;padding:10px;text-align:center">No data</td></tr>'}
+        </tbody>
+      </table></div>
+    </div>`;
 }
 
-/* ══════════════════════════════════════════════════
-   CURRENCY & COMMODITY — exact CSV structure:
-   Row 0: headers
-   Row 1+: [1]=CurrencyName [2]=RateINR [3]=Code  |  [5]=Symbol [6]=Last [7]=Change [8]=Change% [9]=Close [10]=High [11]=Low [12]=LastTrade
-   Skip rows where col[5]='#N/A' or col[1] empty
-══════════════════════════════════════════════════ */
+/* ══════════════════════════════════════════════
+   CURRENCY — same as before, working correctly
+   Col: [1]=Currency [2]=RateINR [3]=Code | [5]=Symbol [6]=Last [7]=Chg [8]=Chg% [9]=Close [10]=High [11]=Low
+══════════════════════════════════════════════ */
 function renderCurrency(rows){
-  const currRows=rows.slice(1).filter(r=>r[1]&&r[1].trim()&&r[2]&&r[2].trim()&&r[1]!=='Currency');
-  const commRows=rows.slice(1).filter(r=>r[5]&&r[5].trim()&&r[5]!=='Symbol'&&r[5]!=='#N/A'&&r[6]&&r[6].trim());
+  const curr=rows.slice(1).filter(r=>r[1]&&r[1].trim()&&r[2]&&r[2].trim()&&r[1]!=='Currency');
+  const comm=rows.slice(1).filter(r=>r[5]&&r[5].trim()&&r[5]!=='Symbol'&&r[5]!=='#N/A'&&r[6]&&r[6].trim());
 
   $('s-currency').innerHTML=`
     <div class="stitle">💱 Currencies &amp; Commodities</div>
     <div class="g2">
       <div class="tcw">
-        <div class="tch">🌐 Global Currencies vs INR <span class="cnt">${currRows.length}</span></div>
+        <div class="tch">🌐 Global Currencies vs INR <span class="cnt">${curr.length}</span></div>
         <div class="tscr"><table>
           <thead><tr><th>Currency</th><th>Code</th><th>Rate (₹)</th></tr></thead>
-          <tbody>${currRows.map(r=>`<tr>
+          <tbody>${curr.map(r=>`<tr>
             <td>${f(r[1])}</td>
             <td style="color:#aaa;font-size:11px">${f(r[3])}</td>
-            <td><strong>${f(r[2])}</strong></td>
-          </tr>`).join('')}</tbody>
+            <td><strong>${f(r[2])}</strong></td></tr>`).join('')}
+          </tbody>
         </table></div>
       </div>
       <div class="tcw">
-        <div class="tch">🪙 MCX Commodities <span class="cnt">${commRows.length}</span></div>
+        <div class="tch">🪙 MCX Commodities <span class="cnt">${comm.length}</span></div>
         <div class="tscr"><table>
           <thead><tr><th>Commodity</th><th>Last</th><th>Chg</th><th>Chg%</th><th>High</th><th>Low</th></tr></thead>
-          <tbody>${commRows.map(r=>`<tr>
+          <tbody>${comm.map(r=>`<tr>
             <td><strong>${f(r[5])}</strong></td><td>${f(r[6])}</td>
             <td class="${ic(r[7])}">${f(r[7])}</td>
             <td class="${ic(r[8])}">${f(r[8])}</td>
             <td style="color:#aaa">${f(r[10])}</td>
-            <td style="color:#aaa">${f(r[11])}</td>
-          </tr>`).join('')}</tbody>
+            <td style="color:#aaa">${f(r[11])}</td></tr>`).join('')}
+          </tbody>
         </table></div>
       </div>
     </div>`;
 }
 
-/* ══════════════════════════════════════════════════
-   ACE INVESTORS — exact CSV structure:
-   Row 0: ",,SUPER INVESTORS OF INDIA"
-   Row 1: "S. No.,Company,Mar 2025%,Jun 2025%,Sep 2025%,Dec 2025%,Mar 2026%,Value in Cr."
-   Investor header row: [0]='' [1]='' [2]=INVESTOR NAME [6]='Portfolio Value:' [7]=amount
-   Next row: column headers (S.No., COMPANY, ...)
-   Data rows: [0]=S.No.(number) [1]=CompanyName [2]=Mar25% ... [6]=Mar26% [7]=ValueCr
-══════════════════════════════════════════════════ */
+/* ══════════════════════════════════════════════
+   FIX 5: ACE INVESTORS — complete data
+   CSV structure:
+   - Investor header row: col[0]='' col[1]='' col[2]=INVESTOR NAME col[6]='Portfolio Value:' col[7]=amount
+   - Next row: col headers (skip)
+   - Data rows: col[0]=S.No.(number), col[1]=Company, col[2..6]=quarterly %, col[7]=ValueCr
+   - Blank rows between investors (all cols empty)
+   FIX: Collect ALL rows until next investor header or end — don't stop at blank rows
+══════════════════════════════════════════════ */
 function renderAce(rows){
-  const NAMES=[
+  const INAMES=[
     ['PRESIDENT OF INDIA','President of India'],
     ['RADHAKISHAN','Radhakishan Damani'],
     ['REKHA JHUNJHUNWALA','Rekha Jhunjhunwala'],
@@ -614,28 +712,31 @@ function renderAce(rows){
   let cur=null;
 
   for(const r of rows){
-    // Investor header: col[2] has the name, col[6]='Portfolio Value:', col[7]=amount
+    // Investor header: col[2] has name, col[0] and col[1] are blank
     const c2=(r[2]||'').trim().toUpperCase();
-    const matched=NAMES.find(([key])=>c2.includes(key));
+    const c0=(r[0]||'').trim();
+    const c1=(r[1]||'').trim();
+    const matched=(!c0&&!c1)?INAMES.find(([k])=>c2.includes(k)):null;
+
     if(matched){
-      if(cur&&cur.h.length) investors.push(cur);
+      if(cur) investors.push(cur);
       cur={name:matched[1], pv:f(r[7]), h:[]};
     } else if(cur){
-      // Data row: col[0] is a number (S.No.), col[1] is company name
+      // Data row: col[0] is a number (S.No.)
       const sno=(r[0]||'').trim();
       const company=(r[1]||'').trim();
-      if(sno&&!isNaN(parseInt(sno))&&company&&company.length>2){
-        cur.h.push(r);
-      }
+      // Skip: blank rows, column header rows, non-numeric S.No.
+      if(!sno||!company||isNaN(parseInt(sno))||company==='COMPANY'||company==='Company') continue;
+      cur.h.push(r);
     }
   }
-  if(cur&&cur.h.length) investors.push(cur);
+  if(cur) investors.push(cur);
 
-  const tabsHtml=investors.map((inv,i)=>
+  const tabs=investors.map((inv,i)=>
     `<button class="itb${i===0?' on':''}" onclick="showInv('ip${i}',this)">${inv.name}</button>`
   ).join('');
 
-  const panelsHtml=investors.map((inv,i)=>`
+  const panels=investors.map((inv,i)=>`
     <div class="ipanel${i===0?' on':''}" id="ip${i}">
       ${inv.pv&&inv.pv!=='—'?`<div class="pvlbl">Portfolio Value (Mar 2026): <strong>₹${inv.pv} Cr</strong></div>`:''}
       <div class="tcw"><div class="tscr"><table>
@@ -645,37 +746,33 @@ function renderAce(rows){
           <td><strong>${f(h[1])}</strong></td>
           <td>${f(h[2])}</td><td>${f(h[3])}</td><td>${f(h[4])}</td>
           <td>${f(h[5])}</td><td><strong>${f(h[6])}</strong></td>
-          <td class="cp">${f(h[7])}</td>
-        </tr>`).join('')}</tbody>
+          <td class="cp">${f(h[7])}</td></tr>`).join('')}
+        </tbody>
       </table></div></div>
     </div>`).join('');
 
   $('s-ace').innerHTML=`
     <div class="stitle">🧠 Ace Investor Portfolios — Mar 2026</div>
     <div class="disc">⚠️ <strong>For Investment Study Only.</strong> Quarterly public disclosures. Not investment advice.</div>
-    <div class="itabs">${tabsHtml}</div>
-    <div>${panelsHtml}</div>`;
+    <div class="itabs">${tabs}</div>
+    <div>${panels}</div>`;
 }
 
-/* ══════════════════════════════════════════════════
-   TICKER — from Global (col2=name,col3=price,col5=%) and Futures (col0=name,col2=price,col4=%)
-══════════════════════════════════════════════════ */
+/* ── TICKER ── */
 function buildTicker(gRows,fRows){
   const items=[];
   gRows.slice(1).filter(r=>r[2]&&r[3]).slice(0,8).forEach(r=>{
     const pos=parseFloat(r[4]||'0')>=0;
     items.push(`<div class="ti"><span class="tn">${f(r[2])}</span><span class="tv">${f(r[3])}</span><span class="tc ${pos?'up':'dn'}">${f(r[5])}%</span></div>`);
   });
-  fRows.filter(r=>r[0]&&r[2]&&r[0]!=='Symbol'&&r[0]!=='Close').slice(0,6).forEach(r=>{
+  fRows.filter(r=>r[0]&&r[2]&&r[0]!=='Symbol'&&r[0]!=='Close'&&r[0]!=='Gift Nifty').slice(0,6).forEach(r=>{
     const pos=!String(r[3]||'').startsWith('-');
     items.push(`<div class="ti"><span class="tn">${f(r[0])}</span><span class="tv">${f(r[2])}</span><span class="tc ${pos?'up':'dn'}">${f(r[4])}</span></div>`);
   });
   $('tick').innerHTML=[...items,...items].join('')||'<div class="ti"><span class="tn">Live</span></div>';
 }
 
-/* ══════════════════════════════════════════════════
-   LOAD ALL
-══════════════════════════════════════════════════ */
+/* ── LOAD ALL ── */
 const DATA={};
 async function loadAll(){
   const btn=$('rbtn'); btn.textContent='⟳ Loading…'; btn.disabled=true;
@@ -683,13 +780,13 @@ async function loadAll(){
     try{DATA[k]=await fetchSheet(gid);}
     catch(e){console.warn(k,e.message);}
   }));
-  if(DATA.global?.length)   try{renderGlobal(DATA.global);}   catch(e){console.error('Global',e);}
-  if(DATA.futures?.length)  try{renderFutures(DATA.futures);}  catch(e){console.error('Futures',e);}
-  if(DATA.indian?.length)   try{renderIndian(DATA.indian);}   catch(e){console.error('Indian',e);}
-  if(DATA.market?.length)   try{renderMarket(DATA.market);}   catch(e){console.error('Market',e);}
-  if(DATA.ipo?.length)      try{renderIPO(DATA.ipo);}         catch(e){console.error('IPO',e);}
-  if(DATA.currency?.length) try{renderCurrency(DATA.currency);}catch(e){console.error('Currency',e);}
-  if(DATA.ace?.length)      try{renderAce(DATA.ace);}         catch(e){console.error('Ace',e);}
+  if(DATA.global?.length)   try{renderGlobal(DATA.global);}    catch(e){console.error('Global',e);}
+  if(DATA.futures?.length)  try{renderFutures(DATA.futures);}   catch(e){console.error('Futures',e);}
+  if(DATA.indian?.length)   try{renderIndian(DATA.indian);}    catch(e){console.error('Indian',e);}
+  if(DATA.market?.length)   try{renderMarket(DATA.market);}    catch(e){console.error('Market',e);}
+  if(DATA.ipo?.length)      try{renderIPO(DATA.ipo);}          catch(e){console.error('IPO',e);}
+  if(DATA.currency?.length) try{renderCurrency(DATA.currency);} catch(e){console.error('Currency',e);}
+  if(DATA.ace?.length)      try{renderAce(DATA.ace);}          catch(e){console.error('Ace',e);}
   try{buildTicker(DATA.global||[],DATA.futures||[]);}catch(e){}
   const now=new Date();
   $('ts').textContent=`Live · Updated ${now.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'})} IST`;
