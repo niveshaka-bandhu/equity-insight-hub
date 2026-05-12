@@ -314,51 +314,53 @@ function renderFutures(rows){
 }
 
 /* ══════════════════════════════════════════════
-   FIX 1: INDIAN INDICES
-   Exact CSV structure:
-   Row 0: "INDEX NAME,Price,CHANGE,% CHANGE,52 WEEK HIGH,52 WEEK LOW,LAST UPDATED TIME,..."
-   Row 1: ",NSE Sectoral Indices,..." → NSE section header (col[0]='' col[1]='NSE Sectoral Indices')
-   Rows 2–19: NSE data [0]=name [1]=price [2]=chg [3]=%chg [4]=52whi [5]=52wlo
-   Row 20: blank
-   Row 21: ",BSE Sectoral Indices,..." → BSE section header
-   Rows 22–38: BSE data same structure
-   Row 39+: blank rows
-   Rows ~41+: Nifty50 stocks [0]=stock [1]=price [2]=chg [3]=%chg [4]=52whi [5]=52wlo [6]=datetime
-              AND col[7]=Company [8]=Industry [9]=Symbol [10]=Weight (weights table)
-   FIX: 4 tables (NSE, BSE, Stocks, Weights) each get their OWN separate table card with header
-   FIX: No duplicate headers inside tables
+   INDIAN INDICES — exact row mapping from CSV:
+   gviz row index = CSV row number - 1  (0-based)
+   Row 0  (CSV 1):  Header: INDEX NAME, Price, CHANGE, % CHANGE, 52W HIGH, 52W LOW, TIME
+   Row 1  (CSV 2):  Section label ",NSE Sectoral Indices" — skip
+   Rows 2–20 (CSV 3–21):   Table 1 — NSE Sectoral (19 rows)
+   Row 21 (CSV 22): blank — skip
+   Row 22 (CSV 23): Section label ",BSE Sectoral Indices" — skip
+   Rows 23–40 (CSV 24–41): Table 2 — BSE Sectoral (18 rows)
+   Rows 41–42 (CSV 42–43): blank — skip
+   Rows 43–72 (CSV 44–73): Table 3 — BSE SENSEX 30 stocks (30 rows)
+   Row 73–74 (CSV 74–75): blank / NSE: label — skip
+   Row 75 (CSV 76): col[7]="Company Name" header for weights — skip
+   Rows 75–124 (CSV 76–125): Table 4 — Nifty 50 stocks col[0–5]
+                              AND weights col[7–10] on same rows
+   Row 125 (CSV 126): last weight row (col[0] blank, col[7–10] = last entry)
+   Cols: [0]=Name [1]=Price [2]=Change [3]=%Chg [4]=52WH [5]=52WL [6]=DateTime
+         [7]=WtCompany [8]=WtIndustry [9]=WtSymbol [10]=WtWeight
 ══════════════════════════════════════════════ */
 function renderIndian(rows){
-  // Find NSE header: row where col[0]=='' and col[1] contains 'NSE'
-  const nseHdrI=rows.findIndex(r=>r[0]===''&&(r[1]||'').includes('NSE'));
-  // Find BSE header: row where col[0]=='' and col[1] contains 'BSE'
-  const bseHdrI=rows.findIndex(r=>r[0]===''&&(r[1]||'').includes('BSE'));
+  // EXACT row slices — gviz is 0-indexed, matches CSV row - 1
+  const nseRows   = rows.slice(2,  21); // CSV rows 3–21
+  const bseRows   = rows.slice(23, 41); // CSV rows 24–41
+  const sensexRows= rows.slice(43, 73); // CSV rows 44–73
+  const niftyRows = rows.slice(75,125); // CSV rows 76–125
 
-  // Data row = col[0] has text AND col[1] is numeric
-  const isData=r=>r[0]&&r[0].trim()&&r[1]&&!isNaN(parseFloat(String(r[1]).replace(/,/g,'')));
+  // Weight rows: same rows 75–125, read col[7–10]
+  // Row 125 (CSV 126) has only weights, no stock data
+  const weightRows = rows.slice(75,126).filter(r=>r[7]&&r[7].trim()&&r[8]&&r[9]&&r[10]&&r[7]!=='Company Name');
 
-  // NSE data: rows from nseHdrI+1 until bseHdrI (exclusive)
-  const nseRows=nseHdrI>=0
-    ? rows.slice(nseHdrI+1, bseHdrI>nseHdrI?bseHdrI:nseHdrI+25).filter(isData)
-    : [];
+  // Filter: only rows where col[0] has a name (skip accidental blank rows)
+  const hasName = r => r[0]&&r[0].trim();
+  const nse    = nseRows.filter(hasName);
+  const bse    = bseRows.filter(hasName);
+  const sensex = sensexRows.filter(hasName);
+  const nifty  = niftyRows.filter(hasName);
 
-  // BSE data: rows from bseHdrI+1 until first blank block
-  const bseRaw=bseHdrI>=0?rows.slice(bseHdrI+1,bseHdrI+30):[];
-  const bseRows=bseRaw.filter(isData);
+  const sectR = r=>`<tr>
+    <td><strong>${f(r[0])}</strong></td>
+    <td>${f(r[1])}</td>
+    <td class="${ic(r[2])}">${f(r[2])}</td>
+    <td class="${ic(r[3])}">${f(r[3])}%</td>
+    <td style="color:#aaa">${f(r[4])}</td>
+    <td style="color:#aaa">${f(r[5])}</td></tr>`;
 
-  // Nifty50 stock rows: have a datetime in col[6] (format contains '/')
-  // These appear AFTER the BSE section blank rows
-  const stockRows=rows.filter(r=>
-    r[0]&&r[0].trim()&&r[1]&&!isNaN(parseFloat(String(r[1]).replace(/,/g,'')))
-    &&r[6]&&r[6].includes('/')
-  );
-
-  // Weight rows: col[7]=Company, col[8]=Industry, col[9]=Symbol, col[10]=Weight
-  // These appear on the SAME rows as stockRows (side by side in the sheet)
-  const weightRows=rows.filter(r=>r[7]&&r[7].trim()&&r[8]&&r[8].trim()&&r[9]&&r[9].trim()&&r[10]);
-
-  const sectR=r=>`<tr>
-    <td><strong>${f(r[0])}</strong></td><td>${f(r[1])}</td>
+  const stockR = r=>`<tr>
+    <td><strong>${f(r[0])}</strong></td>
+    <td>${f(r[1])}</td>
     <td class="${ic(r[2])}">${f(r[2])}</td>
     <td class="${ic(r[3])}">${f(r[3])}%</td>
     <td style="color:#aaa">${f(r[4])}</td>
@@ -369,35 +371,24 @@ function renderIndian(rows){
 
     <div class="g2">
       <div class="tcw">
-        <div class="tch">NSE Sectoral Indices <span class="cnt">${nseRows.length}</span></div>
-        <div class="tscr"><table>
-          ${SECT_TH}
-          <tbody>${nseRows.map(sectR).join('')}</tbody>
-        </table></div>
+        <div class="tch">NSE Sectoral Indices <span class="cnt">${nse.length}</span></div>
+        <div class="tscr"><table>${SECT_TH}<tbody>${nse.map(sectR).join('')}</tbody></table></div>
       </div>
       <div class="tcw">
-        <div class="tch">BSE Sectoral Indices <span class="cnt">${bseRows.length}</span></div>
-        <div class="tscr"><table>
-          ${SECT_TH}
-          <tbody>${bseRows.map(sectR).join('')}</tbody>
-        </table></div>
+        <div class="tch">BSE Sectoral Indices <span class="cnt">${bse.length}</span></div>
+        <div class="tscr"><table>${SECT_TH}<tbody>${bse.map(sectR).join('')}</tbody></table></div>
       </div>
     </div>
 
-    ${stockRows.length?`
     <div class="tcw">
-      <div class="tch">NIFTY 50 Constituents — Live Prices <span class="cnt">${stockRows.length}</span></div>
-      <div class="tscr"><table>
-        ${STOCK_TH}
-        <tbody>${stockRows.map(r=>`<tr>
-          <td><strong>${f(r[0])}</strong></td><td>${f(r[1])}</td>
-          <td class="${ic(r[2])}">${f(r[2])}</td>
-          <td class="${ic(r[3])}">${f(r[3])}%</td>
-          <td style="color:#aaa">${f(r[4])}</td>
-          <td style="color:#aaa">${f(r[5])}</td></tr>`).join('')}
-        </tbody>
-      </table></div>
-    </div>`:''}
+      <div class="tch">BSE SENSEX 30 <span class="cnt">${sensex.length}</span></div>
+      <div class="tscr"><table>${STOCK_TH}<tbody>${sensex.map(stockR).join('')}</tbody></table></div>
+    </div>
+
+    <div class="tcw">
+      <div class="tch">NIFTY 50 Constituents — Live Prices <span class="cnt">${nifty.length}</span></div>
+      <div class="tscr"><table>${STOCK_TH}<tbody>${nifty.map(stockR).join('')}</tbody></table></div>
+    </div>
 
     ${weightRows.length?`
     <div class="tcw">
