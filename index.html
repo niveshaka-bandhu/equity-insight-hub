@@ -192,14 +192,16 @@ function ic(v){
   const n=parseFloat(s);
   return isNaN(n)?'':n<0?'cn':n>0?'cp':'';
 }
-function icard(name,price,chg,pct,hi,lo,tm){
-  const pos=!String(chg||'').trim().startsWith('-');
-  return `<div class="icard">
-    <div class="iname">${f(name)}</div>
+function pctFmt(v){const s=String(v||"").trim();if(!s||s==="—")return "—";return s.includes("%")?s:s+"%";}
+function icard(name,price,chg,pct,hi,lo,tm,hl){
+  const pos=!String(chg||"").trim().startsWith("-");
+  const hls=hl?"border:2px solid #e07b00;background:#fffbf0;":"";
+  return `<div class="icard" style="${hls}">
+    <div class="iname" style="${hl?"font-weight:700;color:#b85c00;":""}">${f(name)}</div>
     <div class="iprc">${f(price)}</div>
-    <div class="ichs"><span class="${pos?'up':'dn'}">${f(chg)}</span><span class="${pos?'up':'dn'}">${f(pct)}%</span></div>
+    <div class="ichs"><span class="${pos?"up":"dn"}">${f(chg)}</span><span class="${pos?"up":"dn"}">${pctFmt(pct)}</span></div>
     <div class="ihl">H:${f(hi)} &nbsp;L:${f(lo)}</div>
-    ${tm?`<div class="itm">${f(tm)}</div>`:''}
+    ${tm?`<div class="itm">${f(tm)}</div>`:""}
   </div>`;
 }
 function sbadge(s){
@@ -224,21 +226,23 @@ const MKT_TH3=`<thead><tr><th>Company</th><th>Price ₹</th><th>% Chg</th></tr><
    DOW is at row index 4 (after NIFTY,SENSEX,VIX) → World, NOT India
 ══════════════════════════════════════════════ */
 function renderGlobal(rows){
-  // row[0] = header ",,INDEX NAME,Price,..." → skip
-  // row[1] = NIFTY 50, row[2] = SENSEX, row[3] = INDIA VIX → India
-  // row[4]+ = DOW, NASDAQ etc → World
-  const dr=rows.slice(1).filter(r=>r[2]&&r[2].trim()&&r[3]&&r[3].trim());
-  // Split by name: India = NIFTY/SENSEX/VIX, World = everything else
-  const INDIA_K=['NIFTY','SENSEX','VIX'];
-  const india=dr.filter(r=>INDIA_K.some(k=>r[2].toUpperCase().includes(k)));
-  const world=dr.filter(r=>!INDIA_K.some(k=>r[2].toUpperCase().includes(k)));
+  // CSV exact structure (0-indexed gviz rows):
+  // Row 0: header → skip
+  // Rows 1,2,3: NIFTY 50, SENSEX, INDIA VIX → India
+  // Rows 4–28: DOW, NASDAQ... → World
+  // Filter: col[2] must have a name
+  const allData=rows.slice(1).filter(r=>r[2]&&r[2].trim());
+  // India = first 3 data rows (NIFTY 50, SENSEX, INDIA VIX)
+  const india=allData.slice(0,3);
+  // World = rest, skip last blank rows
+  const world=allData.slice(3).filter(r=>r[3]&&r[3].trim());
 
-  $('s-global').innerHTML=`
+  $("s-global").innerHTML=`
     <div class="stitle">🌍 Global Indices</div>
     <div class="stitle-sm">India</div>
-    <div class="igrid">${india.map(r=>icard(r[2],r[3],r[4],r[5],r[6],r[7],r[8])).join('')}</div>
+    <div class="igrid">${india.map(r=>icard(r[2],r[3],r[4],r[5],r[6],r[7],r[8])).join("")}</div>
     <div class="stitle-sm">🌐 World Markets</div>
-    <div class="igrid">${world.map(r=>icard(r[2],r[3],r[4],r[5],r[6],r[7],r[8])).join('')}</div>
+    <div class="igrid">${world.map(r=>icard(r[2],r[3],r[4],r[5],r[6],r[7],r[8])).join("")}</div>
     <p style="font-size:10px;color:#bbb;margin-top:6px">⚠️ Quotes delayed up to 20 min. Source: Google Finance. Not investment advice.</p>`;
 }
 
@@ -286,7 +290,8 @@ function renderFutures(rows){
     // Next row has time
     const next=rows[i+1]||[];
     const tm=(next[3]||'').trim();
-    cards.push(icard(name,r[2],r[3],r[4],r[5],r[6],tm));
+    const isHL=name.toUpperCase().includes('NIFTY FUTURES')||name.toUpperCase().includes('GIFT NIFTY FUTURES');
+    cards.push(icard(name,r[2],r[3],r[4],r[5],r[6],tm,isHL));
     i+=2;
   }
 
