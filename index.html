@@ -226,23 +226,54 @@ const MKT_TH3=`<thead><tr><th>Company</th><th>Price ₹</th><th>% Chg</th></tr><
    DOW is at row index 4 (after NIFTY,SENSEX,VIX) → World, NOT India
 ══════════════════════════════════════════════ */
 function renderGlobal(rows){
-  // CSV exact structure (0-indexed gviz rows):
-  // Row 0: header → skip
-  // Rows 1,2,3: NIFTY 50, SENSEX, INDIA VIX → India
-  // Rows 4–28: DOW, NASDAQ... → World
-  // Filter: col[2] must have a name
-  const allData=rows.slice(1).filter(r=>r[2]&&r[2].trim());
-  // India = first 3 data rows (NIFTY 50, SENSEX, INDIA VIX)
-  const india=allData.slice(0,3);
-  // World = rest, skip last blank rows
-  const world=allData.slice(3).filter(r=>r[3]&&r[3].trim());
+  /* Sheet cols (gviz, 0-based):
+     [0]=blank [1]=blank [2]=INDEX NAME
+     Price col D may be hidden → gviz skips it
+     So we detect columns dynamically by header row.
+     Header row[0]: find which col index has "INDEX NAME", "Change", "% Chg", "High", "Low", "Time"
+  */
+  const hdr = rows[0] || [];
+  // Find col indices from header
+  let cName=-1,cChg=-1,cPct=-1,cHi=-1,cLo=-1,cTm=-1,cPrice=-1;
+  hdr.forEach((h,i)=>{
+    const v=(h||'').toLowerCase().trim();
+    if(v.includes('index name')||v==='name') cName=i;
+    else if(v.includes('price')) cPrice=i;
+    else if(v==='change'||v.includes('change')) { if(cChg===-1) cChg=i; }
+    else if(v.includes('%')||v.includes('chg')) { if(cPct===-1) cPct=i; }
+    else if(v.includes('high')) cHi=i;
+    else if(v.includes('low'))  cLo=i;
+    else if(v.includes('time')||v.includes('updated')) cTm=i;
+  });
+  // Fallback to known positions if header detection fails
+  if(cName===-1) cName=2;
+  if(cPrice===-1&&cChg>3) cPrice=3; // price exists between name and change
+  if(cChg===-1)  cChg  = cPrice>0 ? cPrice+1 : 3;
+  if(cPct===-1)  cPct  = cChg+1;
+  if(cHi===-1)   cHi   = cPct+1;
+  if(cLo===-1)   cLo   = cHi+1;
+  if(cTm===-1)   cTm   = cLo+1;
+
+  // All data rows (skip header, skip blank rows)
+  const allData = rows.slice(1).filter(r => r[cName] && r[cName].trim());
+
+  // India = rows whose name is NIFTY 50, SENSEX, or INDIA VIX (exact match preferred)
+  const INDIA = ['NIFTY 50','SENSEX','INDIA VIX','NIFTY','VIX'];
+  const india = allData.filter(r => INDIA.some(k => r[cName].toUpperCase().includes(k)));
+  const world = allData.filter(r => !INDIA.some(k => r[cName].toUpperCase().includes(k)));
+
+  const mkCard = r => icard(
+    r[cName],
+    cPrice>=0 ? r[cPrice] : '—',
+    r[cChg], r[cPct], r[cHi], r[cLo], r[cTm]
+  );
 
   $("s-global").innerHTML=`
     <div class="stitle">🌍 Global Indices</div>
     <div class="stitle-sm">India</div>
-    <div class="igrid">${india.map(r=>icard(r[2],r[3],r[4],r[5],r[6],r[7],r[8])).join("")}</div>
+    <div class="igrid">${india.map(mkCard).join("")}</div>
     <div class="stitle-sm">🌐 World Markets</div>
-    <div class="igrid">${world.map(r=>icard(r[2],r[3],r[4],r[5],r[6],r[7],r[8])).join("")}</div>
+    <div class="igrid">${world.map(mkCard).join("")}</div>
     <p style="font-size:10px;color:#bbb;margin-top:6px">⚠️ Quotes delayed up to 20 min. Source: Google Finance. Not investment advice.</p>`;
 }
 
