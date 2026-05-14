@@ -242,34 +242,46 @@ function renderGlobal(rows){
      Row 4 = INDIA VIX (gviz index 3)
      Row 5+ = World indices
   */
-  // Col B has flag images — gviz may shift columns if it counts images as a col
-  // Detect name column by scanning row 1 for NIFTY/SENSEX
-  let NC=2; // default nameCol
-  const testRow = rows[1] || [];
+  // From console debug: gviz row0=header, row1=SENSEX, row2=INDIA VIX, row3=DOW...
+  // NIFTY 50 (sheet row 2) is skipped by gviz — likely due to image in col B
+  // FIX: India = first 3 rows of allData by position (rows 1,2,3 in gviz = NIFTY50,SENSEX,VIX)
+  // But since NIFTY 50 is skipped, India = rows 1,2 and we manually add NIFTY 50 from ticker
+
+  // Use position-based split: first 2 data rows = India, rest = World
+  // Also include any row whose name contains NIFTY 50 in case gviz starts returning it
+  let NC=2;
+  const testRow = rows[1]||[];
   for(let ci=0;ci<6;ci++){
     const v=(testRow[ci]||'').toUpperCase();
     if(v.includes('NIFTY')||v.includes('SENSEX')){NC=ci;break;}
   }
   const PC=NC+1,CC=NC+2,FC=NC+3,HC=NC+4,LC=NC+5,TC=NC+6;
-  console.log('nameCol='+NC+' row1='+JSON.stringify(testRow.slice(0,7)));
 
   const allData = rows.slice(1).filter(r =>
     r[NC] && r[NC].trim() &&
     !r[NC].includes('candle') && !r[NC].includes('Click')
   );
 
-  const INDIA = ['NIFTY 50','SENSEX','INDIA VIX'];
-  const india = allData.filter(r => INDIA.some(k => r[NC].trim().toUpperCase().includes(k)));
-  const world = allData.filter(r => !INDIA.some(k => r[NC].trim().toUpperCase().includes(k)));
+  // India = first 3 rows by position (sheet rows 2,3,4 = NIFTY 50, SENSEX, INDIA VIX)
+  // Even if NIFTY 50 is skipped by gviz, SENSEX+VIX will be rows 0,1 of allData
+  // World = everything from index 3 onwards (or 2 if NIFTY 50 skipped)
+  const INDIA_NAMES = ['NIFTY','SENSEX','VIX'];
+  const india = allData.filter(r => INDIA_NAMES.some(k => (r[NC]||'').toUpperCase().includes(k)));
+  const world = allData.filter(r => !INDIA_NAMES.some(k => (r[NC]||'').toUpperCase().includes(k)));
 
-  console.log('india='+JSON.stringify(india.map(r=>r[NC])));
+  // gviz skips NIFTY 50 (sheet row 2) — try to recover it from rows[0] if it's a data row
+  // Also check if it appears anywhere in rows with 'NIFTY 50' text
+  const niftyRow = rows.find(r => (r[NC]||'').toUpperCase().trim() === 'NIFTY 50');
+  const indiaWithNifty = niftyRow
+    ? [niftyRow, ...india.filter(r=>(r[NC]||'').toUpperCase().trim()!=='NIFTY 50')]
+    : india;
 
   const mkCard = r => icard(r[NC], r[PC], r[CC], r[FC], r[HC], r[LC], r[TC]);
 
   $('s-global').innerHTML=`
     <div class="stitle">🌍 Global Indices</div>
     <div class="stitle-sm">India</div>
-    <div class="igrid">${india.map(mkCard).join('')}</div>
+    <div class="igrid">${indiaWithNifty.map(mkCard).join('')}</div>
     <div class="stitle-sm">🌐 World Markets</div>
     <div class="igrid">${world.map(mkCard).join('')}</div>
     <p style="font-size:10px;color:#bbb;margin-top:6px">⚠️ Quotes delayed up to 20 min. Source: Google Finance. Not investment advice.</p>`;
