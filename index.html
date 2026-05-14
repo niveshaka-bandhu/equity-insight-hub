@@ -131,7 +131,7 @@ footer a{color:#6ea8fe}
     <nav>
       <button class="nb on"  onclick="showTab('global',this)">🌍 Global</button>
       <button class="nb"     onclick="showTab('futures',this)">📉 Futures</button>
-      <button class="nb"     onclick="showTab('indian',this)">🇮🇳 Indian</button>
+      <button class="nb"     onclick="showTab('indian',this)">Indian</button>
       <button class="nb"     onclick="showTab('market',this)">📈 Market</button>
       <button class="nb"     onclick="showTab('ipo',this)">🏦 IPO</button>
       <button class="nb"     onclick="showTab('currency',this)">💱 Currencies</button>
@@ -226,46 +226,38 @@ const MKT_TH3=`<thead><tr><th>Company</th><th>Price ₹</th><th>% Chg</th></tr><
    DOW is at row index 4 (after NIFTY,SENSEX,VIX) → World, NOT India
 ══════════════════════════════════════════════ */
 function renderGlobal(rows){
-  /* Sheet cols (gviz, 0-based):
-     [0]=blank [1]=blank [2]=INDEX NAME
-     Price col D may be hidden → gviz skips it
-     So we detect columns dynamically by header row.
-     Header row[0]: find which col index has "INDEX NAME", "Change", "% Chg", "High", "Low", "Time"
+  /* EXACT CSV column positions (0-based gviz index):
+     Col 0: blank  Col 1: blank  Col 2: INDEX NAME
+     Col 3: Price  Col 4: Change  Col 5: % Chg
+     Col 6: Today High  Col 7: Today Low  Col 8: Last Updated Time
+     Row 0 = header, Row 1 = NIFTY 50, Row 2 = SENSEX, Row 3 = INDIA VIX
+     Row 4+ = World indices
+     Price col D is sometimes hidden in sheet → gviz skips it.
+     We detect this by checking if header row[3] looks like a price header.
+     If price is hidden: cols shift: [2]=Name [3]=Change [4]=%Chg [5]=High [6]=Low [7]=Time
+     If price is visible: [2]=Name [3]=Price [4]=Change [5]=%Chg [6]=High [7]=Low [8]=Time
   */
   const hdr = rows[0] || [];
-  // Find col indices from header
-  let cName=-1,cChg=-1,cPct=-1,cHi=-1,cLo=-1,cTm=-1,cPrice=-1;
-  hdr.forEach((h,i)=>{
-    const v=(h||'').toLowerCase().trim();
-    if(v.includes('index name')||v==='name') cName=i;
-    else if(v.includes('price')) cPrice=i;
-    else if(v==='change'||v.includes('change')) { if(cChg===-1) cChg=i; }
-    else if(v.includes('%')||v.includes('chg')) { if(cPct===-1) cPct=i; }
-    else if(v.includes('high')) cHi=i;
-    else if(v.includes('low'))  cLo=i;
-    else if(v.includes('time')||v.includes('updated')) cTm=i;
-  });
-  // Fallback to known positions if header detection fails
-  if(cName===-1) cName=2;
-  if(cPrice===-1&&cChg>3) cPrice=3; // price exists between name and change
-  if(cChg===-1)  cChg  = cPrice>0 ? cPrice+1 : 3;
-  if(cPct===-1)  cPct  = cChg+1;
-  if(cHi===-1)   cHi   = cPct+1;
-  if(cLo===-1)   cLo   = cHi+1;
-  if(cTm===-1)   cTm   = cLo+1;
+  const h3 = (hdr[3]||'').toLowerCase();
+  const priceVisible = h3.includes('price') || h3.includes('last');
+  
+  // Column map based on whether price col is visible
+  const C = priceVisible
+    ? {name:2, price:3, chg:4, pct:5, hi:6, lo:7, tm:8}
+    : {name:2, price:-1, chg:3, pct:4, hi:5, lo:6, tm:7};
 
-  // All data rows (skip header, skip blank rows)
-  const allData = rows.slice(1).filter(r => r[cName] && r[cName].trim());
+  // Data rows: col[C.name] must have a non-empty name, skip last 2 blank rows
+  const allData = rows.slice(1).filter(r => r[C.name] && r[C.name].trim() && r[C.name] !== 'For candle stick chart Click on the Index Name');
 
-  // India = rows whose name is NIFTY 50, SENSEX, or INDIA VIX (exact match preferred)
-  const INDIA = ['NIFTY 50','SENSEX','INDIA VIX','NIFTY','VIX'];
-  const india = allData.filter(r => INDIA.some(k => r[cName].toUpperCase().includes(k)));
-  const world = allData.filter(r => !INDIA.some(k => r[cName].toUpperCase().includes(k)));
+  // India section: NIFTY 50, SENSEX, INDIA VIX — identified by name
+  const INDIA_EXACT = ['NIFTY 50', 'SENSEX', 'INDIA VIX'];
+  const india = allData.filter(r => INDIA_EXACT.some(k => r[C.name].trim().toUpperCase() === k));
+  const world = allData.filter(r => !INDIA_EXACT.some(k => r[C.name].trim().toUpperCase() === k));
 
   const mkCard = r => icard(
-    r[cName],
-    cPrice>=0 ? r[cPrice] : '—',
-    r[cChg], r[cPct], r[cHi], r[cLo], r[cTm]
+    r[C.name],
+    C.price >= 0 ? r[C.price] : '',
+    r[C.chg], r[C.pct], r[C.hi], r[C.lo], r[C.tm]
   );
 
   $("s-global").innerHTML=`
@@ -275,78 +267,6 @@ function renderGlobal(rows){
     <div class="stitle-sm">🌐 World Markets</div>
     <div class="igrid">${world.map(mkCard).join("")}</div>
     <p style="font-size:10px;color:#bbb;margin-top:6px">⚠️ Quotes delayed up to 20 min. Source: Google Finance. Not investment advice.</p>`;
-}
-
-/* ══════════════════════════════════════════════
-   FIX 3: FUTURES
-   Alternating rows: data row then 'Close,,,Time...' row
-   Col [0]=Symbol [2]=Last [3]=Change [4]=% [5]=High [6]=Low
-   Next row col[3] = time string e.g. "US Time : Mon May 11..."
-   GIFT NIFTY block:
-     Row with col[0]='Gift Nifty' is section header
-     +1: col[3]=Name, col[4]=DateTime, col[5]=Price, col[6]=Direction
-     +2: col[3]='Change', col[4]='Change in %', col[5]='Previous Close'
-     +3: col[3]=changeVal, col[4]=pctVal, col[5]=prevCloseVal
-   FIX: Show GIFT NIFTY in the main futures grid too (it IS in the data rows)
-   FIX: Remove gift emoji, use 🇮🇳 flag for GIFT NIFTY section
-══════════════════════════════════════════════ */
-function renderFutures(rows){
-  const cards=[];
-  let giftBlock=null;
-
-  let i=0;
-  while(i<rows.length){
-    const r=rows[i];
-    const name=(r[0]||'').trim();
-
-    // GIFT NIFTY info block (not the data row)
-    if(name.toLowerCase()==='gift nifty'){
-      const g1=rows[i+1]||[];
-      const g2=rows[i+3]||[];
-      giftBlock={
-        name: f(g1[3]),
-        dt:   f(g1[4]),
-        price:f(g1[5]),
-        dir:  f(g1[6]),
-        chg:  f(g2[3]),
-        pct:  f(g2[4]),
-        prev: f(g2[5])
-      };
-      i+=5; continue;
-    }
-
-    // Skip header, blank, 'Close' rows
-    if(!name||name==='Symbol'||name==='Close'||!r[2]||!r[2].trim()){i++;continue;}
-
-    // Next row has time
-    const next=rows[i+1]||[];
-    const tm=(next[3]||'').trim();
-    const isHL=name.toUpperCase().includes('NIFTY FUTURES')||name.toUpperCase().includes('GIFT NIFTY FUTURES');
-    cards.push(icard(name,r[2],r[3],r[4],r[5],r[6],tm,isHL));
-    i+=2;
-  }
-
-  // Build GIFT NIFTY section
-  let giftHtml='';
-  if(giftBlock){
-    const pos=!String(giftBlock.chg||'').startsWith('-');
-    giftHtml=`
-      <div class="stitle-sm">🇮🇳 GIFT NIFTY — Live</div>
-      <div class="gift-card">
-        <div class="gift-col"><div class="gift-lbl">Price</div><div class="gift-val">${giftBlock.price}</div></div>
-        <div class="gift-col"><div class="gift-lbl">Change</div><div class="gift-val ${pos?'up':'dn'}">${giftBlock.chg}</div></div>
-        <div class="gift-col"><div class="gift-lbl">Change %</div><div class="gift-val ${pos?'up':'dn'}">${giftBlock.pct}</div></div>
-        <div class="gift-col"><div class="gift-lbl">Prev Close</div><div class="gift-val" style="font-size:18px">${giftBlock.prev}</div></div>
-        <div class="gift-col"><div class="gift-lbl">As of</div><div style="font-size:11px;color:#666;margin-top:4px">${giftBlock.dt}</div></div>
-        <div class="gift-col"><div class="gift-lbl">Direction</div><div class="${pos?'up':'dn'}" style="font-size:16px;font-weight:700;margin-top:4px">${giftBlock.dir} ${pos?'Bullish':'Bearish'}</div></div>
-      </div>`;
-  }
-
-  $('s-futures').innerHTML=`
-    <div class="stitle">📉 Index Futures</div>
-    <div class="disc">ℹ️ Source: Investing.com via your sheet. Times vary by exchange session.</div>
-    <div class="igrid">${cards.join('')}</div>
-    ${giftHtml}`;
 }
 
 /* ══════════════════════════════════════════════
