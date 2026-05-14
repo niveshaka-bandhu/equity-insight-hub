@@ -237,17 +237,33 @@ function renderGlobal(rows){
      If price is hidden: cols shift: [2]=Name [3]=Change [4]=%Chg [5]=High [6]=Low [7]=Time
      If price is visible: [2]=Name [3]=Price [4]=Change [5]=%Chg [6]=High [7]=Low [8]=Time
   */
+  // Detect if Price col exists by checking row 1 col[3]:
+  // If it's a large number (>1000 or multi-digit price) → price col present
+  // If it's a small number (change value like -436, +56) → price col hidden
+  const row1 = rows[1] || [];
+  const col3val = parseFloat(String(row1[3]||'').replace(/,/g,''));
+  // NIFTY 50 price ~24000, SENSEX ~75000 — always >500. Change is ±500 max for most.
+  // But safer: check col[3] header — if blank AND col3val > 1000 → price visible
   const hdr = rows[0] || [];
   const h3 = (hdr[3]||'').toLowerCase();
-  const priceVisible = h3.includes('price') || h3.includes('last');
-  
-  // Column map based on whether price col is visible
+  const h4 = (hdr[4]||'').toLowerCase();
+  // Price visible if: header says price, OR col3 has large numeric & col4 says change
+  const priceVisible = h3.includes('price') || h3.includes('last') ||
+    (!isNaN(col3val) && col3val > 500 && (h4.includes('change') || h4 === ''));
+
+  // Column map
   const C = priceVisible
     ? {name:2, price:3, chg:4, pct:5, hi:6, lo:7, tm:8}
     : {name:2, price:-1, chg:3, pct:4, hi:5, lo:6, tm:7};
 
-  // Data rows: col[C.name] must have a non-empty name, skip last 2 blank rows
-  const allData = rows.slice(1).filter(r => r[C.name] && r[C.name].trim() && r[C.name] !== 'For candle stick chart Click on the Index Name');
+  // Skip header row — but gviz sometimes omits it. Detect: if row[0][2] is 'INDEX NAME' → has header
+  const hasHeader = rows[0] && (rows[0][2]||'').toUpperCase().includes('INDEX');
+  const dataStart = hasHeader ? 1 : 0;
+  // Data rows: col[C.name] must have a non-empty name
+  const allData = rows.slice(dataStart).filter(r =>
+    r[C.name] && r[C.name].trim() &&
+    r[C.name] !== 'For candle stick chart Click on the Index Name'
+  );
 
   // India section: NIFTY 50, SENSEX, INDIA VIX — identified by name
   const INDIA_EXACT = ['NIFTY 50', 'SENSEX', 'INDIA VIX'];
