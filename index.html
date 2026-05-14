@@ -440,25 +440,60 @@ function renderMarket(rows){
     .map(r => [r[5],r[6],r[7]]);
 
   // ── EXACT SLICE POSITIONS ────────────────────────
-  const n50g   = Lg(4,  9);   // Nifty50 Gainers (5 rows)
-  const n50l   = Lg(12, 17);  // Nifty50 Losers  (5 rows)
-  const nseG   = Rg(4,  9);   // ALL NSE Gainers (5 rows)
-  const nseL   = Rg(12, 17);  // ALL NSE Losers  (5 rows)
-  const sens30g = Lg(21, 26); // SENSEX30 Gainers (5 rows)
-  const sens30l = Lg(29, 34); // SENSEX30 Losers  (5 rows)
-  const bseG   = Rg3(21, 26); // ALL BSE Gainers (% only)
-  const bseL   = Rg3(29, 34); // ALL BSE Losers  (% only)
-  const bank   = Lg(38, 51);  // Nifty Bank stocks (rows 39-51)
+  // CSV confirmed: Nifty50 Left=[1,2,3,4], NSE Right=[6,9,10,11]
+  // BUT gviz may skip empty cols 7,8 → shifting [9]→[7],[10]→[8],[11]→[9]
+  // So we detect NSE price column dynamically from first data row
+
+  // Detect NSE right-block price col: scan row idx4 for numeric after col[6]
+  const probe = rows[4] || [];
+  // In CSV: col[6]=name, col[7]='', col[8]='', col[9]=price → gviz may give col[6]=name,col[7]=price
+  // Find price col: first numeric col after col[6]
+  let nsePrice=9, nseChg=10, nsePct=11;
+  for(let ci=7; ci<=11; ci++){
+    const v=parseFloat(String(probe[ci]||'').replace(/,/g,''));
+    if(!isNaN(v) && v > 0) { nsePrice=ci; nseChg=ci+1; nsePct=ci+2; break; }
+  }
+
+  // RIGHT block NSE with detected cols
+  const RgD = (s,e) => rows.slice(s,e)
+    .filter(r => r[6]&&r[6].trim() && r[nsePrice]&&!isNaN(parseFloat(String(r[nsePrice]).replace(/,/g,''))))
+    .map(r => [r[6], r[nsePrice], r[nseChg], r[nsePct]]);
+
+  // RIGHT block BSE (% only) with detected cols
+  const Rg3D = (s,e) => rows.slice(s,e)
+    .filter(r => r[6]&&r[6].trim() && r[nsePrice]&&!isNaN(parseFloat(String(r[nsePrice]).replace(/,/g,''))))
+    .map(r => [r[6], r[nsePrice], r[nseChg]]);
+
+  const n50g    = Lg(4,  9);    // Nifty50 Gainers (5 rows)
+  const n50l    = Lg(12, 17);   // Nifty50 Losers  (5 rows)
+  const nseG    = RgD(4,  9);   // ALL NSE Gainers
+  const nseL    = RgD(12, 17);  // ALL NSE Losers
+  const sens30g = Lg(21, 26);   // SENSEX30 Gainers (5 rows)
+  const sens30l = Lg(29, 34);   // SENSEX30 Losers  (5 rows)
+  const bseG    = Rg3D(21, 26); // ALL BSE Gainers (% only)
+  const bseL    = Rg3D(29, 34); // ALL BSE Losers  (% only)
+  const bank    = Lg(38, 51);   // Nifty Bank stocks
 
   // ── ADVANCE / DECLINE ────────────────────────────
-  // idx 38: col[6]='BSE' col[7]='Adv:' col[8]=count
-  // idx 39: col[7]='Dec:' col[8]=count
-  // idx 40: col[6]='NSE' col[7]='Adv:' col[8]=count
-  // idx 41: col[7]='Dec:' col[8]=count
-  const bseAdv = (rows[38]||[])[8] || '';
-  const bseDec = (rows[39]||[])[8] || '';
-  const nseAdv = (rows[40]||[])[8] || '';
-  const nseDec = (rows[41]||[])[8] || '';
+  // CSV confirmed: col[6]=BSE/NSE, col[7]=Adv:/Dec:, col[8]=count
+  // gviz may skip empty cols → col[8] becomes col[6] or [7]
+  // Scan rows 38-41 for the count value robustly
+  function findAdv(rowIdx, label){
+    const r = rows[rowIdx] || [];
+    // Find col with Adv:/Dec: then take next col
+    for(let ci=5; ci<12; ci++){
+      if((r[ci]||'').includes(label)){ return r[ci+1]||r[ci+2]||'—'; }
+    }
+    return '—';
+  }
+  // Row 38 (idx 38): BSE Adv:
+  // Row 39 (idx 39): BSE Dec:
+  // Row 40 (idx 40): NSE Adv:
+  // Row 41 (idx 41): NSE Dec:
+  const bseAdv = findAdv(38,'Adv:');
+  const bseDec = findAdv(39,'Dec:');
+  const nseAdv = findAdv(40,'Adv:');
+  const nseDec = findAdv(41,'Dec:');
 
   // ── TABLE BUILDERS ────────────────────────────────
   const TH4 = `<thead><tr><th>Company</th><th>Price ₹</th><th>Change</th><th>% Chg</th></tr></thead>`;
