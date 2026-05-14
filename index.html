@@ -226,62 +226,40 @@ const MKT_TH3=`<thead><tr><th>Company</th><th>Price ₹</th><th>% Chg</th></tr><
    DOW is at row index 4 (after NIFTY,SENSEX,VIX) → World, NOT India
 ══════════════════════════════════════════════ */
 function renderGlobal(rows){
-  /* EXACT CSV column positions (0-based gviz index):
-     Col 0: blank  Col 1: blank  Col 2: INDEX NAME
-     Col 3: Price  Col 4: Change  Col 5: % Chg
-     Col 6: Today High  Col 7: Today Low  Col 8: Last Updated Time
-     Row 0 = header, Row 1 = NIFTY 50, Row 2 = SENSEX, Row 3 = INDIA VIX
-     Row 4+ = World indices
-     Price col D is sometimes hidden in sheet → gviz skips it.
-     We detect this by checking if header row[3] looks like a price header.
-     If price is hidden: cols shift: [2]=Name [3]=Change [4]=%Chg [5]=High [6]=Low [7]=Time
-     If price is visible: [2]=Name [3]=Price [4]=Change [5]=%Chg [6]=High [7]=Low [8]=Time
+  /* EXACT sheet structure (confirmed from screenshot):
+     Sheet col A (gviz [0]) = blank
+     Sheet col B (gviz [1]) = flag/logo image (blank in gviz)
+     Sheet col C (gviz [2]) = INDEX NAME
+     Sheet col D (gviz [3]) = Price
+     Sheet col E (gviz [4]) = Change
+     Sheet col F (gviz [5]) = % Chg
+     Sheet col G (gviz [6]) = Today's High
+     Sheet col H (gviz [7]) = Today's Low
+     Sheet col I (gviz [8]) = Last Updated Time (IST)
+     Row 1 = headers (gviz index 0)
+     Row 2 = NIFTY 50 (gviz index 1)
+     Row 3 = SENSEX   (gviz index 2)
+     Row 4 = INDIA VIX (gviz index 3)
+     Row 5+ = World indices
   */
-  // Detect if Price col exists by checking row 1 col[3]:
-  // If it's a large number (>1000 or multi-digit price) → price col present
-  // If it's a small number (change value like -436, +56) → price col hidden
-  const row1 = rows[1] || [];
-  const col3val = parseFloat(String(row1[3]||'').replace(/,/g,''));
-  // NIFTY 50 price ~24000, SENSEX ~75000 — always >500. Change is ±500 max for most.
-  // But safer: check col[3] header — if blank AND col3val > 1000 → price visible
-  const hdr = rows[0] || [];
-  const h3 = (hdr[3]||'').toLowerCase();
-  const h4 = (hdr[4]||'').toLowerCase();
-  // Price visible if: header says price, OR col3 has large numeric & col4 says change
-  const priceVisible = h3.includes('price') || h3.includes('last') ||
-    (!isNaN(col3val) && col3val > 500 && (h4.includes('change') || h4 === ''));
-
-  // Column map
-  const C = priceVisible
-    ? {name:2, price:3, chg:4, pct:5, hi:6, lo:7, tm:8}
-    : {name:2, price:-1, chg:3, pct:4, hi:5, lo:6, tm:7};
-
-  // Skip header row — but gviz sometimes omits it. Detect: if row[0][2] is 'INDEX NAME' → has header
-  const hasHeader = rows[0] && (rows[0][2]||'').toUpperCase().includes('INDEX');
-  const dataStart = hasHeader ? 1 : 0;
-  // Data rows: col[C.name] must have a non-empty name
-  const allData = rows.slice(dataStart).filter(r =>
-    r[C.name] && r[C.name].trim() &&
-    r[C.name] !== 'For candle stick chart Click on the Index Name'
+  // Row 0 = header → skip. Data starts at index 1.
+  const allData = rows.slice(1).filter(r =>
+    r[2] && r[2].trim() &&
+    !r[2].includes('candle') && !r[2].includes('Click')
   );
 
-  // India section: NIFTY 50, SENSEX, INDIA VIX — identified by name
-  const INDIA_EXACT = ['NIFTY 50', 'SENSEX', 'INDIA VIX'];
-  const india = allData.filter(r => INDIA_EXACT.some(k => r[C.name].trim().toUpperCase() === k));
-  const world = allData.filter(r => !INDIA_EXACT.some(k => r[C.name].trim().toUpperCase() === k));
+  const INDIA = ['NIFTY 50','SENSEX','INDIA VIX'];
+  const india = allData.filter(r => INDIA.includes(r[2].trim().toUpperCase()));
+  const world = allData.filter(r => !INDIA.includes(r[2].trim().toUpperCase()));
 
-  const mkCard = r => icard(
-    r[C.name],
-    C.price >= 0 ? r[C.price] : '',
-    r[C.chg], r[C.pct], r[C.hi], r[C.lo], r[C.tm]
-  );
+  const mkCard = r => icard(r[2], r[3], r[4], r[5], r[6], r[7], r[8]);
 
-  $("s-global").innerHTML=`
+  $('s-global').innerHTML=`
     <div class="stitle">🌍 Global Indices</div>
     <div class="stitle-sm">India</div>
-    <div class="igrid">${india.map(mkCard).join("")}</div>
+    <div class="igrid">${india.map(mkCard).join('')}</div>
     <div class="stitle-sm">🌐 World Markets</div>
-    <div class="igrid">${world.map(mkCard).join("")}</div>
+    <div class="igrid">${world.map(mkCard).join('')}</div>
     <p style="font-size:10px;color:#bbb;margin-top:6px">⚠️ Quotes delayed up to 20 min. Source: Google Finance. Not investment advice.</p>`;
 }
 
