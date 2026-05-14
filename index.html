@@ -253,8 +253,8 @@ function renderGlobal(rows){
 
   // Column map
   const C = priceVisible
-    ? {name:2, price:3, chg:4, pct:5, hi:6, lo:7, tm:8}
-    : {name:2, price:-1, chg:3, pct:4, hi:5, lo:6, tm:7};
+    ? {name:1, price:2, chg:3, pct:4, hi:5, lo:6, tm:7}
+    : {name:1, price:2, chg:3, pct:4, hi:5, lo:6, tm:7};
 
   // Skip header row — but gviz sometimes omits it. Detect: if row[0][2] is 'INDEX NAME' → has header
   const hasHeader = rows[0] && (rows[0][2]||'').toUpperCase().includes('INDEX');
