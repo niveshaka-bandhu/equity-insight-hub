@@ -242,22 +242,29 @@ function renderGlobal(rows){
      Row 4 = INDIA VIX (gviz index 3)
      Row 5+ = World indices
   */
-  // Row 0 = header → skip. Data starts at index 1.
+  // Col B has flag images — gviz may shift columns if it counts images as a col
+  // Detect name column by scanning row 1 for NIFTY/SENSEX
+  let NC=2; // default nameCol
+  const testRow = rows[1] || [];
+  for(let ci=0;ci<6;ci++){
+    const v=(testRow[ci]||'').toUpperCase();
+    if(v.includes('NIFTY')||v.includes('SENSEX')){NC=ci;break;}
+  }
+  const PC=NC+1,CC=NC+2,FC=NC+3,HC=NC+4,LC=NC+5,TC=NC+6;
+  console.log('nameCol='+NC+' row1='+JSON.stringify(testRow.slice(0,7)));
+
   const allData = rows.slice(1).filter(r =>
-    r[2] && r[2].trim() &&
-    !r[2].includes('candle') && !r[2].includes('Click')
+    r[NC] && r[NC].trim() &&
+    !r[NC].includes('candle') && !r[NC].includes('Click')
   );
 
   const INDIA = ['NIFTY 50','SENSEX','INDIA VIX'];
-  const india = allData.filter(r => INDIA.some(k => r[2].trim().toUpperCase().includes(k)));
-  const world = allData.filter(r => !INDIA.some(k => r[2].trim().toUpperCase().includes(k)));
+  const india = allData.filter(r => INDIA.some(k => r[NC].trim().toUpperCase().includes(k)));
+  const world = allData.filter(r => !INDIA.some(k => r[NC].trim().toUpperCase().includes(k)));
 
-  // DEBUG — open browser console to see raw gviz values for first 4 rows
-  console.log('Global rows 0-4:', rows.slice(0,4).map(r=>JSON.stringify(r)));
-  console.log('allData names:', allData.map(r=>JSON.stringify([r[0],r[1],r[2],r[3]])));
-  console.log('india found:', india.map(r=>r[2]));
+  console.log('india='+JSON.stringify(india.map(r=>r[NC])));
 
-  const mkCard = r => icard(r[2], r[3], r[4], r[5], r[6], r[7], r[8]);
+  const mkCard = r => icard(r[NC], r[PC], r[CC], r[FC], r[HC], r[LC], r[TC]);
 
   $('s-global').innerHTML=`
     <div class="stitle">🌍 Global Indices</div>
