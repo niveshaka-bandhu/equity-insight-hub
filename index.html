@@ -376,103 +376,87 @@ function renderIndian(rows){
    Adv/Dec: col[6]='BSE'/'NSE', col[7]='Adv:'/'Dec:', col[8]=count
 ══════════════════════════════════════════════ */
 function renderMarket(rows){
-  let n50g=[],n50l=[],nseG=[],nseL=[],bse5g=[],bse5l=[],bank=[];
-  let bseAdv='',bseDec='',nseAdv='',nseDec='';
-  let bseExtG=[],bseExtL=[];
-  let lSec='',rSec='';
+  /* EXACT sheet structure (confirmed from screenshots):
+     Rows are 0-indexed in gviz (sheet row - 1)
 
-  for(let i=0;i<rows.length;i++){
-    const r=rows[i];
-    const l1=(r[1]||'').trim();
-    const l6=(r[6]||'').trim();
+     LEFT BLOCK (Nifty50 + BSE5):
+       Col B=gviz[1]=Company, Col D=gviz[3]=Price, Col E=gviz[4]=Change, Col F=gviz[5]=%Change
 
-    // Adv/Dec
-    if(r[6]==='BSE'&&(r[7]||'').includes('Adv:')) bseAdv=f(r[8]);
-    if(r[6]==='BSE'&&(r[7]||'').includes('Dec:')) bseDec=f(r[8]);
-    if(r[6]==='NSE'&&(r[7]||'').includes('Adv:')) nseAdv=f(r[8]);
-    if(r[6]==='NSE'&&(r[7]||'').includes('Dec:')) nseDec=f(r[8]);
+     RIGHT BLOCK (ALL NSE + ALL BSE):
+       Col H=gviz[7]=Company, Col J=gviz[9]=Price, Col K=gviz[10]=Change, Col L=gviz[11]=%Change
 
-    // Left section headers
-    if(l1==='Nifty 50'){lSec='n50';continue;}
-    if(l1==='TOP GAINERS'&&lSec==='n50'){lSec='n50g';continue;}
-    if(l1==='TOP LOSERS'&&lSec==='n50'){lSec='n50l';continue;}
-    if(l1==='ALL BSE'){lSec='bse5';continue;}
-    if(l1==='TOP GAINERS'&&lSec==='bse5'){lSec='bse5g';continue;}
-    if(l1==='TOP LOSERS'&&lSec==='bse5'){lSec='bse5l';continue;}
-    if(l1==='FII & DII DAILY TRADING ACTIVITY') break;
-    // Skip header rows inside sections
-    if(l1==='Company'||l1==='Stocks'){continue;}
+     NIFTY BANK (left block same cols):
+       Col B=gviz[1]=Company, Col D=gviz[3]=Price, Col E=gviz[4]=Change, Col F=gviz[5]=%Change
 
-    // Nifty Bank: appears after adv/dec section with label "Company,Price,Change,% Change"
-    // Detect: col[1] has bank stock name AND col[2] has price AND lSec is reset after bse5
-    if(lSec===''&&l1&&l1.length>2&&r[2]&&!isNaN(parseFloat(String(r[2]).replace(/,/g,'')))){
-      lSec='bank';
-    }
-    if(l1==='AU Small Finance Bank Ltd') lSec='bank';
+     ADV/DECLINE (right side of bank section):
+       Row 39(gviz 38): col H=BSE, col J=Adv:, col L=2317
+       Row 40(gviz 39): col J=Dec:, col L=1700
+       Row 42(gviz 41): col H=NSE, col J=Adv:, col L=1734
+       Row 43(gviz 42): col J=Dec:, col L=1215
 
-    // Right section headers
-    if(l6==='ALL NSE'){rSec='nse';continue;}
-    if(l6==='TOP GAINERS'&&rSec==='nse'){rSec='nseG';continue;}
-    if(l6==='TOP LOSERS'&&rSec==='nse'){rSec='nseL';continue;}
-    if(l6==='ALL BSE'&&(rSec==='nseG'||rSec==='nseL')){rSec='bseR';continue;}
-    if(l6==='TOP GAINERS'&&rSec==='bseR'){rSec='bseRg';continue;}
-    if(l6==='TOP LOSERS'&&rSec==='bseR'){rSec='bseRl';continue;}
-    if(l6==='Advance/Decline'){rSec='adv';continue;}
-    if(l6==='Company'||l6==='Stocks'){continue;}
+     KEY ROW RANGES (gviz 0-based, = sheet row - 1):
+       Nifty50 Gainers:  rows 4-8   (sheet 5-9)
+       Nifty50 Losers:   rows 12-16 (sheet 13-17)
+       BSE5 Gainers:     rows 21-25 (sheet 22-26)
+       BSE5 Losers:      rows 29-33 (sheet 30-34)
+       ALL NSE Gainers:  rows 4-8   col[7,9,10,11]
+       ALL NSE Losers:   rows 12-16 col[7,9,10,11]
+       ALL BSE Gainers:  rows 20-24 col[7,9,10,11] (right side, row 19=header)
+       ALL BSE Losers:   rows 28-32 col[7,9,10,11]
+       Nifty Bank:       rows 39-50 (sheet 40-51)
+       Adv/Dec:          rows 38-44
+  */
 
-    // Collect LEFT data (col[1]=name, col[2]=price, col[3]=chg, col[4]=%)
-    const ln=(r[1]||'').trim();
-    const lp=String(r[2]||'').replace(/,/g,'');
-    if(ln&&lp&&!isNaN(parseFloat(lp))&&parseFloat(lp)>0){
-      const row=[ln,r[2],r[3],r[4]];
-      if(lSec==='n50g') n50g.push(row);
-      else if(lSec==='n50l') n50l.push(row);
-      else if(lSec==='bse5g') bse5g.push(row);
-      else if(lSec==='bse5l') bse5l.push(row);
-      else if(lSec==='bank') bank.push(row);
-    }
+  // Helper to extract left-block data rows (col 1,3,4,5)
+  const L = rows => rows.filter(r => r[1]&&r[1].trim()&&r[3]&&!isNaN(parseFloat(String(r[3]).replace(/,/g,''))))
+                        .map(r => [r[1],r[3],r[4],r[5]]);
 
-    // Collect RIGHT data NSE (col[6]=name, col[9]=price, col[10]=chg, col[11]=%)
-    const rn=(r[6]||'').trim();
-    const rp=String(r[9]||'').replace(/,/g,'');
-    if(rn&&rp&&!isNaN(parseFloat(rp))&&parseFloat(rp)>0&&rn!=='BSE'&&rn!=='NSE'){
-      if(rSec==='nseG') nseG.push([rn,r[9],r[10],r[11]]);
-      else if(rSec==='nseL') nseL.push([rn,r[9],r[10],r[11]]);
-    }
+  // Helper to extract right-block data rows (col 7,9,10,11)
+  const R = rows => rows.filter(r => r[7]&&r[7].trim()&&r[9]&&!isNaN(parseFloat(String(r[9]).replace(/,/g,''))))
+                        .map(r => [r[7],r[9],r[10],r[11]]);
 
-    // BSE RIGHT data (col[6]=bse name, col[9]=price, col[10]=%)
-    if((rSec==='bseRg'||rSec==='bseRl')&&rn&&rp&&!isNaN(parseFloat(rp))){
-      if(rSec==='bseRg') bse5g.push([rn,r[9],r[10],'']);
-      else bse5l.push([rn,r[9],r[10],'']);
-    }
+  const n50g  = L(rows.slice(4,  9));   // Nifty50 Gainers
+  const n50l  = L(rows.slice(12, 17));  // Nifty50 Losers
+  const bse5g = L(rows.slice(21, 26));  // BSE5 Gainers (left)
+  const bse5l = L(rows.slice(29, 34));  // BSE5 Losers (left)
+  const nseG  = R(rows.slice(4,  9));   // ALL NSE Gainers
+  const nseL  = R(rows.slice(12, 17));  // ALL NSE Losers
+  const bseRg = R(rows.slice(20, 25));  // ALL BSE Gainers (right)
+  const bseRl = R(rows.slice(28, 33));  // ALL BSE Losers (right)
+  const bank  = L(rows.slice(39, 51));  // Nifty Bank stocks
 
-    // BSE Extended movers: col[2]=gName, col[3]=gPrice, col[4]=gPct, col[5]=lName, col[6]=lPrice, col[7]=lPct
-    const eg=(r[2]||'').trim(), el=(r[5]||'').trim();
-    const egp=String(r[3]||'').replace(/,/g,''), elp=String(r[6]||'').replace(/,/g,'');
-    if(eg&&egp&&!isNaN(parseFloat(egp))&&parseFloat(egp)>0&&eg!=='Company'&&eg!=='BSE Gainers'&&eg!=='Stocks'&&eg!=='COMPANY'){
-      bseExtG.push([eg,r[3],r[4]]);
-    }
-    if(el&&elp&&!isNaN(parseFloat(elp))&&parseFloat(elp)>0&&el!=='Company'&&el!=='BSE Losers'){
-      bseExtL.push([el,r[6],r[7]]);
-    }
+  // Advance/Decline — from right side of bank section
+  let bseAdv='', bseDec='', nseAdv='', nseDec='';
+  for(let i=38; i<46; i++){
+    const r = rows[i] || [];
+    const h=(r[7]||'').trim(), j=(r[9]||'').trim(), l=(r[11]||r[10]||'').trim();
+    if(h==='BSE'){ if(j.includes('Adv')) bseAdv=l; }
+    if(h===''&&j.includes('Dec')&&bseAdv&&!bseDec) bseDec=l;
+    if(h==='NSE'){ if(j.includes('Adv')) nseAdv=l; }
+    if(h===''&&j.includes('Dec')&&nseAdv&&!nseDec) nseDec=l;
   }
 
-  const tbl4=(title,data)=>`<div class="tcw">
+  const th4=`<thead><tr><th>Company</th><th>Price ₹</th><th>Change</th><th>% Chg</th></tr></thead>`;
+  const th3=`<thead><tr><th>Company</th><th>Price ₹</th><th>% Chg</th></tr></thead>`;
+
+  const tbl=(title,data,is4=true)=>`<div class="tcw">
     <div class="tch">${title} <span class="cnt">${data.length}</span></div>
-    <div class="tscr"><table>${MKT_TH4}<tbody>${data.map(r=>`<tr>
-      <td>${f(r[0])}</td><td>${f(r[1])}</td>
-      <td class="${ic(r[2])}">${f(r[2])}</td>
-      <td class="${ic(r[3])}">${f(r[3])}</td></tr>`).join('')||noData(4)}
+    <div class="tscr"><table>${is4?th4:th3}<tbody>
+      ${data.map(r=>`<tr>
+        <td>${f(r[0])}</td><td>${f(r[1])}</td>
+        <td class="${ic(r[2])}">${f(r[2])}</td>
+        <td class="${ic(r[3])}">${f(r[3])}</td>
+      </tr>`).join('')||'<tr><td colspan="4" style="color:#aaa;padding:10px;text-align:center">No data</td></tr>'}
     </tbody></table></div></div>`;
 
   const tbl3=(title,data)=>`<div class="tcw">
     <div class="tch">${title} <span class="cnt">${data.length}</span></div>
-    <div class="tscr"><table>${MKT_TH3}<tbody>${data.map(r=>`<tr>
-      <td>${f(r[0])}</td><td>${f(r[1])}</td>
-      <td class="${ic(r[2])}">${f(r[2])}</td></tr>`).join('')||noData(3)}
-    </tbody></table></div></div>`;
-
-  const noData=c=>`<tr><td colspan="${c}" style="color:#aaa;padding:10px;text-align:center">No data</td></tr>`;
+    <div class="tscr"><table>${th3}<tbody>
+      ${data.map(r=>`<tr>
+        <td>${f(r[0])}</td><td>${f(r[1])}</td>
+        <td class="${ic(r[2])}">${f(r[2])}</td>
+      </tr>`).join('')||'<tr><td colspan="3" style="color:#aaa;padding:10px;text-align:center">No data</td></tr>'}
+    </tbody></table></div>`;
 
   $('s-market').innerHTML=`
     <div class="stitle">📈 Market Data — NSE &amp; BSE</div>
@@ -482,23 +466,11 @@ function renderMarket(rows){
       ${nseAdv?`<div class="adbox"><div class="adlbl">NSE Advances</div><div class="adnum up">${nseAdv}</div></div>`:''}
       ${nseDec?`<div class="adbox"><div class="adlbl">NSE Declines</div><div class="adnum dn">${nseDec}</div></div>`:''}
     </div>`:''}
-    <div class="g2">${tbl4('🟢 NIFTY 50 Gainers',n50g)}${tbl4('🔴 NIFTY 50 Losers',n50l)}</div>
-    <div class="g2">${tbl4('🟢 All NSE Gainers',nseG)}${tbl4('🔴 All NSE Losers',nseL)}</div>
-    <div class="g2">${tbl3('🟢 All BSE Gainers',bse5g)}${tbl3('🔴 All BSE Losers',bse5l)}</div>
-    ${bank.length?tbl4('🏦 Nifty Bank Stocks',bank):''}
-    ${bseExtG.length?`<div class="tcw">
-      <div class="tch">📊 BSE Extended Movers <span class="cnt">Top ${Math.max(bseExtG.length,bseExtL.length)} each</span></div>
-      <div class="g2" style="margin:0;gap:0">
-        <div class="tscr" style="border-right:1px solid #eee"><table>
-          <thead><tr><th>🟢 BSE Gainers</th><th>Price</th><th>%</th></tr></thead>
-          <tbody>${bseExtG.map(r=>`<tr><td>${f(r[0])}</td><td>${f(r[1])}</td><td class="${ic(r[2])}">${f(r[2])}</td></tr>`).join('')}</tbody>
-        </table></div>
-        <div class="tscr"><table>
-          <thead><tr><th>🔴 BSE Losers</th><th>Price</th><th>%</th></tr></thead>
-          <tbody>${bseExtL.map(r=>`<tr><td>${f(r[0])}</td><td>${f(r[1])}</td><td class="${ic(r[2])}">${f(r[2])}</td></tr>`).join('')}</tbody>
-        </table></div>
-      </div>
-    </div>`:''}`;
+    <div class="g2">${tbl('🟢 NIFTY 50 Gainers',n50g)}${tbl('🔴 NIFTY 50 Losers',n50l)}</div>
+    <div class="g2">${tbl('🟢 All NSE Gainers',nseG)}${tbl('🔴 All NSE Losers',nseL)}</div>
+    <div class="g2">${tbl('🟢 BSE Top Gainers',bse5g)}${tbl('🔴 BSE Top Losers',bse5l)}</div>
+    <div class="g2">${tbl3('🟢 All BSE Gainers',bseRg)}${tbl3('🔴 All BSE Losers',bseRl)}</div>
+    ${bank.length?tbl('🏦 Nifty Bank Stocks',bank):''}`;
 }
 
 /* ══════════════════════════════════════════════
