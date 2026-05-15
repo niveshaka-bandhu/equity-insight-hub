@@ -501,10 +501,10 @@ function renderMarket(rows){
     .map(r => [r[5],r[6],r[7]]);
 
   // ── SLICES ──────────────────────────────────────────────────────
-  const n50g    = Lg(0, 4);     // Nifty50 Gainers
-  const n50l    = Lg(5, 9);    // Nifty50 Losers
-  const nseG    = RgNSE(0,  4);  // ALL NSE Gainers
-  const nseL    = RgNSE(5, 9); // ALL NSE Losers
+  const n50g    = Lg(1, 5);     // Nifty50 Gainers
+  const n50l    = Lg(5, 10);    // Nifty50 Losers
+  const nseG    = RgNSE(1,  5);  // ALL NSE Gainers
+  const nseL    = RgNSE(5, 10); // ALL NSE Losers
   const s30g    = Lg(21, 26);    // SENSEX30 Gainers
   const s30l    = Lg(29, 34);    // SENSEX30 Losers
   const bseG    = RgBSE(21, 26); // ALL BSE Gainers
@@ -525,10 +525,10 @@ function renderMarket(rows){
     }
     return '—';
   }
-  const bseAdv = getAdv(38,'Adv:');
-  const bseDec = getAdv(39,'Dec:');
-  const nseAdv = getAdv(40,'Adv:');
-  const nseDec = getAdv(41,'Dec:');
+  const bseAdv = getAdv(36,'Adv:');
+  const bseDec = getAdv(37,'Dec:');
+  const nseAdv = getAdv(38,'Adv:');
+  const nseDec = getAdv(39,'Dec:');
 
   // ── TABLE BUILDERS ───────────────────────────────────────────────
   const TH4=`<thead><tr><th>Company</th><th>Price ₹</th><th>Change</th><th>% Chg</th></tr></thead>`;
