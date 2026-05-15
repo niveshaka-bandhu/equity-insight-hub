@@ -359,8 +359,8 @@ function renderIndian(rows){
   // EXACT row slices — gviz is 0-indexed, matches CSV row - 1
   const nseRows   = rows.slice(1,  19); // CSV rows 3–21
   const bseRows   = rows.slice(20, 38); // CSV rows 24–41
-  const sensexRows= rows.slice(43, 70); // CSV rows 44–73
-  const niftyRows = rows.slice(72,125); // CSV rows 76–125
+  const sensexRows= rows.slice(41, 70); // CSV rows 44–73
+  const niftyRows = rows.slice(70,125); // CSV rows 76–125
 
   // Weight rows: same rows 75–125, read col[7–10]
   // Row 125 (CSV 126) has only weights, no stock data
