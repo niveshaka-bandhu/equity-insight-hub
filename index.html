@@ -501,10 +501,10 @@ function renderMarket(rows){
     .map(r => [r[5],r[6],r[7]]);
 
   // ── SLICES ──────────────────────────────────────────────────────
-  const n50g    = Lg(4,  9);     // Nifty50 Gainers
-  const n50l    = Lg(12, 17);    // Nifty50 Losers
-  const nseG    = RgNSE(4,  9);  // ALL NSE Gainers
-  const nseL    = RgNSE(12, 17); // ALL NSE Losers
+  const n50g    = Lg(0, 4);     // Nifty50 Gainers
+  const n50l    = Lg(5, 9);    // Nifty50 Losers
+  const nseG    = RgNSE(0,  4);  // ALL NSE Gainers
+  const nseL    = RgNSE(5, 9); // ALL NSE Losers
   const s30g    = Lg(21, 26);    // SENSEX30 Gainers
   const s30l    = Lg(29, 34);    // SENSEX30 Losers
   const bseG    = RgBSE(21, 26); // ALL BSE Gainers
