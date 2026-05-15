@@ -598,93 +598,70 @@ function renderMarket(rows){
    KEY FIX: Use SEPARATE section detection — stop each section at next blank block
 ══════════════════════════════════════════════ */
 function renderIPO(rows){
-  /* EXACT positions confirmed from CSV:
-     Listed IPOs:    headers idx 1 (row 2),  data idx 2-25  (rows 3-26)
-     GMP:            headers idx 39 (row 40), data idx 40-59 (rows 41-60)
-     Issue Dates:    data idx 111-131 (rows 112-132), col[0] only
-     Experts:        headers idx 134 (row 135), data idx 135-156 (rows 136-157)
-     Subscription:   headers idx 159 (row 160), data idx 160-179 (rows 161-180)
+  /*
+  EXACT positions (gviz idx = CSV row - 1):
 
-     Listed cols: [0]=Company [1]=Type [2]=Date [3]=IssuePrice [4]=Subs
-                  [5]=ListOpen [6]=ListClose [7]=ListGain [8]=LTP [9]=TodayGain [10]=Size
-     GMP cols:    [0]=Name [1]=GMP [2]=Trend [3]=PriceBand [4]=EstListing
-                  [5]=Date [6]=Type [7]=Status [8]=LastUpdated
-     Experts cols:[0]=Company [1]=Apply [2]=MayApply [3]=Neutral [4]=Avoid [5]=NotRated
-     Sub cols:    [0]=IPO [1]=Type [2]=Open [3]=Close [4]=QIB [5]=NII [6]=Retail [7]=Total
+  1. Recently Listed IPOs — FIRST TABLE
+     Headers: idx 1  (CSV row 2)  cols [0-10]
+     Data:    idx 2-25 (CSV rows 3-26)
+     cols: [0]=Company [1]=Type [2]=ListDate [3]=IssuePrice [4]=Subs
+           [5]=ListOpen [6]=ListClose [7]=ListGain [8]=LTP [9]=TodayGain [10]=Size
+
+  2. GMP — SECOND TABLE
+     Headers: idx 39 (CSV row 40)  cols [0-8]  — strip * from all
+     Data:    idx 40-59 (CSV rows 41-60)
+     cols: [0]=Name [1]=GMP [2]=Trend [3]=PriceBand [4]=EstListing
+           [5]=Date [6]=Type [7]=Status [8]=LastUpdated
+
+  3. Experts Advice — THIRD TABLE
+     Headers: idx 134 (CSV row 135) cols [0-5]
+     Data:    idx 135-156 (CSV rows 136-157)
+     cols: [0]=Company [1]=Apply [2]=MayApply [3]=Neutral [4]=Avoid [5]=NotRated
+
+  4. Subscription Status — FOURTH TABLE
+     Headers: idx 159 (CSV row 160) cols [0-7]
+     Data:    idx 160-179 (CSV rows 161-180)
+     cols: [0]=IPO [1]=Type [2]=Open [3]=Close [4]=QIB [5]=NII [6]=Retail [7]=Total
+
+  5. Issue Dates — LAST, as list (not table)
+     Data:    idx 111-130 (CSV rows 112-131) col[0] only
   */
 
-  // Strip * markdown bold from any value
+  // Strip * markdown from any value
   const st = v => String(v||'').replace(/\*/g,'').trim() || '—';
 
-  // Listed IPOs: idx 2-25 (24 rows)
-  const listed = rows.slice(2, 26).filter(r => r[0]&&r[0].trim());
+  // Data slices — exact
+  const listed  = rows.slice(2,  26).filter(r => r[0]&&r[0].trim());
+  const gmp     = rows.slice(40, 60).filter(r => r[0]&&r[0].trim());
+  const experts = rows.slice(135,157).filter(r => r[0]&&r[0].trim());
+  const subs    = rows.slice(160,180).filter(r => r[0]&&r[0].trim());
+  const dates   = rows.slice(111,131).map(r => r[0]).filter(v => v&&v.trim());
 
-  // GMP: idx 40-59 (20 rows), stop at blank
-  const gmp = rows.slice(40, 60).filter(r => r[0]&&r[0].trim());
-
-  // Issue Dates: idx 111-131 (col[0] only)
-  const dates = rows.slice(111, 132).filter(r => r[0]&&r[0].trim()).map(r => r[0]);
-
-  // Experts: idx 135-156
-  const experts = rows.slice(135, 157).filter(r => r[0]&&r[0].trim());
-
-  // Subscription: idx 160-179
-  const subs = rows.slice(160, 180).filter(r => r[0]&&r[0].trim());
-
-  // Status badge
+  // Badges
   const sbadge = s => {
     const l=(s||'').toLowerCase();
     if(l.includes('open'))     return '<span class="sop">OPEN</span>';
     if(l.includes('upcoming')) return '<span class="sup">UPCOMING</span>';
     if(l.includes('clos'))     return '<span class="scl">CLOSED</span>';
-    return s?`<span class="bd bd-g">${s}</span>`:'—';
+    return s ? s : '—';
   };
-  const tbadge = t => `<span class="bd ${/main/i.test(t||'')?'bd-a':'bd-g'}">${t||'—'}</span>`;
-
-  // Expert score bar
-  const expertBar = (apply,mayApply,neutral,avoid) => {
-    const tot = (+apply)+(+mayApply)+(+neutral)+(+avoid);
-    if(!tot) return '<span style="color:#aaa">—</span>';
-    const score = ((+apply)*2+(+mayApply)*1+(+neutral)*0+(+avoid)*-1)/tot;
-    const pct = Math.round(((score+1)/3)*100);
-    const col = score>0.5?'var(--green)':score<-0.2?'var(--red)':'var(--orange)';
-    const label = score>0.5?'✅ Apply':score<-0.2?'❌ Avoid':'⚠️ Neutral';
-    return `<div style="display:flex;align-items:center;gap:6px">
-      <div style="width:60px;height:6px;background:#eee;border-radius:3px;overflow:hidden">
-        <div style="width:${pct}%;height:100%;background:${col}"></div>
-      </div>
-      <span style="font-size:11px;color:${col};font-weight:600">${label}</span>
-    </div>`;
+  const tbadge = t => {
+    const s=st(t);
+    return `<span class="bd ${/main/i.test(s)?'bd-a':'bd-g'}">${s||'—'}</span>`;
   };
 
   $('s-ipo').innerHTML=`
     <div class="stitle">🏦 IPO Corner</div>
 
-    <!-- 1. GMP -->
-    <div class="tcw">
-      <div class="tch">📋 Grey Market Premium (GMP)</div>
-      <div class="tscr"><table>
-        <thead><tr><th>IPO Name</th><th>GMP</th><th>Trend</th><th>Price Band</th><th>Est. Listing</th><th>Date</th><th>Type</th><th>Status</th><th>Updated</th></tr></thead>
-        <tbody>${gmp.map(r=>`<tr>
-          <td><strong>${st(r[0])}</strong></td>
-          <td class="${ic(st(r[1]))}">${st(r[1])}</td>
-          <td style="font-size:16px">${f(r[2])}</td>
-          <td>${st(r[3])}</td>
-          <td>${st(r[4])}</td>
-          <td>${st(r[5])}</td>
-          <td>${tbadge(st(r[6]))}</td>
-          <td>${sbadge(st(r[7]))}</td>
-          <td style="color:#aaa;font-size:11px">${st(r[8])}</td>
-        </tr>`).join('')}
-        </tbody>
-      </table></div>
-    </div>
-
-    <!-- 2. Recently Listed -->
+    <!-- TABLE 1: Recently Listed -->
     <div class="tcw">
       <div class="tch">📈 Recently Listed IPO Performances</div>
       <div class="tscr"><table>
-        <thead><tr><th>Company</th><th>Type</th><th>Listed</th><th>Issue ₹</th><th>Subs</th><th>List Open</th><th>List Close</th><th>List Gain</th><th>LTP ₹</th><th>Today's Gain</th><th>Size</th></tr></thead>
+        <thead><tr>
+          <th>Company</th><th>Type</th><th>Listed</th><th>Issue ₹</th>
+          <th>Subs</th><th>List Open</th><th>List Close</th><th>List Gain</th>
+          <th>LTP ₹</th><th>Today's Gain</th><th>Size</th>
+        </tr></thead>
         <tbody>${listed.map(r=>`<tr>
           <td><strong>${f(r[0])}</strong></td>
           <td>${tbadge(r[1])}</td>
@@ -702,47 +679,84 @@ function renderIPO(rows){
       </table></div>
     </div>
 
-    <!-- 3. Experts Advice -->
+    <!-- TABLE 2: GMP -->
     <div class="tcw">
-      <div class="tch">🎓 Experts Advice</div>
+      <div class="tch">📋 Grey Market Premium (GMP)</div>
       <div class="tscr"><table>
-        <thead><tr><th>Company</th><th>Apply</th><th>May Apply</th><th>Neutral</th><th>Avoid</th><th>Not Rated</th><th>Verdict</th></tr></thead>
-        <tbody>${experts.map(r=>`<tr>
-          <td><strong>${f(r[0])}</strong></td>
-          <td style="color:var(--green);font-weight:600">${f(r[1])}</td>
-          <td style="color:var(--green)">${f(r[2])}</td>
-          <td style="color:var(--orange)">${f(r[3])}</td>
-          <td style="color:var(--red);font-weight:600">${f(r[4])}</td>
-          <td style="color:#aaa">${f(r[5])}</td>
-          <td>${expertBar(r[1],r[2],r[3],r[4])}</td>
+        <thead><tr>
+          <th>IPO Name</th><th>IPO GMP</th><th>Trend</th><th>Price Band</th>
+          <th>Est. Listing</th><th>Date</th><th>Type</th><th>Status</th><th>Last Updated</th>
+        </tr></thead>
+        <tbody>${gmp.map(r=>`<tr>
+          <td><strong>${st(r[0])}</strong></td>
+          <td class="${ic(st(r[1]))}" style="font-weight:600">${st(r[1])}</td>
+          <td style="font-size:16px;text-align:center">${f(r[2])}</td>
+          <td>${st(r[3])}</td>
+          <td>${st(r[4])}</td>
+          <td>${st(r[5])}</td>
+          <td>${tbadge(r[6])}</td>
+          <td>${sbadge(st(r[7]))}</td>
+          <td style="color:#aaa;font-size:11px">${st(r[8])}</td>
         </tr>`).join('')}
         </tbody>
       </table></div>
     </div>
 
-    <!-- 4. Subscription Status -->
+    <!-- TABLE 3: Experts Advice -->
     <div class="tcw">
-      <div class="tch">📅 IPO Subscription Status</div>
+      <div class="tch">🎓 Experts Advice</div>
       <div class="tscr"><table>
-        <thead><tr><th>IPO</th><th>Type</th><th>Open</th><th>Close</th><th>QIB (x)</th><th>NII (x)</th><th>Retail (x)</th><th>Total (x)</th></tr></thead>
+        <thead><tr>
+          <th>Company</th>
+          <th style="color:var(--green)">Apply</th>
+          <th style="color:var(--green)">May Apply</th>
+          <th style="color:var(--orange)">Neutral</th>
+          <th style="color:var(--red)">Avoid</th>
+          <th style="color:#aaa">Not Rated</th>
+        </tr></thead>
+        <tbody>${experts.map(r=>`<tr>
+          <td><strong>${f(r[0])}</strong></td>
+          <td style="color:var(--green);font-weight:600;text-align:center">${f(r[1])}</td>
+          <td style="color:var(--green);text-align:center">${f(r[2])}</td>
+          <td style="color:var(--orange);text-align:center">${f(r[3])}</td>
+          <td style="color:var(--red);font-weight:600;text-align:center">${f(r[4])}</td>
+          <td style="color:#aaa;text-align:center">${f(r[5])}</td>
+        </tr>`).join('')}
+        </tbody>
+      </table></div>
+    </div>
+
+    <!-- TABLE 4: Subscription Status -->
+    <div class="tcw">
+      <div class="tch">📅 IPO Subscription Status (Application-wise)</div>
+      <div class="tscr"><table>
+        <thead><tr>
+          <th>IPO</th><th>Type</th><th>Opening Date</th><th>Closing Date</th>
+          <th>QIB (X)</th><th>NII (X)</th><th>Retail (X)</th><th>Total (X)</th>
+        </tr></thead>
         <tbody>${subs.map(r=>`<tr>
           <td><strong>${f(r[0])}</strong></td>
           <td>${tbadge(r[1])}</td>
           <td>${f(r[2])}</td>
           <td>${f(r[3])}</td>
-          ${[4,5,6,7].map(i=>{const v=parseFloat(r[i]);return`<td class="${v>=10?'cp':v>=1?'':'cn'}">${f(r[i])}</td>`;}).join('')}
+          ${[4,5,6,7].map(i=>{
+            const v=parseFloat(r[i]);
+            const cls=isNaN(v)?'':v>=10?'cp':v>=1?'':'cn';
+            return `<td class="${cls}">${f(r[i])}</td>`;
+          }).join('')}
         </tr>`).join('')}
         </tbody>
       </table></div>
     </div>
 
-    <!-- 5. Issue Dates (last, as list) -->
+    <!-- LAST: Issue Dates (list, not table) -->
     <div class="tcw">
       <div class="tch">📆 Company &amp; Issue Dates</div>
-      <div style="padding:12px 14px;columns:2;column-gap:24px">
-        ${dates.map(d=>`<div style="padding:5px 0;border-bottom:1px solid #f5f5f5;font-size:12px;break-inside:avoid">
-          📌 ${d}
-        </div>`).join('')}
+      <div style="padding:10px 14px">
+        ${dates.map(d=>`
+          <div style="padding:6px 0;border-bottom:1px solid #f5f5f5;font-size:12px;color:#333">
+            📌 ${d}
+          </div>`).join('')}
       </div>
     </div>`;
 }
