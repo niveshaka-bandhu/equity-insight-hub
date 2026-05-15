@@ -631,8 +631,8 @@ function renderIPO(rows){
   const st = v => String(v||'').replace(/\*/g,'').trim() || '—';
 
   // Data slices — exact
-  const listed  = rows.slice(2,  26).filter(r => r[0]&&r[0].trim());
-  const gmp     = rows.slice(40, 60).filter(r => r[0]&&r[0].trim());
+  const listed  = rows.slice(0,  21).filter(r => r[0]&&r[0].trim());
+  const gmp     = rows.slice(22, 50).filter(r => r[0]&&r[0].trim());
   const experts = rows.slice(135,157).filter(r => r[0]&&r[0].trim());
   const subs    = rows.slice(160,180).filter(r => r[0]&&r[0].trim());
   const dates   = rows.slice(111,131).map(r => r[0]).filter(v => v&&v.trim());
