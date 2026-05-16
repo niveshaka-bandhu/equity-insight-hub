@@ -766,8 +766,8 @@ function renderIPO(rows){
    Col: [1]=Currency [2]=RateINR [3]=Code | [5]=Symbol [6]=Last [7]=Chg [8]=Chg% [9]=Close [10]=High [11]=Low
 ══════════════════════════════════════════════ */
 function renderCurrency(rows){
-  const curr=rows.slice(1).filter(r=>r[1]&&r[1].trim()&&r[2]&&r[2].trim()&&r[1]!=='Currency');
-  const comm=rows.slice(1).filter(r=>r[5]&&r[5].trim()&&r[5]!=='Symbol'&&r[5]!=='#N/A'&&r[6]&&r[6].trim());
+  const curr=rows.slice(0).filter(r=>r[1]&&r[1].trim()&&r[2]&&r[2].trim()&&r[1]!=='Currency');
+  const comm=rows.slice(0).filter(r=>r[5]&&r[5].trim()&&r[5]!=='Symbol'&&r[5]!=='#N/A'&&r[6]&&r[6].trim());
 
   $('s-currency').innerHTML=`
     <div class="stitle">💱 Currencies &amp; Commodities</div>
