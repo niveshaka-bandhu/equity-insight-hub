@@ -492,14 +492,6 @@ function renderMarket(rows){
     .filter(r => r[6]&&r[6].trim() && r[BPC]&&!isNaN(parseFloat(String(r[BPC]).replace(/,/g,''))))
     .map(r => [r[6], r[BPC], r[BFC]]);
 
-  // Extended BSE movers: [2]=gName [3]=price [4]=pct | [5]=lName [6]=price [7]=pct
-  const extG = rows.slice(103,153)
-    .filter(r => r[2]&&r[2].trim() && !isNaN(parseFloat(String(r[3]||'').replace(/,/g,''))))
-    .map(r => [r[2],r[3],r[4]]);
-  const extL = rows.slice(103,153)
-    .filter(r => r[5]&&r[5].trim() && !isNaN(parseFloat(String(r[6]||'').replace(/,/g,''))))
-    .map(r => [r[5],r[6],r[7]]);
-
   // ── SLICES ──────────────────────────────────────────────────────
   const n50g    = Lg(0, 5);     // Nifty50 Gainers
   const n50l    = Lg(6, 12);    // Nifty50 Losers
@@ -570,8 +562,6 @@ function renderMarket(rows){
     <div class="g2">${tbl4('🟢 SENSEX 30 Gainers',s30g)}${tbl4('🔴 SENSEX 30 Losers',s30l)}</div>
     <div class="g2">${tbl3('🟢 All BSE Gainers',bseG)}${tbl3('🔴 All BSE Losers',bseL)}</div>
     ${tbl4('🏦 Nifty Bank Stocks',bank)}
-    <div class="tcw">
-      <div class="tch">📊 BSE Extended Movers</div>
       <div class="g2" style="margin:0;gap:0">
         <div class="tscr" style="border-right:1px solid #eee"><table>
           <thead><tr><th>🟢 BSE Gainers</th><th>Price</th><th>%</th></tr></thead>
