@@ -505,11 +505,11 @@ function renderMarket(rows){
   const n50l    = Lg(6, 12);    // Nifty50 Losers
   const nseG    = RgNSE(0,  5);  // ALL NSE Gainers
   const nseL    = RgNSE(6, 12); // ALL NSE Losers
-  const s30g    = Lg(13, 18);    // SENSEX30 Gainers
-  const s30l    = Lg(19, 24);    // SENSEX30 Losers
-  const bseG    = RgBSE(13, 18); // ALL BSE Gainers
-  const bseL    = RgBSE(19, 24); // ALL BSE Losers
-  const bank    = Lg(39, 51);    // Nifty Bank stocks (idx 39-50)
+  const s30g    = Lg(13, 19);    // SENSEX30 Gainers
+  const s30l    = Lg(20, 26);    // SENSEX30 Losers
+  const bseG    = RgBSE(13, 19); // ALL BSE Gainers
+  const bseL    = RgBSE(20, 26); // ALL BSE Losers
+  const bank    = Lg(29, 42);    // Nifty Bank stocks (idx 39-50)
 
   // ── ADVANCE / DECLINE ────────────────────────────────────────────
   // Scan each row for 'Adv:' or 'Dec:' label, take next non-empty cell
