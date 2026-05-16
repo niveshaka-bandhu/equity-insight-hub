@@ -493,8 +493,10 @@ function renderMarket(rows){
     .map(r => [r[6], r[BPC], r[BFC]]);
 
   // Extended BSE movers: [2]=gName [3]=price [4]=pct | [5]=lName [6]=price [7]=pct
+  const extG = rows.slice(103,153)
     .filter(r => r[2]&&r[2].trim() && !isNaN(parseFloat(String(r[3]||'').replace(/,/g,''))))
     .map(r => [r[2],r[3],r[4]]);
+  const extL = rows.slice(103,153)
     .filter(r => r[5]&&r[5].trim() && !isNaN(parseFloat(String(r[6]||'').replace(/,/g,''))))
     .map(r => [r[5],r[6],r[7]]);
 
