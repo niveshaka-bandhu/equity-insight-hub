@@ -425,112 +425,48 @@ function renderIndian(rows){
    Adv/Dec: col[6]='BSE'/'NSE', col[7]='Adv:'/'Dec:', col[8]=count
 ══════════════════════════════════════════════ */
 function renderMarket(rows){
-  /*
-   CONFIRMED from CSV analysis (col indices in gviz):
-   ── Nifty50 / SENSEX30 LEFT block:
-      [1]=Company  [2]=Price  [3]=Change  [4]=%Change
-   ── ALL NSE RIGHT block:
-      [6]=Company  [9]=Price  [10]=Change  [11]=%Change
-      (cols 7,8 are blank merged cells → gviz may skip them → price shifts to [7])
-   ── ALL BSE RIGHT block:
-      [6]=Company  [9]=Price  [10]=%Change  (no change col)
-   ── Adv/Dec:
-      row[38]: [6]='BSE' [7]='Adv:' [8]=count
-      row[39]: [7]='Dec:' [8]=count
-      row[40]: [6]='NSE' [7]='Adv:' [8]=count
-      row[41]: [7]='Dec:' [8]=count
-
-   ROW RANGES (gviz 0-based = CSV row - 1):
-      Nifty50 Gainers:  idx 4-8   (CSV rows 5-9)
-      Nifty50 Losers:   idx 12-16 (CSV rows 13-17)
-      SENSEX30 Gainers: idx 21-25 (CSV rows 22-26)
-      SENSEX30 Losers:  idx 29-33 (CSV rows 30-34)
-      ALL NSE Gainers:  idx 4-8   right cols
-      ALL NSE Losers:   idx 12-16 right cols
-      ALL BSE Gainers:  idx 21-25 right cols
-      ALL BSE Losers:   idx 29-33 right cols
-      Nifty Bank:       idx 39-50 (CSV rows 40-51) left cols
-      Adv/Dec:          idx 38-41
-  */
-
-  // ── DETECT NSE right-block price column ─────────────────────────
-  // In CSV: col[9]=price. gviz may skip blank cols 7,8 → price at col[7]
-  // Probe first NSE data row (idx 4) to find first numeric col after col[6]
-  const probe = rows[4] || [];
-  let PC=9, CC=10, FC=11; // defaults from CSV
-  for(let ci=7; ci<=11; ci++){
-    const v=String(probe[ci]||'').replace(/,/g,'');
-    if(v && !isNaN(parseFloat(v)) && parseFloat(v)>0){
-      PC=ci; CC=ci+1; FC=ci+2; break;
-    }
-  }
-
-  // ── DETECT BSE right-block (% only, no change col) ──────────────
-  // Same logic — probe SENSEX30 Gainers row (idx 21)
-  const probe2 = rows[21] || [];
-  let BPC=9, BFC=10; // BSE price, pct
-  for(let ci=7; ci<=11; ci++){
-    const v=String(probe2[ci]||'').replace(/,/g,'');
-    if(v && !isNaN(parseFloat(v)) && parseFloat(v)>0){
-      BPC=ci; BFC=ci+1; break;
-    }
-  }
-
-  // ── DATA EXTRACTORS ─────────────────────────────────────────────
-  // Left block: [1]=name [2]=price [3]=chg [4]=pct
+  // LEFT: col[1]=Company col[2]=Price col[3]=Change col[4]=%Change
   const Lg = (s,e) => rows.slice(s,e)
     .filter(r => r[1]&&r[1].trim() && r[2]&&!isNaN(parseFloat(String(r[2]).replace(/,/g,''))))
     .map(r => [r[1],r[2],r[3],r[4]]);
 
-  // Right NSE block: detected cols
+  // NSE RIGHT: probe for price col after col[6]
+  const probe = rows[4] || [];
+  let PC=9, CC=10, FC=11;
+  for(let ci=7; ci<=11; ci++){
+    const v=String(probe[ci]||'').replace(/,/g,'');
+    if(v && !isNaN(parseFloat(v)) && parseFloat(v)>0){ PC=ci; CC=ci+1; FC=ci+2; break; }
+  }
   const RgNSE = (s,e) => rows.slice(s,e)
     .filter(r => r[6]&&r[6].trim() && r[PC]&&!isNaN(parseFloat(String(r[PC]).replace(/,/g,''))))
     .map(r => [r[6], r[PC], r[CC], r[FC]]);
 
-  // Right BSE block: % only
+  // ALL BSE RIGHT: col[6]=Company col[7]=Price col[8]=%Change
   const RgBSE = (s,e) => rows.slice(s,e)
-    .filter(r => r[6]&&r[6].trim() && r[BPC]&&!isNaN(parseFloat(String(r[BPC]).replace(/,/g,''))))
-    .map(r => [r[6], r[BPC], r[BFC]]);
+    .filter(r => r[6]&&r[6].trim() && r[7]&&!isNaN(parseFloat(String(r[7]).replace(/,/g,''))))
+    .map(r => [r[6], r[7], r[8]]);
 
-  // Extended BSE movers: [2]=gName [3]=price [4]=pct | [5]=lName [6]=price [7]=pct
-  const extG = rows.slice(103,153)
-    .filter(r => r[2]&&r[2].trim() && !isNaN(parseFloat(String(r[3]||'').replace(/,/g,''))))
-    .map(r => [r[2],r[3],r[4]]);
-  const extL = rows.slice(103,153)
-    .filter(r => r[5]&&r[5].trim() && !isNaN(parseFloat(String(r[6]||'').replace(/,/g,''))))
-    .map(r => [r[5],r[6],r[7]]);
+  // SLICES — confirmed from CSV
+  const n50g  = Lg(4,  9);    // CSV rows 5-9
+  const n50l  = Lg(12, 17);   // CSV rows 13-17
+  const nseG  = RgNSE(4,  9);
+  const nseL  = RgNSE(12, 17);
+  const s30g  = Lg(21, 26);   // CSV rows 22-26
+  const s30l  = Lg(29, 34);   // CSV rows 30-34
+  const bseG  = RgBSE(21, 26);
+  const bseL  = RgBSE(29, 34);
+  const bank  = Lg(39, 51);   // CSV rows 40-51, col[1,2,3,4]
 
-  // ── SLICES ──────────────────────────────────────────────────────
-  const n50g    = Lg(0, 5);     // Nifty50 Gainers
-  const n50l    = Lg(6, 12);    // Nifty50 Losers
-  const nseG    = RgNSE(0,  5);  // ALL NSE Gainers
-  const nseL    = RgNSE(6, 12); // ALL NSE Losers
-  const s30g    = Lg(13, 20);    // SENSEX30 Gainers
-  const s30l    = Lg(21, 27);    // SENSEX30 Losers
-  const bseG    = RgBSE(13, 20); // ALL BSE Gainers
-  const bseL    = RgBSE(20, 27); // ALL BSE Losers
-  const bank    = Lg(29, 42);    // Nifty Bank stocks (idx 39-50)
+  // ADVANCE/DECLINE — confirmed from CSV:
+  // idx 37: col[8]='1624' (BSE Adv)
+  // idx 38: col[8]='2387' (BSE Dec)
+  // idx 39: col[8]='1016' (NSE Adv)
+  // idx 40: col[8]='1914' (NSE Dec)
+  const bseAdv = (rows[37]||[])[8] || '—';
+  const bseDec = (rows[38]||[])[8] || '—';
+  const nseAdv = (rows[39]||[])[8] || '—';
+  const nseDec = (rows[40]||[])[8] || '—';
 
-  // ── ADVANCE / DECLINE ────────────────────────────────────────────
-  // Scan each row for 'Adv:' or 'Dec:' label, take next non-empty cell
-  function getAdv(rowIdx, label){
-    const r = rows[rowIdx] || [];
-    for(let ci=5; ci<12; ci++){
-      if((r[ci]||'').trim()===label){
-        // next cell
-        for(let ni=ci+1; ni<12; ni++){
-          if(r[ni]&&r[ni].trim()) return r[ni];
-        }
-      }
-    }
-    return '—';
-  }
-  const bseAdv = getAdv(37,'Adv:');
-  const bseDec = getAdv(38,'Dec:');
-  const nseAdv = getAdv(39,'Adv:');
-  const nseDec = getAdv(40,'Dec:');
-
-  // ── TABLE BUILDERS ───────────────────────────────────────────────
   const TH4=`<thead><tr><th>Company</th><th>Price ₹</th><th>Change</th><th>% Chg</th></tr></thead>`;
   const TH3=`<thead><tr><th>Company</th><th>Price ₹</th><th>% Chg</th></tr></thead>`;
 
@@ -538,8 +474,7 @@ function renderMarket(rows){
     <div class="tch">${title}</div>
     <div class="tscr"><table>${TH4}<tbody>
       ${data.map(r=>`<tr>
-        <td><strong>${f(r[0])}</strong></td>
-        <td>${f(r[1])}</td>
+        <td><strong>${f(r[0])}</strong></td><td>${f(r[1])}</td>
         <td class="${ic(r[2])}">${f(r[2])}</td>
         <td class="${ic(r[3])}">${f(r[3])}</td>
       </tr>`).join('')||'<tr><td colspan="4" style="color:#aaa;padding:10px;text-align:center">No data</td></tr>'}
@@ -549,40 +484,24 @@ function renderMarket(rows){
     <div class="tch">${title}</div>
     <div class="tscr"><table>${TH3}<tbody>
       ${data.map(r=>`<tr>
-        <td><strong>${f(r[0])}</strong></td>
-        <td>${f(r[1])}</td>
+        <td><strong>${f(r[0])}</strong></td><td>${f(r[1])}</td>
         <td class="${ic(r[2])}">${f(r[2])}</td>
       </tr>`).join('')||'<tr><td colspan="3" style="color:#aaa;padding:10px;text-align:center">No data</td></tr>'}
     </tbody></table></div></div>`;
 
   $('s-market').innerHTML=`
     <div class="stitle">📈 Market Data — NSE &amp; BSE</div>
-
     <div class="adrow">
       <div class="adbox"><div class="adlbl">BSE Advances</div><div class="adnum up">${bseAdv}</div></div>
       <div class="adbox"><div class="adlbl">BSE Declines</div><div class="adnum dn">${bseDec}</div></div>
       <div class="adbox"><div class="adlbl">NSE Advances</div><div class="adnum up">${nseAdv}</div></div>
       <div class="adbox"><div class="adlbl">NSE Declines</div><div class="adnum dn">${nseDec}</div></div>
     </div>
-
     <div class="g2">${tbl4('🟢 NIFTY 50 Top Gainers',n50g)}${tbl4('🔴 NIFTY 50 Top Losers',n50l)}</div>
     <div class="g2">${tbl4('🟢 All NSE Top Gainers',nseG)}${tbl4('🔴 All NSE Top Losers',nseL)}</div>
     <div class="g2">${tbl4('🟢 SENSEX 30 Gainers',s30g)}${tbl4('🔴 SENSEX 30 Losers',s30l)}</div>
     <div class="g2">${tbl3('🟢 All BSE Gainers',bseG)}${tbl3('🔴 All BSE Losers',bseL)}</div>
-    ${tbl4('🏦 Nifty Bank Stocks',bank)}
-    <div class="tcw">
-      <div class="tch">📊 BSE Extended Movers</div>
-      <div class="g2" style="margin:0;gap:0">
-        <div class="tscr" style="border-right:1px solid #eee"><table>
-          <thead><tr><th>🟢 BSE Gainers</th><th>Price</th><th>%</th></tr></thead>
-          <tbody>${extG.map(r=>`<tr><td><strong>${f(r[0])}</strong></td><td>${f(r[1])}</td><td class="${ic(r[2])}">${f(r[2])}</td></tr>`).join('')}</tbody>
-        </table></div>
-        <div class="tscr"><table>
-          <thead><tr><th>🔴 BSE Losers</th><th>Price</th><th>%</th></tr></thead>
-          <tbody>${extL.map(r=>`<tr><td><strong>${f(r[0])}</strong></td><td>${f(r[1])}</td><td class="${ic(r[2])}">${f(r[2])}</td></tr>`).join('')}</tbody>
-        </table></div>
-      </div>
-    </div>`;
+    ${tbl4('🏦 Nifty Bank Stocks',bank)}`;
 }
 
 /* ══════════════════════════════════════════════
@@ -598,122 +517,78 @@ function renderMarket(rows){
    KEY FIX: Use SEPARATE section detection — stop each section at next blank block
 ══════════════════════════════════════════════ */
 function renderIPO(rows){
-  /*
-  EXACT positions (gviz idx = CSV row - 1):
-
-  1. Recently Listed IPOs — FIRST TABLE
-     Headers: idx 1  (CSV row 2)  cols [0-10]
-     Data:    idx 2-25 (CSV rows 3-26)
-     cols: [0]=Company [1]=Type [2]=ListDate [3]=IssuePrice [4]=Subs
-           [5]=ListOpen [6]=ListClose [7]=ListGain [8]=LTP [9]=TodayGain [10]=Size
-
-  2. GMP — SECOND TABLE
-     Headers: idx 39 (CSV row 40)  cols [0-8]  — strip * from all
-     Data:    idx 40-59 (CSV rows 41-60)
-     cols: [0]=Name [1]=GMP [2]=Trend [3]=PriceBand [4]=EstListing
-           [5]=Date [6]=Type [7]=Status [8]=LastUpdated
-
-  3. Experts Advice — THIRD TABLE
-     Headers: idx 134 (CSV row 135) cols [0-5]
-     Data:    idx 135-156 (CSV rows 136-157)
-     cols: [0]=Company [1]=Apply [2]=MayApply [3]=Neutral [4]=Avoid [5]=NotRated
-
-  4. Subscription Status — FOURTH TABLE
-     Headers: idx 159 (CSV row 160) cols [0-7]
-     Data:    idx 160-179 (CSV rows 161-180)
-     cols: [0]=IPO [1]=Type [2]=Open [3]=Close [4]=QIB [5]=NII [6]=Retail [7]=Total
-
-  5. Issue Dates — LAST, as list (not table)
-     Data:    idx 111-130 (CSV rows 112-131) col[0] only
-  */
-
-  // Strip * markdown from any value
   const st = v => String(v||'').replace(/\*/g,'').trim() || '—';
 
-  // Data slices — exact
-  const listed  = rows.slice(0,  21).filter(r => r[0]&&r[0].trim());
-  const gmp     = rows.slice(22, 50).filter(r => r[0]&&r[0].trim());
-  const experts = rows.slice(135,157).filter(r => r[0]&&r[0].trim());
-  const subs    = rows.slice(160,180).filter(r => r[0]&&r[0].trim());
-  const dates   = rows.slice(111,131).map(r => r[0]).filter(v => v&&v.trim());
+  // Listed IPOs: idx 2-21 (CSV rows 3-22)
+  const listed = rows.slice(2, 22).filter(r => r[0]&&r[0].trim());
 
-  // Badges
+  // GMP: idx 25-37 (CSV rows 26-38)
+  const gmp = rows.slice(25, 38).filter(r => r[0]&&r[0].trim());
+
+  // Issue Dates: idx 39-47, col[0]=Company col[1]=Date
+  const dates = rows.slice(39, 48).filter(r => r[0]&&r[0].trim()&&r[0]!=='Company');
+
+  // Experts: idx 50-68 (skip header row 49)
+  const experts = rows.slice(50, 69).filter(r => r[0]&&r[0].trim());
+
+  // Subscription: idx 72-152 (CSV rows 73-153)
+  const subs = rows.slice(72, 153).filter(r => r[0]&&r[0].trim());
+
   const sbadge = s => {
     const l=(s||'').toLowerCase();
     if(l.includes('open'))     return '<span class="sop">OPEN</span>';
     if(l.includes('upcoming')) return '<span class="sup">UPCOMING</span>';
     if(l.includes('clos'))     return '<span class="scl">CLOSED</span>';
-    return s ? s : '—';
+    return s||'—';
   };
-  const tbadge = t => {
-    const s=st(t);
-    return `<span class="bd ${/main/i.test(s)?'bd-a':'bd-g'}">${s||'—'}</span>`;
-  };
+  const tbadge = t => `<span class="bd ${/main/i.test(st(t))?'bd-a':'bd-g'}">${st(t)||'—'}</span>`;
 
   $('s-ipo').innerHTML=`
     <div class="stitle">🏦 IPO Corner</div>
 
-    <!-- TABLE 1: Recently Listed -->
     <div class="tcw">
       <div class="tch">📈 Recently Listed IPO Performances</div>
       <div class="tscr"><table>
-        <thead><tr>
-          <th>Company</th><th>Type</th><th>Listed</th><th>Issue ₹</th>
+        <thead><tr><th>Company</th><th>Type</th><th>Listed</th><th>Issue ₹</th>
           <th>Subs</th><th>List Open</th><th>List Close</th><th>List Gain</th>
-          <th>LTP ₹</th><th>Today's Gain</th><th>Size</th>
-        </tr></thead>
+          <th>LTP ₹</th><th>Today's Gain</th><th>Size</th></tr></thead>
         <tbody>${listed.map(r=>`<tr>
-          <td><strong>${f(r[0])}</strong></td>
-          <td>${tbadge(r[1])}</td>
-          <td>${f(r[2])}</td>
-          <td>${f(r[3])}</td>
-          <td>${f(r[4])}</td>
-          <td>${f(r[5])}</td>
-          <td>${f(r[6])}</td>
+          <td><strong>${f(r[0])}</strong></td><td>${tbadge(r[1])}</td>
+          <td>${f(r[2])}</td><td>${f(r[3])}</td><td>${f(r[4])}</td>
+          <td>${f(r[5])}</td><td>${f(r[6])}</td>
           <td class="${ic(r[7])}">${f(r[7])}</td>
           <td>${f(r[8])}</td>
           <td class="${ic(r[9])}">${f(r[9])}</td>
           <td>${f(r[10])}</td>
-        </tr>`).join('')}
-        </tbody>
+        </tr>`).join('')}</tbody>
       </table></div>
     </div>
 
-    <!-- TABLE 2: GMP -->
     <div class="tcw">
       <div class="tch">📋 Grey Market Premium (GMP)</div>
       <div class="tscr"><table>
-        <thead><tr>
-          <th>IPO Name</th><th>IPO GMP</th><th>Trend</th><th>Price Band</th>
-          <th>Est. Listing</th><th>Date</th><th>Type</th><th>Status</th><th>Last Updated</th>
-        </tr></thead>
+        <thead><tr><th>IPO Name</th><th>GMP</th><th>Trend</th><th>Price Band</th>
+          <th>Est. Listing</th><th>Date</th><th>Type</th><th>Status</th><th>Updated</th></tr></thead>
         <tbody>${gmp.map(r=>`<tr>
           <td><strong>${st(r[0])}</strong></td>
           <td class="${ic(st(r[1]))}" style="font-weight:600">${st(r[1])}</td>
           <td style="font-size:16px;text-align:center">${f(r[2])}</td>
-          <td>${st(r[3])}</td>
-          <td>${st(r[4])}</td>
-          <td>${st(r[5])}</td>
-          <td>${tbadge(r[6])}</td>
-          <td>${sbadge(st(r[7]))}</td>
+          <td>${st(r[3])}</td><td>${st(r[4])}</td><td>${st(r[5])}</td>
+          <td>${tbadge(r[6])}</td><td>${sbadge(st(r[7]))}</td>
           <td style="color:#aaa;font-size:11px">${st(r[8])}</td>
-        </tr>`).join('')}
-        </tbody>
+        </tr>`).join('')}</tbody>
       </table></div>
     </div>
 
-    <!-- TABLE 3: Experts Advice -->
     <div class="tcw">
       <div class="tch">🎓 Experts Advice</div>
       <div class="tscr"><table>
-        <thead><tr>
-          <th>Company</th>
+        <thead><tr><th>Company</th>
           <th style="color:var(--green)">Apply</th>
           <th style="color:var(--green)">May Apply</th>
           <th style="color:var(--orange)">Neutral</th>
           <th style="color:var(--red)">Avoid</th>
-          <th style="color:#aaa">Not Rated</th>
-        </tr></thead>
+          <th style="color:#aaa">Not Rated</th></tr></thead>
         <tbody>${experts.map(r=>`<tr>
           <td><strong>${f(r[0])}</strong></td>
           <td style="color:var(--green);font-weight:600;text-align:center">${f(r[1])}</td>
@@ -721,42 +596,29 @@ function renderIPO(rows){
           <td style="color:var(--orange);text-align:center">${f(r[3])}</td>
           <td style="color:var(--red);font-weight:600;text-align:center">${f(r[4])}</td>
           <td style="color:#aaa;text-align:center">${f(r[5])}</td>
-        </tr>`).join('')}
-        </tbody>
+        </tr>`).join('')}</tbody>
       </table></div>
     </div>
 
-    <!-- TABLE 4: Subscription Status -->
     <div class="tcw">
       <div class="tch">📅 IPO Subscription Status (Application-wise)</div>
       <div class="tscr"><table>
-        <thead><tr>
-          <th>IPO</th><th>Type</th><th>Opening Date</th><th>Closing Date</th>
-          <th>QIB (X)</th><th>NII (X)</th><th>Retail (X)</th><th>Total (X)</th>
-        </tr></thead>
+        <thead><tr><th>IPO</th><th>Type</th><th>Opening Date</th><th>Closing Date</th>
+          <th>QIB (X)</th><th>NII (X)</th><th>Retail (X)</th><th>Total (X)</th></tr></thead>
         <tbody>${subs.map(r=>`<tr>
-          <td><strong>${f(r[0])}</strong></td>
-          <td>${tbadge(r[1])}</td>
-          <td>${f(r[2])}</td>
-          <td>${f(r[3])}</td>
-          ${[4,5,6,7].map(i=>{
-            const v=parseFloat(r[i]);
-            const cls=isNaN(v)?'':v>=10?'cp':v>=1?'':'cn';
-            return `<td class="${cls}">${f(r[i])}</td>`;
-          }).join('')}
-        </tr>`).join('')}
-        </tbody>
+          <td><strong>${f(r[0])}</strong></td><td>${tbadge(r[1])}</td>
+          <td>${f(r[2])}</td><td>${f(r[3])}</td>
+          ${[4,5,6,7].map(i=>{const v=parseFloat(r[i]);return`<td class="${isNaN(v)?'':v>=10?'cp':v>=1?'':'cn'}">${f(r[i])}</td>`;}).join('')}
+        </tr>`).join('')}</tbody>
       </table></div>
     </div>
 
-    <!-- LAST: Issue Dates (list, not table) -->
     <div class="tcw">
       <div class="tch">📆 Company &amp; Issue Dates</div>
       <div style="padding:10px 14px">
-        ${dates.map(d=>`
-          <div style="padding:6px 0;border-bottom:1px solid #f5f5f5;font-size:12px;color:#333">
-            📌 ${d}
-          </div>`).join('')}
+        ${dates.map(r=>`<div style="padding:6px 0;border-bottom:1px solid #f5f5f5;font-size:12px;color:#333">
+          📌 <strong>${f(r[0])}</strong> — ${f(r[1])}
+        </div>`).join('')}
       </div>
     </div>`;
 }
@@ -823,26 +685,30 @@ function renderAce(rows){
     ['DOLLY RAJEEV KHANNA','Dolly Khanna'],
     ['VIJAY KEDIA','Vijay Kedia'],
   ];
-
-  const investors=[];
+  const investors=[], seen=new Set();
   let cur=null;
 
   for(const r of rows){
-    // Investor header: col[2] has name, col[0] and col[1] are blank
-    const c2=(r[2]||'').trim().toUpperCase();
-    const c0=(r[0]||'').trim();
-    const c1=(r[1]||'').trim();
-    const matched=(!c0&&!c1)?INAMES.find(([k])=>c2.includes(k)):null;
-
+    const c0=(r[0]||'').trim(), c1=(r[1]||'').trim(), c2=(r[2]||'').trim().toUpperCase();
+    // Investor header: col[0] and col[1] blank, col[2] has name
+    const matched = (!c0&&!c1) ? INAMES.find(([k])=>c2.includes(k)) : null;
     if(matched){
       if(cur) investors.push(cur);
       cur={name:matched[1], pv:f(r[7]), h:[]};
-    } else if(cur){
-      // Data row: col[0] is a number (S.No.)
-      const sno=(r[0]||'').trim();
-      const company=(r[1]||'').trim();
-      // Skip: blank rows, column header rows, non-numeric S.No.
-      if(!sno||!company||isNaN(parseInt(sno))||company==='COMPANY'||company==='Company') continue;
+      continue;
+    }
+    if(!cur) continue;
+    // Skip blank rows (continue, don't stop)
+    if(!c0&&!c1&&!c2) continue;
+    // Skip column headers
+    if(c0.toLowerCase().startsWith('s.')||c0==='#'||c1.toUpperCase()==='COMPANY') continue;
+    // Skip super investors label
+    if(c2.includes('SUPER INVESTORS')) continue;
+    // Valid data: col[0] is a number, col[1] has company name
+    const sno=parseInt(c0);
+    const company=(r[1]||'').trim();
+    if(!isNaN(sno) && sno>0 && company && !seen.has(cur.name+'|'+company)){
+      seen.add(cur.name+'|'+company);
       cur.h.push(r);
     }
   }
@@ -856,13 +722,15 @@ function renderAce(rows){
     <div class="ipanel${i===0?' on':''}" id="ip${i}">
       ${inv.pv&&inv.pv!=='—'?`<div class="pvlbl">Portfolio Value (Mar 2026): <strong>₹${inv.pv} Cr</strong></div>`:''}
       <div class="tcw"><div class="tscr"><table>
-        <thead><tr><th>#</th><th>Company</th><th>Mar'25%</th><th>Jun'25%</th><th>Sep'25%</th><th>Dec'25%</th><th>Mar'26%</th><th>Value ₹Cr</th></tr></thead>
+        <thead><tr><th>#</th><th>Company</th><th>Mar'25%</th><th>Jun'25%</th>
+          <th>Sep'25%</th><th>Dec'25%</th><th>Mar'26%</th><th>Value ₹Cr</th></tr></thead>
         <tbody>${inv.h.map((h,j)=>`<tr>
           <td style="color:#ccc">${j+1}</td>
           <td><strong>${f(h[1])}</strong></td>
           <td>${f(h[2])}</td><td>${f(h[3])}</td><td>${f(h[4])}</td>
           <td>${f(h[5])}</td><td><strong>${f(h[6])}</strong></td>
-          <td class="cp">${f(h[7])}</td></tr>`).join('')}
+          <td class="cp">${f(h[7])}</td>
+        </tr>`).join('')}
         </tbody>
       </table></div></div>
     </div>`).join('');
