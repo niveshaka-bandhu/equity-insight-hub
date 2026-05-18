@@ -135,7 +135,7 @@ footer a{color:#6ea8fe}
       <button class="nb"     onclick="showTab('market',this)">📈 Market</button>
       <button class="nb"     onclick="showTab('ipo',this)">🏦 IPO</button>
       <button class="nb"     onclick="showTab('currency',this)">💱 Currencies</button>
-      <button class="nb"     onclick="showTab('ace',this)">🧠 Ace Investors</button>
+      <button class="nb"     onclick="showTab('corporate',this)">📋 Corporate Actions</button>
     </nav>
     <button class="rbtn" id="rbtn" onclick="refreshAll()">⟳ Refresh</button>
   </div>
@@ -149,7 +149,7 @@ footer a{color:#6ea8fe}
   <div class="sec"    id="s-market"><div class="loading"><div class="spin"></div>Loading…</div></div>
   <div class="sec"    id="s-ipo"><div class="loading"><div class="spin"></div>Loading…</div></div>
   <div class="sec"    id="s-currency"><div class="loading"><div class="spin"></div>Loading…</div></div>
-  <div class="sec"    id="s-ace"><div class="loading"><div class="spin"></div>Loading…</div></div>
+  <div class="sec"    id="s-corporate"><div class="loading"><div class="spin"></div>Loading…</div></div>
 </div>
 
 <footer>
@@ -159,7 +159,8 @@ footer a{color:#6ea8fe}
 
 <script>
 const SID='1xoUJqge0b4SQmZSRLZyoBBcokXrUrFVt8fBFoef28NQ';
-const GIDS={global:572014590,futures:2063758158,indian:139113774,market:1259430707,ipo:536891537,currency:1847303228,ace:773783735};
+const SID2='1_7_7lctIPNdHjUd3wNp0hu6xMjqhG3Tw0fNJO_fxWJg';
+const GIDS={global:572014590,futures:2063758158,indian:139113774,market:1259430707,ipo:536891537,currency:1847303228};
 
 /* ── JSONP fetch ── */
 let _n=0;
@@ -171,6 +172,19 @@ function fetchSheet(gid){
     const s=document.createElement('script');
     s.onerror=()=>{clearTimeout(t);delete window[cb];rej(new Error('Load failed GID '+gid));};
     s.src=`https://docs.google.com/spreadsheets/d/${SID}/gviz/tq?gid=${gid}&tqx=out:json;responseHandler:${cb}&t=${Date.now()}`;
+    document.head.appendChild(s);
+    s.onload=()=>{try{document.head.removeChild(s);}catch(e){}};
+  });
+}
+
+function fetchSheet2(gid){
+  return new Promise((res,rej)=>{
+    const cb='__gs_'+(++_n);
+    const t=setTimeout(()=>{delete window[cb];rej(new Error('Timeout'));},20000);
+    window[cb]=data=>{clearTimeout(t);delete window[cb];try{res(toRows(data));}catch(e){rej(e);}};
+    const s=document.createElement('script');
+    s.onerror=()=>{clearTimeout(t);delete window[cb];rej(new Error('Load failed'));};
+    s.src=`https://docs.google.com/spreadsheets/d/${SID2}/gviz/tq?gid=203302293&tqx=out:json;responseHandler:${cb}&t=${Date.now()}`;
     document.head.appendChild(s);
     s.onload=()=>{try{document.head.removeChild(s);}catch(e){}};
   });
@@ -808,70 +822,85 @@ function renderCurrency(rows){
    - Blank rows between investors (all cols empty)
    FIX: Collect ALL rows until next investor header or end — don't stop at blank rows
 ══════════════════════════════════════════════ */
-function renderAce(rows){
-  const INAMES=[
-    ['PRESIDENT OF INDIA','President of India'],
-    ['RADHAKISHAN','Radhakishan Damani'],
-    ['REKHA JHUNJHUNWALA','Rekha Jhunjhunwala'],
-    ['MUKUL AGARWAL','Mukul Agarwal'],
-    ['SUNIL SINGHANIA','Sunil Singhania'],
-    ['ASHISH DHAWAN','Ashish Dhawan'],
-    ['ASHISH KACHOLIA','Ashish Kacholia'],
-    ['ANIL KUMAR GOEL','Anil Kumar Goel'],
-    ['MOHNISH PABRAI','Mohnish Pabrai'],
-    ['DILIPKUMAR LAKHI','Dilipkumar Lakhi'],
-    ['DOLLY RAJEEV KHANNA','Dolly Khanna'],
-    ['VIJAY KEDIA','Vijay Kedia'],
-  ];
+function renderCorporate(rows){
+  /*
+  Sheet: 1_7_7lctIPNdHjUd3wNp0hu6xMjqhG3Tw0fNJO_fxWJg  GID: 203302293
+  CSV structure (confirmed):
+    Row 1 (idx 0): Headers — col[0]=blank col[1]=Event Type col[2]=Announced Date col[3]=Ex-Date col[4]=Dividend(Rs.) col[5]=Ratio
+    Rows 2+ (idx 1+): Data
+    col[0]=Company  col[1]=EventType  col[2]=AnnouncedDate  col[3]=ExDate  col[4]=Dividend  col[5]=Ratio
+  */
+  const data = rows.slice(1).filter(r => r[0]&&r[0].trim());
 
-  const investors=[];
-  let cur=null;
+  // Event type badge colors
+  const evBadge = t => {
+    const s=(t||'').trim();
+    const colors = {
+      'Dividend':     'background:#e6f4ee;color:#1a7a4a',
+      'Bonus':        'background:#e8f0ff;color:#0d47a1',
+      'Split':        'background:#fff3e0;color:#e07b00',
+      'Rights':       'background:#fce4ec;color:#c62828',
+      'Buyback':      'background:#f3e5f5;color:#6a1b9a',
+      'Board Meeting':'background:#fff8e1;color:#f57f17',
+      'AGM-EGM':      'background:#e0f2f1;color:#00695c',
+    };
+    const key = Object.keys(colors).find(k => s.toLowerCase().includes(k.toLowerCase()));
+    const style = key ? colors[key] : 'background:#f5f5f5;color:#555';
+    return `<span style="display:inline-block;padding:2px 8px;border-radius:3px;font-size:10px;font-weight:700;${style}">${s||'—'}</span>`;
+  };
 
-  for(const r of rows){
-    // Investor header: col[2] has name, col[0] and col[1] are blank
-    const c2=(r[2]||'').trim().toUpperCase();
-    const c0=(r[0]||'').trim();
-    const c1=(r[1]||'').trim();
-    const matched=(!c0&&!c1)?INAMES.find(([k])=>c2.includes(k)):null;
+  // Group by Ex-Date
+  const grouped = {};
+  data.forEach(r => {
+    const date = (r[3]||'').trim() || 'Unknown';
+    if(!grouped[date]) grouped[date] = [];
+    grouped[date].push(r);
+  });
 
-    if(matched){
-      if(cur) investors.push(cur);
-      cur={name:matched[1], pv:f(r[7]), h:[]};
-    } else if(cur){
-      // Data row: col[0] is a number (S.No.)
-      const sno=(r[0]||'').trim();
-      const company=(r[1]||'').trim();
-      // Skip: blank rows, column header rows, non-numeric S.No.
-      if(!sno||!company||isNaN(parseInt(sno))||company==='COMPANY'||company==='Company') continue;
-      cur.h.push(r);
-    }
-  }
-  if(cur) investors.push(cur);
+  // Sort dates
+  const sortedDates = Object.keys(grouped).sort((a,b) => {
+    const pa = a.split('/').reverse().join('');
+    const pb = b.split('/').reverse().join('');
+    return pa.localeCompare(pb);
+  });
 
-  const tabs=investors.map((inv,i)=>
-    `<button class="itb${i===0?' on':''}" onclick="showInv('ip${i}',this)">${inv.name}</button>`
-  ).join('');
+  $('s-corporate').innerHTML=`
+    <div class="stitle">📋 Corporate Actions</div>
 
-  const panels=investors.map((inv,i)=>`
-    <div class="ipanel${i===0?' on':''}" id="ip${i}">
-      ${inv.pv&&inv.pv!=='—'?`<div class="pvlbl">Portfolio Value (Mar 2026): <strong>₹${inv.pv} Cr</strong></div>`:''}
-      <div class="tcw"><div class="tscr"><table>
-        <thead><tr><th>#</th><th>Company</th><th>Mar'25%</th><th>Jun'25%</th><th>Sep'25%</th><th>Dec'25%</th><th>Mar'26%</th><th>Value ₹Cr</th></tr></thead>
-        <tbody>${inv.h.map((h,j)=>`<tr>
-          <td style="color:#ccc">${j+1}</td>
-          <td><strong>${f(h[1])}</strong></td>
-          <td>${f(h[2])}</td><td>${f(h[3])}</td><td>${f(h[4])}</td>
-          <td>${f(h[5])}</td><td><strong>${f(h[6])}</strong></td>
-          <td class="cp">${f(h[7])}</td></tr>`).join('')}
+    <div class="tcw">
+      <div class="tch">📅 All Corporate Actions</div>
+      <div class="tscr"><table>
+        <thead><tr>
+          <th>Company</th>
+          <th>Event Type</th>
+          <th>Announced Date</th>
+          <th>Ex-Date</th>
+          <th>Dividend (₹)</th>
+          <th>Ratio</th>
+        </tr></thead>
+        <tbody>
+          ${sortedDates.map(date => `
+            <tr style="background:#f5f7ff">
+              <td colspan="6" style="font-weight:700;color:#0d47a1;font-size:11px;padding:6px 10px">
+                📆 Ex-Date: ${date}
+              </td>
+            </tr>
+            ${grouped[date].map(r=>`<tr>
+              <td><strong>${f(r[0])}</strong></td>
+              <td>${evBadge(r[1])}</td>
+              <td style="color:#888">${f(r[2])}</td>
+              <td style="font-weight:600">${f(r[3])}</td>
+              <td class="${f(r[4])!=='—'&&f(r[4])!=='-'?'cp':''}">${f(r[4])}</td>
+              <td>${f(r[5])}</td>
+            </tr>`).join('')}
+          `).join('')}
         </tbody>
-      </table></div></div>
-    </div>`).join('');
+      </table></div>
+    </div>
 
-  $('s-ace').innerHTML=`
-    <div class="stitle">🧠 Ace Investor Portfolios — Mar 2026</div>
-    <div class="disc">⚠️ <strong>For Investment Study Only.</strong> Quarterly public disclosures. Not investment advice.</div>
-    <div class="itabs">${tabs}</div>
-    <div>${panels}</div>`;
+    <p style="font-size:10px;color:#bbb;margin-top:6px">
+      Source: Niveshaka-bandhu Corporate Actions Sheet &nbsp;|&nbsp; Data updates daily
+    </p>`;
 }
 
 /* ── TICKER ── */
@@ -892,17 +921,22 @@ function buildTicker(gRows,fRows){
 const DATA={};
 async function loadAll(){
   const btn=$('rbtn'); btn.textContent='⟳ Loading…'; btn.disabled=true;
+  // Fetch main sheet tabs
   await Promise.allSettled(Object.entries(GIDS).map(async([k,gid])=>{
     try{DATA[k]=await fetchSheet(gid);}
     catch(e){console.warn(k,e.message);}
   }));
-  if(DATA.global?.length)   try{renderGlobal(DATA.global);}    catch(e){console.error('Global',e);}
-  if(DATA.futures?.length)  try{renderFutures(DATA.futures);}   catch(e){console.error('Futures',e);}
-  if(DATA.indian?.length)   try{renderIndian(DATA.indian);}    catch(e){console.error('Indian',e);}
-  if(DATA.market?.length)   try{renderMarket(DATA.market);}    catch(e){console.error('Market',e);}
-  if(DATA.ipo?.length)      try{renderIPO(DATA.ipo);}          catch(e){console.error('IPO',e);}
-  if(DATA.currency?.length) try{renderCurrency(DATA.currency);} catch(e){console.error('Currency',e);}
-  if(DATA.ace?.length)      try{renderAce(DATA.ace);}          catch(e){console.error('Ace',e);}
+  // Fetch corporate actions from separate sheet
+  try{DATA['corporate']=await fetchSheet2();}
+  catch(e){console.warn('corporate',e.message);}
+
+  if(DATA.global?.length)    try{renderGlobal(DATA.global);}     catch(e){console.error('Global',e);}
+  if(DATA.futures?.length)   try{renderFutures(DATA.futures);}    catch(e){console.error('Futures',e);}
+  if(DATA.indian?.length)    try{renderIndian(DATA.indian);}     catch(e){console.error('Indian',e);}
+  if(DATA.market?.length)    try{renderMarket(DATA.market);}     catch(e){console.error('Market',e);}
+  if(DATA.ipo?.length)       try{renderIPO(DATA.ipo);}           catch(e){console.error('IPO',e);}
+  if(DATA.currency?.length)  try{renderCurrency(DATA.currency);}  catch(e){console.error('Currency',e);}
+  if(DATA.corporate?.length) try{renderCorporate(DATA.corporate);}catch(e){console.error('Corporate',e);}
   try{buildTicker(DATA.global||[],DATA.futures||[]);}catch(e){}
   const now=new Date();
   $('ts').textContent=`Live · Updated ${now.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'})} IST`;
