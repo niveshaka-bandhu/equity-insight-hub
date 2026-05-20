@@ -168,7 +168,7 @@ footer a{color:#6ea8fe}
 const SID='1xoUJqge0b4SQmZSRLZyoBBcokXrUrFVt8fBFoef28NQ';
 const GIDS={global:572014590,futures:2063758158,indian:139113774,market:1259430707,ipo:536891537,currency:1847303228};
 const SID2='1_7_7lctIPNdHjUd3wNp0hu6xMjqhG3Tw0fNJO_fxWJg';
-const CORP_GIDS={dividends:1718274952,bonus:1235071159,splits:1616300885,rights:1541450036};
+const CORP_GIDS={today:203302293,dividends:1718274952,bonus:1235071159,splits:1616300885,rights:1541450036};
 
 /* ── JSONP fetch ── */
 let _n=0;
@@ -843,35 +843,51 @@ function renderCorporate(){
   GIDs: dividends=1718274952, bonus=1235071159, splits=1616300885, rights=1541450036
   */
 
-  function parseCards(rows){
+  /* Card structure per entry (confirmed from sheet screenshot):
+     Row 0: col[1]=Company Name (merged B:E)
+     Row 1: col[2]='LTP'  col[3]=Price  col[4]=%Change
+     Row 2: col[2]=label  col[3]=Value  (Dividend/Ratio)
+     Row 3: col[2]='Announcement Date'  col[3]=Date
+     Row 4: col[2]='Ex-Date'  col[3]=Date
+     Row 5: (Rights only) col[2]=extra  col[3]=extra value
+     rowSize = 5 for Dividends/Bonus/Splits, 6 for Rights
+  */
+  function parseCards(rows, rowSize){
     const cards=[];
     let i=0;
     while(i < rows.length){
       const company=(rows[i]||[])[1]?.trim();
       if(!company){ i++; continue; }
-      const r1=rows[i+1]||[], r2=rows[i+2]||[], r3=rows[i+3]||[], r4=rows[i+4]||[];
-      const pct = f(r1[4]).replace(/[()%]/g,'').trim();
-      const pos = !pct.startsWith('-') && pct !== '—';
+      const r1=rows[i+1]||[], r2=rows[i+2]||[], r3=rows[i+3]||[], r4=rows[i+4]||[], r5=rows[i+5]||[];
+      const pctRaw=f(r1[4]);
+      const pos=!pctRaw.startsWith('-')&&pctRaw!=='—';
       cards.push({
         company,
         ltp:     f(r1[3]),
-        pct:     f(r1[4]),
+        pct:     pctRaw,
         pos,
         value:   f(r2[3]),
         annDate: f(r3[3]),
         exDate:  f(r4[3]),
+        extra:   rowSize===6 ? f(r5[3]) : '',
       });
-      i += 5;
+      i += rowSize;
     }
     return cards;
   }
 
-  const divData    = parseCards(DATA['corp_dividends'] || []);
-  const bonusData  = parseCards(DATA['corp_bonus']     || []);
-  const splitData  = parseCards(DATA['corp_splits']    || []);
-  const rightsData = parseCards(DATA['corp_rights']    || []);
+  // Today's corporate actions (GID 203302293) — flat table
+  function parseTodayActions(rows){
+    return rows.slice(1).filter(r => r[0]&&r[0].trim());
+  }
 
-  function makeTable(cards, valHeader){
+  const todayData  = parseTodayActions(DATA['corp_today']  || []);
+  const divData    = parseCards(DATA['corp_dividends'] || [], 5);
+  const bonusData  = parseCards(DATA['corp_bonus']     || [], 5);
+  const splitData  = parseCards(DATA['corp_splits']    || [], 5);
+  const rightsData = parseCards(DATA['corp_rights']    || [], 6);
+
+  function makeTable(cards, valHeader, showExtra=false){
     if(!cards.length) return '<p style="padding:20px;color:#aaa;text-align:center">No data available</p>';
     return `<div class="tscr"><table>
       <thead><tr>
@@ -881,6 +897,7 @@ function renderCorporate(){
         <th>${valHeader}</th>
         <th>Announced</th>
         <th>Ex-Date</th>
+        ${showExtra?'<th>Details</th>':''}
       </tr></thead>
       <tbody>${cards.map(c=>`<tr>
         <td><strong>${c.company}</strong></td>
@@ -889,16 +906,33 @@ function renderCorporate(){
         <td style="font-weight:600;color:var(--blue)">${c.value}</td>
         <td style="color:#888;font-size:11px">${c.annDate}</td>
         <td style="font-weight:600">${c.exDate}</td>
+        ${showExtra?`<td style="color:#888">${c.extra}</td>`:''}
+      </tr>`).join('')}
+      </tbody>
+    </table></div>`;
+  }
+
+  // Today's actions table
+  function makeTodayTable(rows){
+    if(!rows.length) return '<p style="padding:20px;color:#aaa;text-align:center">No corporate actions today</p>';
+    return `<div class="tscr"><table>
+      <thead><tr><th>Company</th><th>Action</th><th>Ex-Date</th><th>Details</th></tr></thead>
+      <tbody>${rows.map(r=>`<tr>
+        <td><strong>${f(r[0])}</strong></td>
+        <td><span class="bd bd-g">${f(r[1])}</span></td>
+        <td style="font-weight:600">${f(r[2])}</td>
+        <td style="color:#888">${f(r[3])}</td>
       </tr>`).join('')}
       </tbody>
     </table></div>`;
   }
 
   const TABS = [
-    {k:'div',    label:'💰 Dividends', count:divData.length,   color:'#1a7a4a', html:makeTable(divData,   'Dividend (₹)')},
+    {k:'today',  label:'📅 Today',     count:todayData.length,  color:'#555555', html:makeTodayTable(todayData)},
+    {k:'div',    label:'💰 Dividends', count:divData.length,    color:'#1a7a4a', html:makeTable(divData,   'Dividend (₹)')},
     {k:'bonus',  label:'🎁 Bonus',     count:bonusData.length,  color:'#0d47a1', html:makeTable(bonusData, 'Ratio')},
     {k:'splits', label:'✂️ Splits',    count:splitData.length,  color:'#e07b00', html:makeTable(splitData, 'Split Ratio')},
-    {k:'rights', label:'📜 Rights',    count:rightsData.length, color:'#c0392b', html:makeTable(rightsData,'Ratio / Premium')},
+    {k:'rights', label:'📜 Rights',    count:rightsData.length, color:'#c0392b', html:makeTable(rightsData,'Ratio / Premium', true)},
   ];
 
   $('s-corporate').innerHTML = `
