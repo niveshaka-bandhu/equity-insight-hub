@@ -843,40 +843,79 @@ function renderCorporate(){
   GIDs: dividends=1718274952, bonus=1235071159, splits=1616300885, rights=1541450036
   */
 
-  /* Card structure per entry (confirmed from sheet screenshot):
-     Row 0: col[1]=Company Name (merged B:E)
-     Row 1: col[2]='LTP'  col[3]=Price  col[4]=%Change
-     Row 2: col[2]=label  col[3]=Value  (Dividend/Ratio)
-     Row 3: col[2]='Announcement Date'  col[3]=Date
-     Row 4: col[2]='Ex-Date'  col[3]=Date
-     Row 5: (Rights only) col[2]=extra  col[3]=extra value
-     rowSize = 5 for Dividends/Bonus/Splits, 6 for Rights
+  /* EXACT card structure confirmed from CSV:
+     Each entry in col[1] — company name row has ONLY col[1] filled (no col[3])
+     Label rows have col[1]=label AND col[3]=value
+
+     Dividends/Bonus/Splits (5 rows per entry):
+       Row 0: col[1]=CompanyName  (col[3] is EMPTY — this is the company row)
+       Row 1: col[1]='LTP'        col[3]=Price   col[4]=%(change)
+       Row 2: col[1]='Dividend/Ratio' col[3]=Value
+       Row 3: col[1]='Announcement Date' col[3]=Date
+       Row 4: col[1]='Ex-Date'    col[3]=Date
+
+     Rights (6 rows per entry):
+       Row 0: col[1]=CompanyName  (col[3] EMPTY)
+       Row 1: col[1]='LTP'        col[3]=Price   col[4]=%
+       Row 2: col[1]='Ratio'      col[3]=Value
+       Row 3: col[1]='Premium'    col[3]=Value
+       Row 4: col[1]='Announcement Date' col[3]=Date
+       Row 5: col[1]='Ex-Date'    col[3]=Date
+
+     KEY: company row = col[1] has text AND col[3] is empty/blank
+          label row   = col[1] has text AND col[3] has value
   */
   function parseCards(rows, rowSize){
     const cards=[];
     let i=0;
     while(i < rows.length){
-      const company=(rows[i]||[])[1]?.trim();
-      if(!company){ i++; continue; }
-      const r1=rows[i+1]||[], r2=rows[i+2]||[], r3=rows[i+3]||[], r4=rows[i+4]||[], r5=rows[i+5]||[];
-      const pctRaw=f(r1[4]);
-      const pos=!pctRaw.startsWith('-')&&pctRaw!=='—';
-      cards.push({
-        company,
-        ltp:     f(r1[3]),
-        pct:     pctRaw,
-        pos,
-        value:   f(r2[3]),
-        annDate: f(r3[3]),
-        exDate:  f(r4[3]),
-        extra:   rowSize===6 ? f(r5[3]) : '',
-      });
+      const r0 = rows[i]||[];
+      // Company row: col[1] has name, col[3] is empty
+      const company = (r0[1]||'').trim();
+      const hasValue = (r0[3]||'').trim();
+      if(!company || hasValue){ i++; continue; } // skip blank or label rows
+
+      const r1=rows[i+1]||[];  // LTP row
+      const r2=rows[i+2]||[];  // Dividend/Ratio row
+      const r3=rows[i+3]||[];  // Announcement Date (or Premium for Rights)
+      const r4=rows[i+4]||[];  // Ex-Date (or Announcement for Rights)
+      const r5=rows[i+5]||[];  // Ex-Date for Rights only
+
+      const pctRaw = (r1[4]||'').trim();
+      const pos = pctRaw && !pctRaw.startsWith('(-)') && !pctRaw.includes('-') && pctRaw!=='—';
+
+      if(rowSize===6){
+        // Rights: r2=Ratio, r3=Premium, r4=AnnDate, r5=ExDate
+        cards.push({
+          company,
+          ltp:     (r1[3]||'').trim()||'—',
+          pct:     pctRaw||'—',
+          pos,
+          value:   (r2[3]||'').trim()||'—',  // Ratio
+          extra:   (r3[3]||'').trim()||'—',  // Premium
+          annDate: (r4[3]||'').trim()||'—',
+          exDate:  (r5[3]||'').trim()||'—',
+        });
+      } else {
+        // Dividends/Bonus/Splits: r2=value, r3=AnnDate, r4=ExDate
+        cards.push({
+          company,
+          ltp:     (r1[3]||'').trim()||'—',
+          pct:     pctRaw||'—',
+          pos,
+          value:   (r2[3]||'').trim()||'—',
+          extra:   '',
+          annDate: (r3[3]||'').trim()||'—',
+          exDate:  (r4[3]||'').trim()||'—',
+        });
+      }
       i += rowSize;
     }
     return cards;
   }
 
   // Today's corporate actions (GID 203302293) — flat table
+  // col[0]=Company col[1]=EventType col[2]=AnnouncedDate col[3]=ExDate col[4]=Dividend col[5]=Ratio
   function parseTodayActions(rows){
     return rows.slice(1).filter(r => r[0]&&r[0].trim());
   }
@@ -887,7 +926,7 @@ function renderCorporate(){
   const splitData  = parseCards(DATA['corp_splits']    || [], 5);
   const rightsData = parseCards(DATA['corp_rights']    || [], 6);
 
-  function makeTable(cards, valHeader, showExtra=false){
+  function makeTable(cards, valHeader, showExtra=false, extraHeader='Details'){
     if(!cards.length) return '<p style="padding:20px;color:#aaa;text-align:center">No data available</p>';
     return `<div class="tscr"><table>
       <thead><tr>
@@ -897,12 +936,12 @@ function renderCorporate(){
         <th>${valHeader}</th>
         <th>Announced</th>
         <th>Ex-Date</th>
-        ${showExtra?'<th>Details</th>':''}
+        ${showExtra?`<th>${extraHeader}</th>`:''}
       </tr></thead>
       <tbody>${cards.map(c=>`<tr>
         <td><strong>${c.company}</strong></td>
         <td>${c.ltp}</td>
-        <td class="${c.pos?'cp':'cn'}">${c.pct}</td>
+        <td class="${c.pct.includes('-')?'cn':'cp'}">${c.pct}</td>
         <td style="font-weight:600;color:var(--blue)">${c.value}</td>
         <td style="color:#888;font-size:11px">${c.annDate}</td>
         <td style="font-weight:600">${c.exDate}</td>
@@ -916,12 +955,14 @@ function renderCorporate(){
   function makeTodayTable(rows){
     if(!rows.length) return '<p style="padding:20px;color:#aaa;text-align:center">No corporate actions today</p>';
     return `<div class="tscr"><table>
-      <thead><tr><th>Company</th><th>Action</th><th>Ex-Date</th><th>Details</th></tr></thead>
+      <thead><tr><th>Company</th><th>Action</th><th>Announced Date</th><th>Ex-Date</th><th>Dividend (₹)</th><th>Ratio</th></tr></thead>
       <tbody>${rows.map(r=>`<tr>
         <td><strong>${f(r[0])}</strong></td>
-        <td><span class="bd bd-g">${f(r[1])}</span></td>
-        <td style="font-weight:600">${f(r[2])}</td>
-        <td style="color:#888">${f(r[3])}</td>
+        <td><span class="bd bd-g" style="background:#e8f0ff;color:#0d47a1">${f(r[1])}</span></td>
+        <td style="color:#888;font-size:11px">${f(r[2])}</td>
+        <td style="font-weight:600">${f(r[3])}</td>
+        <td class="${f(r[4])!=='—'&&f(r[4])!=='-'?'cp':''}">${f(r[4])}</td>
+        <td>${f(r[5])}</td>
       </tr>`).join('')}
       </tbody>
     </table></div>`;
@@ -932,7 +973,7 @@ function renderCorporate(){
     {k:'div',    label:'💰 Dividends', count:divData.length,    color:'#1a7a4a', html:makeTable(divData,   'Dividend (₹)')},
     {k:'bonus',  label:'🎁 Bonus',     count:bonusData.length,  color:'#0d47a1', html:makeTable(bonusData, 'Ratio')},
     {k:'splits', label:'✂️ Splits',    count:splitData.length,  color:'#e07b00', html:makeTable(splitData, 'Split Ratio')},
-    {k:'rights', label:'📜 Rights',    count:rightsData.length, color:'#c0392b', html:makeTable(rightsData,'Ratio / Premium', true)},
+    {k:'rights', label:'📜 Rights',    count:rightsData.length, color:'#c0392b', html:makeTable(rightsData,'Ratio', true, 'Premium')},
   ];
 
   $('s-corporate').innerHTML = `
