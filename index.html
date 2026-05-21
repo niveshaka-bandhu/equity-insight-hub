@@ -843,70 +843,61 @@ function renderCorporate(){
   GIDs: dividends=1718274952, bonus=1235071159, splits=1616300885, rights=1541450036
   */
 
-  /* EXACT card structure confirmed from CSV:
-     Each entry in col[1] — company name row has ONLY col[1] filled (no col[3])
-     Label rows have col[1]=label AND col[3]=value
+  /* CONFIRMED CSV structure (from direct CSV analysis):
+     Company row: col[1]=Name, col[2]=EMPTY, col[3]=EMPTY
+     LTP row:     col[1]='LTP', col[3]=Price, col[4]=%Change
+     Value row:   col[1]='Dividend/Ratio', col[3]=Value
+     Ann row:     col[1]='Announcement Date', col[3]=Date
+     ExDate row:  col[1]='Ex-Date', col[3]=Date
+     Rights extra:col[1]='Premium', col[3]=Value (between Ratio and AnnDate)
 
-     Dividends/Bonus/Splits (5 rows per entry):
-       Row 0: col[1]=CompanyName  (col[3] is EMPTY — this is the company row)
-       Row 1: col[1]='LTP'        col[3]=Price   col[4]=%(change)
-       Row 2: col[1]='Dividend/Ratio' col[3]=Value
-       Row 3: col[1]='Announcement Date' col[3]=Date
-       Row 4: col[1]='Ex-Date'    col[3]=Date
-
-     Rights (6 rows per entry):
-       Row 0: col[1]=CompanyName  (col[3] EMPTY)
-       Row 1: col[1]='LTP'        col[3]=Price   col[4]=%
-       Row 2: col[1]='Ratio'      col[3]=Value
-       Row 3: col[1]='Premium'    col[3]=Value
-       Row 4: col[1]='Announcement Date' col[3]=Date
-       Row 5: col[1]='Ex-Date'    col[3]=Date
-
-     KEY: company row = col[1] has text AND col[3] is empty/blank
-          label row   = col[1] has text AND col[3] has value
+     KEY DETECTION: company row has col[2] EMPTY (no label in col C)
+                    all label rows have col[2] filled with the label text
+     rowSize: 5 for Div/Bonus/Splits, 6 for Rights
   */
   function parseCards(rows, rowSize){
     const cards=[];
     let i=0;
     while(i < rows.length){
       const r0 = rows[i]||[];
-      // Company row: col[1] has name, col[3] is empty
-      const company = (r0[1]||'').trim();
-      const hasValue = (r0[3]||'').trim();
-      if(!company || hasValue){ i++; continue; } // skip blank or label rows
+      const col1 = (r0[1]||'').trim();
+      const col2 = (r0[2]||'').trim(); // label column
+      const col3 = (r0[3]||'').trim();
 
-      const r1=rows[i+1]||[];  // LTP row
-      const r2=rows[i+2]||[];  // Dividend/Ratio row
-      const r3=rows[i+3]||[];  // Announcement Date (or Premium for Rights)
-      const r4=rows[i+4]||[];  // Ex-Date (or Announcement for Rights)
-      const r5=rows[i+5]||[];  // Ex-Date for Rights only
+      // Company row: col[1]=name, col[2]=empty (no label), col[3]=empty (no value)
+      if(!col1 || col2 || col3){ i++; continue; }
+
+      const r1=rows[i+1]||[];  // LTP
+      const r2=rows[i+2]||[];  // Dividend/Ratio/Ratio
+      const r3=rows[i+3]||[];  // Premium (Rights) or Announcement Date (others)
+      const r4=rows[i+4]||[];  // Announcement Date (Rights) or Ex-Date (others)
+      const r5=rows[i+5]||[];  // Ex-Date (Rights only)
 
       const pctRaw = (r1[4]||'').trim();
-      const pos = pctRaw && !pctRaw.startsWith('(-)') && !pctRaw.includes('-') && pctRaw!=='—';
+      // Positive if contains '+' or doesn't contain '-'
+      const pos = pctRaw.includes('+') || (!pctRaw.includes('-') && pctRaw !== '—' && pctRaw !== '');
 
       if(rowSize===6){
-        // Rights: r2=Ratio, r3=Premium, r4=AnnDate, r5=ExDate
         cards.push({
-          company,
+          company: col1,
           ltp:     (r1[3]||'').trim()||'—',
           pct:     pctRaw||'—',
           pos,
           value:   (r2[3]||'').trim()||'—',  // Ratio
           extra:   (r3[3]||'').trim()||'—',  // Premium
-          annDate: (r4[3]||'').trim()||'—',
-          exDate:  (r5[3]||'').trim()||'—',
+          annDate: (r4[3]||'').trim()||'—',  // Announcement Date
+          exDate:  (r5[3]||'').trim()||'—',  // Ex-Date
         });
       } else {
-        // Dividends/Bonus/Splits: r2=value, r3=AnnDate, r4=ExDate
         cards.push({
-          company,
+          company: col1,
           ltp:     (r1[3]||'').trim()||'—',
           pct:     pctRaw||'—',
           pos,
-          value:   (r2[3]||'').trim()||'—',
+          value:   (r2[3]||'').trim()||'—',  // Dividend/Ratio
           extra:   '',
-          annDate: (r3[3]||'').trim()||'—',
-          exDate:  (r4[3]||'').trim()||'—',
+          annDate: (r3[3]||'').trim()||'—',  // Announcement Date
+          exDate:  (r4[3]||'').trim()||'—',  // Ex-Date
         });
       }
       i += rowSize;
