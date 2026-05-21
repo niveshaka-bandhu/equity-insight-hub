@@ -97,6 +97,7 @@ tbody td{font-size:12px;color:#222;padding:7px 10px;white-space:nowrap}
 .itb{padding:5px 12px;border:1px solid #ddd;border-radius:3px;font-size:11px;font-weight:600;cursor:pointer;background:#fff;color:#555;transition:.15s;font-family:'Inter',sans-serif}
 .itb:hover{border-color:var(--mc);color:var(--mc)}.itb.on{background:var(--mc);color:#fff;border-color:var(--mc)}
 .ipanel{display:none}.ipanel.on{display:block}
+.ca-panel{display:none}.ca-panel.ca-on{display:block}
 .pvlbl{font-size:11px;color:#888;margin-bottom:8px}
 .pvlbl strong{color:var(--blue);font-size:13px}
 .disc{background:#fffde7;border:1px solid #ffe082;border-radius:5px;padding:10px 14px;font-size:11px;color:#6d4c00;margin-bottom:12px}
@@ -114,14 +115,6 @@ footer a{color:#6ea8fe}
   .iprc{font-size:18px}
 }
 @media(max-width:380px){.nb{font-size:10px;padding:4px 7px}}
-
-/* CORPORATE SUB-TABS */
-.corp-tabs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
-.corp-tab{padding:8px 16px;border-radius:4px;font-size:12px;font-weight:600;
-  cursor:pointer;border:2px solid;background:#fff;transition:.2s;font-family:'Inter',sans-serif}
-.corp-tab:hover{opacity:.85}
-.corp-tab.on{color:#fff}
-.corp-panel{display:none}.corp-panel.on{display:block}
 </style>
 </head>
 <body>
@@ -133,6 +126,7 @@ footer a{color:#6ea8fe}
 <header>
   <div class="hdr">
     <div class="logo">
+      <div class="lhn">निवेशक</div>
       <div><div class="len">Niveshaka-bandhu</div><div class="lsl">Investor's Friend</div></div>
     </div>
     <nav>
@@ -142,7 +136,8 @@ footer a{color:#6ea8fe}
       <button class="nb"     onclick="showTab('market',this)">📈 Market</button>
       <button class="nb"     onclick="showTab('ipo',this)">🏦 IPO</button>
       <button class="nb"     onclick="showTab('currency',this)">💱 Currencies</button>
-      <button class="nb"     onclick="showTab('corporate',this)">📋 Corporate Actions</button>
+      <button class="nb"     onclick="showTab('ace',this)">🧠 Ace Investors</button>
+      <button class="nb"     onclick="showTab('corpact',this)">📋 Corporate Actions</button>
     </nav>
     <button class="rbtn" id="rbtn" onclick="refreshAll()">⟳ Refresh</button>
   </div>
@@ -156,7 +151,8 @@ footer a{color:#6ea8fe}
   <div class="sec"    id="s-market"><div class="loading"><div class="spin"></div>Loading…</div></div>
   <div class="sec"    id="s-ipo"><div class="loading"><div class="spin"></div>Loading…</div></div>
   <div class="sec"    id="s-currency"><div class="loading"><div class="spin"></div>Loading…</div></div>
-  <div class="sec"    id="s-corporate"><div class="loading"><div class="spin"></div>Loading…</div></div>
+  <div class="sec"    id="s-ace"><div class="loading"><div class="spin"></div>Loading…</div></div>
+  <div class="sec"    id="s-corpact"><div class="loading"><div class="spin"></div>Loading…</div></div>
 </div>
 
 <footer>
@@ -166,9 +162,7 @@ footer a{color:#6ea8fe}
 
 <script>
 const SID='1xoUJqge0b4SQmZSRLZyoBBcokXrUrFVt8fBFoef28NQ';
-const GIDS={global:572014590,futures:2063758158,indian:139113774,market:1259430707,ipo:536891537,currency:1847303228};
-const SID2='1_7_7lctIPNdHjUd3wNp0hu6xMjqhG3Tw0fNJO_fxWJg';
-const CORP_GIDS={today:203302293,dividends:1718274952,bonus:1235071159,splits:1616300885,rights:1541450036};
+const GIDS={global:572014590,futures:2063758158,indian:139113774,market:1259430707,ipo:536891537,currency:1847303228,ace:773783735,corpact:0};
 
 /* ── JSONP fetch ── */
 let _n=0;
@@ -180,20 +174,6 @@ function fetchSheet(gid){
     const s=document.createElement('script');
     s.onerror=()=>{clearTimeout(t);delete window[cb];rej(new Error('Load failed GID '+gid));};
     s.src=`https://docs.google.com/spreadsheets/d/${SID}/gviz/tq?gid=${gid}&tqx=out:json;responseHandler:${cb}&t=${Date.now()}`;
-    document.head.appendChild(s);
-    s.onload=()=>{try{document.head.removeChild(s);}catch(e){}};
-  });
-}
-
-/* fetchSheet2 — for Corporate Actions (separate Google Sheet) */
-function fetchSheet2(gid){
-  return new Promise((res,rej)=>{
-    const cb='__gs_'+(++_n);
-    const t=setTimeout(()=>{delete window[cb];rej(new Error('Timeout'));},20000);
-    window[cb]=data=>{clearTimeout(t);delete window[cb];try{res(toRows(data));}catch(e){rej(e);}};
-    const s=document.createElement('script');
-    s.onerror=()=>{clearTimeout(t);delete window[cb];rej(new Error('Load failed'));};
-    s.src=`https://docs.google.com/spreadsheets/d/${SID2}/gviz/tq?gid=${gid}&tqx=out:json;responseHandler:${cb}&t=${Date.now()}`;
     document.head.appendChild(s);
     s.onload=()=>{try{document.head.removeChild(s);}catch(e){}};
   });
@@ -831,190 +811,171 @@ function renderCurrency(rows){
    - Blank rows between investors (all cols empty)
    FIX: Collect ALL rows until next investor header or end — don't stop at blank rows
 ══════════════════════════════════════════════ */
-function renderCorporate(){
-  /*
-  4 sub-sheets from SID2 — card format (5 rows per stock entry):
-    Row 0: col[1] = Company Name
-    Row 1: col[1]='LTP'  col[3]=price  col[4]=% change
-    Row 2: col[1]=label  col[3]=value  (Dividend/Ratio/Premium)
-    Row 3: col[1]='Announcement Date'  col[3]=date
-    Row 4: col[1]='Ex-Date'  col[3]=date
-
-  GIDs: dividends=1718274952, bonus=1235071159, splits=1616300885, rights=1541450036
-  */
-
-  /* CONFIRMED CSV structure (from direct CSV analysis):
-     Company row: col[1]=Name, col[2]=EMPTY, col[3]=EMPTY
-     LTP row:     col[1]='LTP', col[3]=Price, col[4]=%Change
-     Value row:   col[1]='Dividend/Ratio', col[3]=Value
-     Ann row:     col[1]='Announcement Date', col[3]=Date
-     ExDate row:  col[1]='Ex-Date', col[3]=Date
-     Rights extra:col[1]='Premium', col[3]=Value (between Ratio and AnnDate)
-
-     KEY DETECTION: company row has col[2] EMPTY (no label in col C)
-                    all label rows have col[2] filled with the label text
-     rowSize: 5 for Div/Bonus/Splits, 6 for Rights
-  */
-  function parseCards(rows, rowSize){
-    const cards=[];
-    let i=0;
-    while(i < rows.length){
-      const r0 = rows[i]||[];
-      const col1 = (r0[1]||'').trim();
-      const col2 = (r0[2]||'').trim(); // label column
-      const col3 = (r0[3]||'').trim();
-
-      // Company row: col[1]=name, col[2]=empty (no label), col[3]=empty (no value)
-      if(!col1 || col2 || col3){ i++; continue; }
-
-      const r1=rows[i+1]||[];  // LTP
-      const r2=rows[i+2]||[];  // Dividend/Ratio/Ratio
-      const r3=rows[i+3]||[];  // Premium (Rights) or Announcement Date (others)
-      const r4=rows[i+4]||[];  // Announcement Date (Rights) or Ex-Date (others)
-      const r5=rows[i+5]||[];  // Ex-Date (Rights only)
-
-      const pctRaw = (r1[4]||'').trim();
-      // Positive if contains '+' or doesn't contain '-'
-      const pos = pctRaw.includes('+') || (!pctRaw.includes('-') && pctRaw !== '—' && pctRaw !== '');
-
-      if(rowSize===6){
-        cards.push({
-          company: col1,
-          ltp:     (r1[3]||'').trim()||'—',
-          pct:     pctRaw||'—',
-          pos,
-          value:   (r2[3]||'').trim()||'—',  // Ratio
-          extra:   (r3[3]||'').trim()||'—',  // Premium
-          annDate: (r4[3]||'').trim()||'—',  // Announcement Date
-          exDate:  (r5[3]||'').trim()||'—',  // Ex-Date
-        });
-      } else {
-        cards.push({
-          company: col1,
-          ltp:     (r1[3]||'').trim()||'—',
-          pct:     pctRaw||'—',
-          pos,
-          value:   (r2[3]||'').trim()||'—',  // Dividend/Ratio
-          extra:   '',
-          annDate: (r3[3]||'').trim()||'—',  // Announcement Date
-          exDate:  (r4[3]||'').trim()||'—',  // Ex-Date
-        });
-      }
-      i += rowSize;
-    }
-    return cards;
-  }
-
-  // Today's corporate actions (GID 203302293) — flat table
-  // col[0]=Company col[1]=EventType col[2]=AnnouncedDate col[3]=ExDate col[4]=Dividend col[5]=Ratio
-  function parseTodayActions(rows){
-    return rows.slice(1).filter(r => r[0]&&r[0].trim());
-  }
-
-  const todayData  = parseTodayActions(DATA['corp_today']  || []);
-  const divData    = parseCards(DATA['corp_dividends'] || [], 5);
-  const bonusData  = parseCards(DATA['corp_bonus']     || [], 5);
-  const splitData  = parseCards(DATA['corp_splits']    || [], 5);
-  const rightsData = parseCards(DATA['corp_rights']    || [], 6);
-
-  function makeTable(cards, valHeader, showExtra=false, extraHeader='Details'){
-    if(!cards.length) return '<p style="padding:20px;color:#aaa;text-align:center">No data available</p>';
-    return `<div class="tscr"><table>
-      <thead><tr>
-        <th>Company</th>
-        <th>LTP (₹)</th>
-        <th>Change</th>
-        <th>${valHeader}</th>
-        <th>Announced</th>
-        <th>Ex-Date</th>
-        ${showExtra?`<th>${extraHeader}</th>`:''}
-      </tr></thead>
-      <tbody>${cards.map(c=>`<tr>
-        <td><strong>${c.company}</strong></td>
-        <td>${c.ltp}</td>
-        <td class="${c.pct.includes('-')?'cn':'cp'}">${c.pct}</td>
-        <td style="font-weight:600;color:var(--blue)">${c.value}</td>
-        <td style="color:#888;font-size:11px">${c.annDate}</td>
-        <td style="font-weight:600">${c.exDate}</td>
-        ${showExtra?`<td style="color:#888">${c.extra}</td>`:''}
-      </tr>`).join('')}
-      </tbody>
-    </table></div>`;
-  }
-
-  // Today's actions table
-  function makeTodayTable(rows){
-    if(!rows.length) return '<p style="padding:20px;color:#aaa;text-align:center">No corporate actions today</p>';
-    return `<div class="tscr"><table>
-      <thead><tr><th>Company</th><th>Action</th><th>Announced Date</th><th>Ex-Date</th><th>Dividend (₹)</th><th>Ratio</th></tr></thead>
-      <tbody>${rows.map(r=>`<tr>
-        <td><strong>${f(r[0])}</strong></td>
-        <td><span class="bd bd-g" style="background:#e8f0ff;color:#0d47a1">${f(r[1])}</span></td>
-        <td style="color:#888;font-size:11px">${f(r[2])}</td>
-        <td style="font-weight:600">${f(r[3])}</td>
-        <td class="${f(r[4])!=='—'&&f(r[4])!=='-'?'cp':''}">${f(r[4])}</td>
-        <td>${f(r[5])}</td>
-      </tr>`).join('')}
-      </tbody>
-    </table></div>`;
-  }
-
-  const TABS = [
-    {k:'today',  label:'📅 Today',     count:todayData.length,  color:'#555555', html:makeTodayTable(todayData)},
-    {k:'div',    label:'💰 Dividends', count:divData.length,    color:'#1a7a4a', html:makeTable(divData,   'Dividend (₹)')},
-    {k:'bonus',  label:'🎁 Bonus',     count:bonusData.length,  color:'#0d47a1', html:makeTable(bonusData, 'Ratio')},
-    {k:'splits', label:'✂️ Splits',    count:splitData.length,  color:'#e07b00', html:makeTable(splitData, 'Split Ratio')},
-    {k:'rights', label:'📜 Rights',    count:rightsData.length, color:'#c0392b', html:makeTable(rightsData,'Ratio', true, 'Premium')},
+function renderAce(rows){
+  const INAMES=[
+    ['PRESIDENT OF INDIA','President of India'],
+    ['RADHAKISHAN','Radhakishan Damani'],
+    ['REKHA JHUNJHUNWALA','Rekha Jhunjhunwala'],
+    ['MUKUL AGARWAL','Mukul Agarwal'],
+    ['SUNIL SINGHANIA','Sunil Singhania'],
+    ['ASHISH DHAWAN','Ashish Dhawan'],
+    ['ASHISH KACHOLIA','Ashish Kacholia'],
+    ['ANIL KUMAR GOEL','Anil Kumar Goel'],
+    ['MOHNISH PABRAI','Mohnish Pabrai'],
+    ['DILIPKUMAR LAKHI','Dilipkumar Lakhi'],
+    ['DOLLY RAJEEV KHANNA','Dolly Khanna'],
+    ['VIJAY KEDIA','Vijay Kedia'],
   ];
 
-  $('s-corporate').innerHTML = `
-    <div class="stitle">📋 Corporate Actions</div>
+  const investors=[];
+  let cur=null;
 
-    <div class="corp-tabs">
-      ${TABS.map((t,i) => `
-        <button class="corp-tab${i===0?' on':''}"
-          id="ctab-${t.k}"
-          style="border-color:${t.color};${i===0?`background:${t.color};color:#fff`:''}"
-          onclick="showCorpTab('${t.k}',this,'${t.color}')">
-          ${t.label}
-          <span style="margin-left:6px;font-size:10px;padding:1px 6px;border-radius:10px;
-            background:${i===0?'rgba(255,255,255,0.3)':''+t.color+'22'};
-            color:${i===0?'#fff':t.color}">
-            ${t.count}
-          </span>
-        </button>`).join('')}
+  for(const r of rows){
+    // Investor header: col[2] has name, col[0] and col[1] are blank
+    const c2=(r[2]||'').trim().toUpperCase();
+    const c0=(r[0]||'').trim();
+    const c1=(r[1]||'').trim();
+    const matched=(!c0&&!c1)?INAMES.find(([k])=>c2.includes(k)):null;
+
+    if(matched){
+      if(cur) investors.push(cur);
+      cur={name:matched[1], pv:f(r[7]), h:[]};
+    } else if(cur){
+      // Data row: col[0] is a number (S.No.)
+      const sno=(r[0]||'').trim();
+      const company=(r[1]||'').trim();
+      // Skip: blank rows, column header rows, non-numeric S.No.
+      if(!sno||!company||isNaN(parseInt(sno))||company==='COMPANY'||company==='Company') continue;
+      cur.h.push(r);
+    }
+  }
+  if(cur) investors.push(cur);
+
+  const tabs=investors.map((inv,i)=>
+    `<button class="itb${i===0?' on':''}" onclick="showInv('ip${i}',this)">${inv.name}</button>`
+  ).join('');
+
+  const panels=investors.map((inv,i)=>`
+    <div class="ipanel${i===0?' on':''}" id="ip${i}">
+      ${inv.pv&&inv.pv!=='—'?`<div class="pvlbl">Portfolio Value (Mar 2026): <strong>₹${inv.pv} Cr</strong></div>`:''}
+      <div class="tcw"><div class="tscr"><table>
+        <thead><tr><th>#</th><th>Company</th><th>Mar'25%</th><th>Jun'25%</th><th>Sep'25%</th><th>Dec'25%</th><th>Mar'26%</th><th>Value ₹Cr</th></tr></thead>
+        <tbody>${inv.h.map((h,j)=>`<tr>
+          <td style="color:#ccc">${j+1}</td>
+          <td><strong>${f(h[1])}</strong></td>
+          <td>${f(h[2])}</td><td>${f(h[3])}</td><td>${f(h[4])}</td>
+          <td>${f(h[5])}</td><td><strong>${f(h[6])}</strong></td>
+          <td class="cp">${f(h[7])}</td></tr>`).join('')}
+        </tbody>
+      </table></div></div>
+    </div>`).join('');
+
+  $('s-ace').innerHTML=`
+    <div class="stitle">🧠 Ace Investor Portfolios — Mar 2026</div>
+    <div class="disc">⚠️ <strong>For Investment Study Only.</strong> Quarterly public disclosures. Not investment advice.</div>
+    <div class="itabs">${tabs}</div>
+    <div>${panels}</div>`;
+}
+
+/* ══════════════════════════════════════════════
+   CORPORATE ACTIONS
+   Sheet structure (gviz 0-based rows):
+   Row 0: header — Today | Ex-Date | Type | Company | LTP | Change | Dividend/Ratio | Announced
+   Rows 1+: data rows
+   Col[0]=Today flag  Col[1]=ExDate  Col[2]=Type(Dividend/Bonus/Split/Rights)
+   Col[3]=Company     Col[4]=LTP     Col[5]=Change
+   Col[6]=Amount/Ratio Col[7]=Announced
+══════════════════════════════════════════════ */
+function renderCorporateActions(rows){
+  /* Tab counters */
+  const ALL = rows.slice(1).filter(r => r[3]&&r[3].trim());
+  const today    = ALL.filter(r => (r[0]||'').trim()==='Y' || (r[0]||'').trim()==='1');
+  const divs     = ALL.filter(r => /dividend/i.test(r[2]||''));
+  const bonus    = ALL.filter(r => /bonus/i.test(r[2]||''));
+  const splits   = ALL.filter(r => /split/i.test(r[2]||''));
+  const rights   = ALL.filter(r => /rights/i.test(r[2]||''));
+
+  const dash = v => (v&&v.trim()&&v!=='—') ? v : '<span style="color:#ccc">—</span>';
+  const ltp  = v => (v&&v.trim()&&v!=='—') ? `<span style="color:#0d47a1;font-weight:600">${v}</span>` : '<span style="color:#ccc">—</span>';
+  const chg  = v => {
+    if(!v||!v.trim()||v==='—') return '<span style="color:#ccc">—</span>';
+    const n=parseFloat(String(v).replace(/,/g,''));
+    if(isNaN(n)) return v;
+    return n<0?`<span class="cn">${v}</span>`:n>0?`<span class="cp">${v}</span>`:v;
+  };
+  const exd  = v => (v&&v.trim()&&v!=='—') ? `<span style="color:#c0392b;font-weight:600;font-size:11px">${v}</span>` : '<span style="color:#ccc">—</span>';
+  const badge = type => {
+    const t=(type||'').toLowerCase();
+    if(t.includes('dividend')) return '<span class="bd bd-g">DIV</span>';
+    if(t.includes('bonus'))    return '<span style="background:#e8f0ff;color:#0d47a1;padding:1px 7px;border-radius:3px;font-size:10px;font-weight:700">BONUS</span>';
+    if(t.includes('split'))    return '<span style="background:#fff3e0;color:#e07b00;padding:1px 7px;border-radius:3px;font-size:10px;font-weight:700">SPLIT</span>';
+    if(t.includes('rights'))   return '<span style="background:#fdecea;color:#c0392b;padding:1px 7px;border-radius:3px;font-size:10px;font-weight:700">RIGHTS</span>';
+    return `<span class="bd">${type||'—'}</span>`;
+  };
+  const tag = type => {
+    const t=(type||'').toLowerCase();
+    if(t.includes('ann')) return '<span style="background:#e8f0ff;color:#0d47a1;font-size:10px;font-weight:700;padding:1px 6px;border-radius:3px">ANN</span>';
+    return '<span style="background:#e6f4ee;color:#1a7a4a;font-size:10px;font-weight:700;padding:1px 6px;border-radius:3px">EX</span>';
+  };
+
+  /* Tab state */
+  let activeTab = today.length ? 'today' : 'dividends';
+
+  function tabRows(set, showType=false){
+    if(!set.length) return `<tr><td colspan="7" style="color:#aaa;padding:14px;text-align:center">No data available</td></tr>`;
+    return set.map(r => `<tr>
+      <td><strong>${dash(r[3])}</strong></td>
+      ${showType?`<td>${badge(r[2])}</td>`:''}
+      <td>${ltp(r[4])}</td>
+      <td>${chg(r[5])}</td>
+      <td style="color:#1a7a4a;font-weight:600">${dash(r[6])}</td>
+      <td style="color:#888;font-size:11px">${dash(r[7])}</td>
+      <td>${exd(r[1])}</td>
+    </tr>`).join('');
+  }
+
+  function tHead(showType=false){
+    return `<thead><tr>
+      <th>Company</th>
+      ${showType?'<th>Type</th>':''}
+      <th>LTP (₹)</th><th>Change</th><th>Amount / Ratio</th>
+      <th>Announced</th><th>Ex-Date</th>
+    </tr></thead>`;
+  }
+
+  function panel(id, set, label, showType=false, isActive=false){
+    return `<div class="ca-panel${isActive?' ca-on':''}" id="cap-${id}">
+      <div class="tcw">
+        <div class="tch">${label} <span class="cnt">${set.length}</span></div>
+        <div class="tscr"><table>${tHead(showType)}<tbody>${tabRows(set,showType)}</tbody></table></div>
+      </div>
+    </div>`;
+  }
+
+  $('s-corpact').innerHTML=`
+    <div class="stitle">Corporate Actions</div>
+    <div class="itabs" id="ca-tabs">
+      <button class="itb${activeTab==='today'?' on':''}"     onclick="caTab('today',this)">Today <span class="cnt" style="background:#e8f0ff;color:#0d47a1">${today.length}</span></button>
+      <button class="itb${activeTab==='dividends'?' on':''}" onclick="caTab('dividends',this)">Dividends <span class="cnt">${divs.length}</span></button>
+      <button class="itb${activeTab==='bonus'?' on':''}"     onclick="caTab('bonus',this)">Bonus <span class="cnt">${bonus.length}</span></button>
+      <button class="itb${activeTab==='splits'?' on':''}"    onclick="caTab('splits',this)">Splits <span class="cnt">${splits.length}</span></button>
+      <button class="itb${activeTab==='rights'?' on':''}"    onclick="caTab('rights',this)">Rights <span class="cnt">${rights.length}</span></button>
     </div>
-
-    ${TABS.map((t,i) => `
-      <div class="corp-panel${i===0?' on':''}" id="cp-${t.k}">
-        <div class="tcw">
-          <div class="tch" style="color:${t.color}">${t.label} <span style="font-size:11px;color:#888;font-weight:400">${t.count} companies</span></div>
-          ${t.html}
-        </div>
-      </div>`).join('')}
-
-    <p style="font-size:10px;color:#bbb;margin-top:8px">
-      Source: Niveshaka-bandhu Corporate Actions Sheet &nbsp;|&nbsp; Auto-refreshes every 5 min
-    </p>`;
+    ${panel('today',    today,    'Today — All Corporate Actions', true,  activeTab==='today')}
+    ${panel('dividends',divs,     'Dividends',                     false, activeTab==='dividends')}
+    ${panel('bonus',    bonus,    'Bonus Issues',                  false, activeTab==='bonus')}
+    ${panel('splits',   splits,   'Stock Splits',                  false, activeTab==='splits')}
+    ${panel('rights',   rights,   'Rights Issues',                 false, activeTab==='rights')}
+    <p style="font-size:10px;color:#bbb;margin-top:6px">Source: Niveshaka-bandhu Corporate Actions Sheet &nbsp;|&nbsp; Auto-refreshes every 5 min</p>`;
 }
 
-function showCorpTab(key, btn, color){
-  document.querySelectorAll('.corp-panel').forEach(p=>p.classList.remove('on'));
-  document.querySelectorAll('.corp-tab').forEach(b=>{
-    b.classList.remove('on');
-    b.style.background='#fff';
-    const sp=b.querySelector('span');
-    const bc=b.style.borderColor;
-    b.style.color=bc;
-    if(sp){sp.style.background=bc+'22';sp.style.color=bc;}
-  });
-  document.getElementById('cp-'+key).classList.add('on');
-  btn.classList.add('on');
-  btn.style.background=color;
-  btn.style.color='#fff';
-  const sp=btn.querySelector('span');
-  if(sp){sp.style.background='rgba(255,255,255,0.3)';sp.style.color='#fff';}
-}
+window.caTab=function(id, btn){
+  document.querySelectorAll('.ca-panel').forEach(p=>p.classList.remove('ca-on'));
+  document.querySelectorAll('#ca-tabs .itb').forEach(b=>b.classList.remove('on'));
+  const el=document.getElementById('cap-'+id);
+  if(el) el.classList.add('ca-on');
+  if(btn) btn.classList.add('on');
+};
 
 /* ── TICKER ── */
 function buildTicker(gRows,fRows){
@@ -1034,26 +995,18 @@ function buildTicker(gRows,fRows){
 const DATA={};
 async function loadAll(){
   const btn=$('rbtn'); btn.textContent='⟳ Loading…'; btn.disabled=true;
-
-  // Main sheet tabs
   await Promise.allSettled(Object.entries(GIDS).map(async([k,gid])=>{
     try{DATA[k]=await fetchSheet(gid);}
     catch(e){console.warn(k,e.message);}
   }));
-
-  // Corporate Actions — 4 sub-sheets from separate Google Sheet
-  await Promise.allSettled(Object.entries(CORP_GIDS).map(async([k,gid])=>{
-    try{DATA['corp_'+k]=await fetchSheet2(gid);}
-    catch(e){console.warn('corp_'+k,e.message);}
-  }));
-
   if(DATA.global?.length)   try{renderGlobal(DATA.global);}    catch(e){console.error('Global',e);}
-  if(DATA.futures?.length)  try{renderFutures(DATA.futures);}  catch(e){console.error('Futures',e);}
+  if(DATA.futures?.length)  try{renderFutures(DATA.futures);}   catch(e){console.error('Futures',e);}
   if(DATA.indian?.length)   try{renderIndian(DATA.indian);}    catch(e){console.error('Indian',e);}
   if(DATA.market?.length)   try{renderMarket(DATA.market);}    catch(e){console.error('Market',e);}
   if(DATA.ipo?.length)      try{renderIPO(DATA.ipo);}          catch(e){console.error('IPO',e);}
-  if(DATA.currency?.length) try{renderCurrency(DATA.currency);}catch(e){console.error('Currency',e);}
-  try{renderCorporate();}catch(e){console.error('Corporate',e);}
+  if(DATA.currency?.length) try{renderCurrency(DATA.currency);} catch(e){console.error('Currency',e);}
+  if(DATA.ace?.length)      try{renderAce(DATA.ace);}          catch(e){console.error('Ace',e);}
+  if(DATA.corpact?.length)  try{renderCorporateActions(DATA.corpact);} catch(e){console.error('CorpAct',e);}
   try{buildTicker(DATA.global||[],DATA.futures||[]);}catch(e){}
   const now=new Date();
   $('ts').textContent=`Live · Updated ${now.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'})} IST`;
