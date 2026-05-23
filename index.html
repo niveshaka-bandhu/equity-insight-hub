@@ -861,11 +861,9 @@ function renderCorporate(){
     while(i < rows.length){
       const r0 = rows[i]||[];
       const col1 = (r0[1]||'').trim();
-      const col2 = (r0[2]||'').trim(); // label column
       const col3 = (r0[3]||'').trim();
-
-      // Company row: col[1]=name, col[2]=empty (no label), col[3]=empty (no value)
-      if(!col1 || col2 || col3){ i++; continue; }
+      // Company row: col[1]=name, col[3]=empty. Label rows have col[3] filled.
+      if(!col1 || col3){ i++; continue; }
 
       const r1=rows[i+1]||[];  // LTP
       const r2=rows[i+2]||[];  // Dividend/Ratio/Ratio
@@ -908,7 +906,11 @@ function renderCorporate(){
   // Today's corporate actions (GID 203302293) — flat table
   // col[0]=Company col[1]=EventType col[2]=AnnouncedDate col[3]=ExDate col[4]=Dividend col[5]=Ratio
   function parseTodayActions(rows){
-    return rows.slice(1).filter(r => r[0]&&r[0].trim());
+    // col[0]=Company col[1]=EventType col[2]=AnnouncedDate col[3]=ExDate col[4]=Dividend col[5]=Ratio
+    // Skip header row only if first row's col[0] looks like a header label
+    const headerWords = ['company','event','type','announced'];
+    const isHeader = rows[0] && headerWords.some(w=>(rows[0][0]||'').toLowerCase().includes(w));
+    return rows.slice(isHeader?1:0).filter(r => r[0]&&r[0].trim());
   }
 
   const todayData  = parseTodayActions(DATA['corp_today']  || []);
