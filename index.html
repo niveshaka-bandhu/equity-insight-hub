@@ -960,11 +960,11 @@ function renderCorporate(){
   }
 
   const TABS = [
-    {k:'today',  label:'📅 Today',     count:todayData.length,  color:'#555555', html:makeTodayTable(todayData)},
-    {k:'div',    label:'💰 Dividends', count:divData.length,    color:'#1a7a4a', html:makeTable(divData,   'Dividend (₹)')},
-    {k:'bonus',  label:'🎁 Bonus',     count:bonusData.length,  color:'#0d47a1', html:makeTable(bonusData, 'Ratio')},
-    {k:'splits', label:'✂️ Splits',    count:splitData.length,  color:'#e07b00', html:makeTable(splitData, 'Split Ratio')},
-    {k:'rights', label:'📜 Rights',    count:rightsData.length, color:'#c0392b', html:makeTable(rightsData,'Ratio', true, 'Premium')},
+    {k:'today',  label:'Today',     count:todayData.length,  color:'#555555', html:makeTodayTable(todayData)},
+    {k:'div',    label:'Dividends', count:divData.length,    color:'#1a7a4a', html:makeTable(divData,   'Dividend (₹)')},
+    {k:'bonus',  label:'Bonus',     count:bonusData.length,  color:'#0d47a1', html:makeTable(bonusData, 'Ratio')},
+    {k:'splits', label:'Splits',    count:splitData.length,  color:'#e07b00', html:makeTable(splitData, 'Split Ratio')},
+    {k:'rights', label:'Rights',    count:rightsData.length, color:'#c0392b', html:makeTable(rightsData,'Ratio', true, 'Premium')},
   ];
 
   $('s-corporate').innerHTML = `
