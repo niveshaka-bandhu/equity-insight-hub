@@ -867,11 +867,11 @@ function renderCorporate(){
       // Company row: col[1]=name, col[2]=empty (no label), col[3]=empty (no value)
       if(!col1 || col2 || col3){ i++; continue; }
 
-      const r1=rows[i+1]||[];  // LTP
-      const r2=rows[i+2]||[];  // Dividend/Ratio/Ratio
-      const r3=rows[i+3]||[];  // Premium (Rights) or Announcement Date (others)
-      const r4=rows[i+4]||[];  // Announcement Date (Rights) or Ex-Date (others)
-      const r5=rows[i+5]||[];  // Ex-Date (Rights only)
+      const r1=rows[i+2]||[];  // LTP
+      const r2=rows[i+3]||[];  // Dividend/Ratio/Ratio
+      const r3=rows[i+4]||[];  // Premium (Rights) or Announcement Date (others)
+      const r4=rows[i+5]||[];  // Announcement Date (Rights) or Ex-Date (others)
+      const r5=rows[i+6]||[];  // Ex-Date (Rights only)
 
       const pctRaw = (r1[4]||'').trim();
       // Positive if contains '+' or doesn't contain '-'
