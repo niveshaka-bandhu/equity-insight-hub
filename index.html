@@ -857,45 +857,74 @@ function renderCorporate(){
   */
   function parseCards(rows, rowSize){
     const cards=[];
+    if(!rows.length) return cards;
+
+    // AUTO-DETECT columns from first data rows
+    // Company row: only col[1] has text, all other cols empty
+    // LTP row: col[1]='LTP', and some col has price (numeric >1), another has % in brackets
+    // Find which col has the price by scanning row 1 (LTP row) for a numeric value
+    let priceCol=3, pctCol=4, valCol=3; // defaults from CSV
+
+    // Scan first few rows to find LTP row and detect price column
+    for(let ri=0; ri<Math.min(10,rows.length); ri++){
+      const r = rows[ri]||[];
+      if((r[1]||'').trim()==='LTP'){
+        // This is the LTP row — find first numeric col after col[1]
+        for(let ci=2; ci<8; ci++){
+          const v=parseFloat(String(r[ci]||'').replace(/,/g,''));
+          if(!isNaN(v) && v>0){ priceCol=ci; break; }
+        }
+        // % col: find col with bracket % format like (-2.19%) or (+1.14%)
+        for(let ci=priceCol+1; ci<8; ci++){
+          if((r[ci]||'').includes('%')){ pctCol=ci; break; }
+        }
+        break;
+      }
+    }
+    // Value col (Dividend/Ratio) = same as priceCol (both in col D)
+    valCol = priceCol;
+
+    console.log('parseCards detected: priceCol='+priceCol+' pctCol='+pctCol+' rowSize='+rowSize);
+
     let i=0;
     while(i < rows.length){
       const r0 = rows[i]||[];
       const col1 = (r0[1]||'').trim();
-      const col3 = (r0[3]||'').trim();
-      // Company row: col[1]=name, col[3]=empty. Label rows have col[3] filled.
-      if(!col1 || col3){ i++; continue; }
 
-      const r1=rows[i+1]||[];  // LTP
-      const r2=rows[i+2]||[];  // Dividend/Ratio/Ratio
-      const r3=rows[i+3]||[];  // Premium (Rights) or Announcement Date (others)
-      const r4=rows[i+4]||[];  // Announcement Date (Rights) or Ex-Date (others)
-      const r5=rows[i+5]||[];  // Ex-Date (Rights only)
+      // Company row: col[1] has name, price col is empty
+      const priceVal = (r0[priceCol]||'').trim();
+      if(!col1 || priceVal){ i++; continue; }
 
-      const pctRaw = (r1[4]||'').trim();
-      // Positive if contains '+' or doesn't contain '-'
-      const pos = pctRaw.includes('+') || (!pctRaw.includes('-') && pctRaw !== '—' && pctRaw !== '');
+      const r1=rows[i+1]||[];  // LTP row
+      const r2=rows[i+2]||[];  // Dividend/Ratio row
+      const r3=rows[i+3]||[];  // Ann Date (non-rights) or Premium (rights)
+      const r4=rows[i+4]||[];  // Ex-Date (non-rights) or Ann Date (rights)
+      const r5=rows[i+5]||[];  // Ex-Date (rights only)
+
+      const pctRaw = (r1[pctCol]||'').trim();
+      const pos = pctRaw.includes('+');
 
       if(rowSize===6){
         cards.push({
           company: col1,
-          ltp:     (r1[3]||'').trim()||'—',
+          ltp:     (r1[priceCol]||'').trim()||'—',
           pct:     pctRaw||'—',
           pos,
-          value:   (r2[3]||'').trim()||'—',  // Ratio
-          extra:   (r3[3]||'').trim()||'—',  // Premium
-          annDate: (r4[3]||'').trim()||'—',  // Announcement Date
-          exDate:  (r5[3]||'').trim()||'—',  // Ex-Date
+          value:   (r2[valCol]||'').trim()||'—',   // Ratio
+          extra:   (r3[valCol]||'').trim()||'—',   // Premium
+          annDate: (r4[valCol]||'').trim()||'—',   // Announcement Date
+          exDate:  (r5[valCol]||'').trim()||'—',   // Ex-Date
         });
       } else {
         cards.push({
           company: col1,
-          ltp:     (r1[3]||'').trim()||'—',
+          ltp:     (r1[priceCol]||'').trim()||'—',
           pct:     pctRaw||'—',
           pos,
-          value:   (r2[3]||'').trim()||'—',  // Dividend/Ratio
+          value:   (r2[valCol]||'').trim()||'—',   // Dividend/Ratio
           extra:   '',
-          annDate: (r3[3]||'').trim()||'—',  // Announcement Date
-          exDate:  (r4[3]||'').trim()||'—',  // Ex-Date
+          annDate: (r3[valCol]||'').trim()||'—',   // Announcement Date
+          exDate:  (r4[valCol]||'').trim()||'—',   // Ex-Date
         });
       }
       i += rowSize;
