@@ -885,9 +885,8 @@ function renderCorporate(){
     valCol = priceCol;
 
     console.log('parseCards detected: priceCol='+priceCol+' pctCol='+pctCol+' rowSize='+rowSize);
-    console.log('row0:', JSON.stringify(rows[0]), 'row1:', JSON.stringify(rows[1]));
 
-    let i=0;
+    let i = (rows[0] && !(rows[0][1]||'').trim()) ? 1 : 0;
     while(i < rows.length){
       const r0 = rows[i]||[];
       const col1 = (r0[1]||'').trim();
