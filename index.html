@@ -1,3 +1,16 @@
+Enable desktop notifications for Gmail.
+   OK  No, thanks
+Conversations
+(no subject)
+Inbox
+
+Subramanya Kamath
+Attachments
+12:35 (1 minute ago)
+to me
+
+ One attachment
+  •  Scanned by Gmail
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -186,17 +199,34 @@ function fetchSheet(gid){
 }
 
 /* fetchSheet2 — for Corporate Actions (separate Google Sheet) */
-function fetchSheet2(gid){
-  return new Promise((res,rej)=>{
-    const cb='__gs_'+(++_n);
-    const t=setTimeout(()=>{delete window[cb];rej(new Error('Timeout'));},20000);
-    window[cb]=data=>{clearTimeout(t);delete window[cb];try{res(toRows(data));}catch(e){rej(e);}};
-    const s=document.createElement('script');
-    s.onerror=()=>{clearTimeout(t);delete window[cb];rej(new Error('Load failed'));};
-    s.src=`https://docs.google.com/spreadsheets/d/${SID2}/gviz/tq?gid=${gid}&tqx=out:json;responseHandler:${cb}&t=${Date.now()}`;
-    document.head.appendChild(s);
-    s.onload=()=>{try{document.head.removeChild(s);}catch(e){}};
-  });
+async function fetchSheet2(gid){
+  // Use CSV export — preserves merged cell company names that gviz skips
+  const url=`https://docs.google.com/spreadsheets/d/${SID2}/export?format=csv&gid=${gid}&t=${Date.now()}`;
+  const res=await fetch(url);
+  if(!res.ok) throw new Error('CSV fetch failed: '+res.status);
+  const text=await res.text();
+  return parseCSV(text);
+}
+
+function parseCSV(text){
+  const rows=[];
+  const lines=text.split(/\r?\n/);
+  for(const line of lines){
+    if(!line.trim()) continue;
+    const cells=[];
+    let cur='',inQ=false;
+    for(let i=0;i<line.length;i++){
+      const ch=line[i];
+      if(ch==='"'&&!inQ){inQ=true;continue;}
+      if(ch==='"'&&inQ&&line[i+1]==='"'){cur+='"';i++;continue;}
+      if(ch==='"'&&inQ){inQ=false;continue;}
+      if(ch===','&&!inQ){cells.push(cur.trim());cur='';continue;}
+      cur+=ch;
+    }
+    cells.push(cur.trim());
+    rows.push(cells);
+  }
+  return rows;
 }
 function toRows(data){
   if(!data||!data.table||!data.table.rows) return [];
@@ -856,61 +886,49 @@ function renderCorporate(){
      rowSize: 5 for Div/Bonus/Splits, 6 for Rights
   */
   function parseCards(rows, rowSize){
-    /* CONFIRMED from console: gviz SKIPS the company name row entirely
-       (merged bold cell with no formula — gviz cannot read it)
-       gviz returns rowSize-1 rows per entry, anchored at LTP row:
-         row+0: col[1]='LTP'               col[3]=price  col[4]=%
-         row+1: col[1]='Dividend/Ratio'    col[3]=value
-         row+2: col[1]='Ann. Date'         col[3]=date   (non-rights)
-         row+3: col[1]='Ex-Date'           col[3]=date   (non-rights)
-         Rights:
-         row+1: col[1]='Ratio'             col[3]=value
-         row+2: col[1]='Premium'           col[3]=value
-         row+3: col[1]='Ann. Date'         col[3]=date
-         row+4: col[1]='Ex-Date'           col[3]=date
+    /* CSV structure (company name row IS present in CSV fetch):
+       Row 0: col[1]=CompanyName  (col[3] empty)
+       Row 1: col[1]='LTP'        col[3]=price  col[4]=%
+       Row 2: col[1]='Dividend/Ratio' col[3]=value
+       Row 3: col[1]='Ann. Date'  col[3]=date
+       Row 4: col[1]='Ex-Date'    col[3]=date
+       Rights (rowSize=6):
+       Row 0: company, Row1: LTP, Row2: Ratio, Row3: Premium, Row4: AnnDate, Row5: ExDate
     */
     const cards = [];
-    const step = rowSize - 1;
     let i = 0;
-    let companyNum = 0;
-
     while(i < rows.length){
-      const r = rows[i]||[];
-      // Find LTP row — this is our anchor
-      if((r[1]||'').trim() !== 'LTP'){ i++; continue; }
+      const r0 = rows[i]||[];
+      const company = (r0[1]||'').trim();
+      // Company row: col[1]=name, col[3]=empty
+      if(!company||(r0[3]||'').trim()){ i++; continue; }
 
-      // LTP row found
-      companyNum++;
-      const r0 = r;                   // LTP row
-      const r1 = rows[i+1]||[];      // Dividend/Ratio
-      const r2 = rows[i+2]||[];      // Ann Date (non-rights) / Premium (rights)
-      const r3 = rows[i+3]||[];      // Ex-Date (non-rights) / Ann Date (rights)
-      const r4 = rows[i+4]||[];      // Ex-Date (rights only)
+      const r1=rows[i+1]||[];  // LTP
+      const r2=rows[i+2]||[];  // Dividend/Ratio
+      const r3=rows[i+3]||[];  // AnnDate (non-rights) / Premium (rights)
+      const r4=rows[i+4]||[];  // ExDate (non-rights) / AnnDate (rights)
+      const r5=rows[i+5]||[];  // ExDate (rights only)
 
-      const ltp = (r0[3]||'').trim()||'—';
-      const pct = (r0[4]||'').trim()||'—';
-      const pos = pct.includes('+');
+      const ltp=(r1[3]||'').trim()||'—';
+      const pct=(r1[4]||'').trim()||'—';
+      const pos=pct.includes('+');
 
       if(rowSize===6){
-        cards.push({
-          company: 'Company '+companyNum,
-          ltp, pct, pos,
-          value:   (r1[3]||'').trim()||'—',  // Ratio
-          extra:   (r2[3]||'').trim()||'—',  // Premium
-          annDate: (r3[3]||'').trim()||'—',  // Announcement Date
-          exDate:  (r4[3]||'').trim()||'—',  // Ex-Date
+        cards.push({company,ltp,pct,pos,
+          value:  (r2[3]||'').trim()||'—',
+          extra:  (r3[3]||'').trim()||'—',
+          annDate:(r4[3]||'').trim()||'—',
+          exDate: (r5[3]||'').trim()||'—',
         });
       } else {
-        cards.push({
-          company: 'Company '+companyNum,
-          ltp, pct, pos,
-          value:   (r1[3]||'').trim()||'—',  // Dividend/Ratio
-          extra:   '',
-          annDate: (r2[3]||'').trim()||'—',  // Announcement Date
-          exDate:  (r3[3]||'').trim()||'—',  // Ex-Date
+        cards.push({company,ltp,pct,pos,
+          value:  (r2[3]||'').trim()||'—',
+          extra:  '',
+          annDate:(r3[3]||'').trim()||'—',
+          exDate: (r4[3]||'').trim()||'—',
         });
       }
-      i += step;
+      i += rowSize;
     }
     return cards;
   }
