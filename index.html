@@ -532,13 +532,7 @@ function renderMarket(rows){
     .filter(r => r[6]&&r[6].trim() && r[BPC]&&!isNaN(parseFloat(String(r[BPC]).replace(/,/g,''))))
     .map(r => [r[6], r[BPC], r[BFC]]);
 
-  // Extended BSE movers: [2]=gName [3]=price [4]=pct | [5]=lName [6]=price [7]=pct
-  const extG = rows.slice(103,153)
-    .filter(r => r[2]&&r[2].trim() && !isNaN(parseFloat(String(r[3]||'').replace(/,/g,''))))
-    .map(r => [r[2],r[3],r[4]]);
-  const extL = rows.slice(103,153)
-    .filter(r => r[5]&&r[5].trim() && !isNaN(parseFloat(String(r[6]||'').replace(/,/g,''))))
-    .map(r => [r[5],r[6],r[7]]);
+  // Extended BSE removed
 
   // ── SLICES ──────────────────────────────────────────────────────
   const n50g    = Lg(0, 5);     // Nifty50 Gainers
@@ -547,8 +541,8 @@ function renderMarket(rows){
   const nseL    = RgNSE(6, 12); // ALL NSE Losers
   const s30g    = Lg(13, 20);    // SENSEX30 Gainers
   const s30l    = Lg(21, 27);    // SENSEX30 Losers
-  const bseG    = RgBSE(13, 20); // ALL BSE Gainers
-  const bseL    = RgBSE(20, 27); // ALL BSE Losers
+  const bseG    = RgBSE(21, 26); // ALL BSE Gainers
+  const bseL    = RgBSE(29, 34); // ALL BSE Losers
   const bank    = Lg(29, 42);    // Nifty Bank stocks (idx 39-50)
 
   // ── ADVANCE / DECLINE ────────────────────────────────────────────
@@ -565,10 +559,10 @@ function renderMarket(rows){
     }
     return '—';
   }
-  const bseAdv = getAdv(30,'Adv:');
-  const bseDec = getAdv(31,'Dec:');
-  const nseAdv = getAdv(32,'Adv:');
-  const nseDec = getAdv(33,'Dec:');
+  const bseAdv = getAdv(37,'Adv:');
+  const bseDec = getAdv(38,'Dec:');
+  const nseAdv = getAdv(39,'Adv:');
+  const nseDec = getAdv(40,'Dec:');
 
   // ── TABLE BUILDERS ───────────────────────────────────────────────
   const TH4=`<thead><tr><th>Company</th><th>Price ₹</th><th>Change</th><th>% Chg</th></tr></thead>`;
@@ -609,20 +603,7 @@ function renderMarket(rows){
     <div class="g2">${tbl4('🟢 All NSE Top Gainers',nseG)}${tbl4('🔴 All NSE Top Losers',nseL)}</div>
     <div class="g2">${tbl4('🟢 SENSEX 30 Gainers',s30g)}${tbl4('🔴 SENSEX 30 Losers',s30l)}</div>
     <div class="g2">${tbl3('🟢 All BSE Gainers',bseG)}${tbl3('🔴 All BSE Losers',bseL)}</div>
-    ${tbl4('🏦 Nifty Bank Stocks',bank)}
-    <div class="tcw">
-      <div class="tch">📊 BSE Extended Movers</div>
-      <div class="g2" style="margin:0;gap:0">
-        <div class="tscr" style="border-right:1px solid #eee"><table>
-          <thead><tr><th>🟢 BSE Gainers</th><th>Price</th><th>%</th></tr></thead>
-          <tbody>${extG.map(r=>`<tr><td><strong>${f(r[0])}</strong></td><td>${f(r[1])}</td><td class="${ic(r[2])}">${f(r[2])}</td></tr>`).join('')}</tbody>
-        </table></div>
-        <div class="tscr"><table>
-          <thead><tr><th>🔴 BSE Losers</th><th>Price</th><th>%</th></tr></thead>
-          <tbody>${extL.map(r=>`<tr><td><strong>${f(r[0])}</strong></td><td>${f(r[1])}</td><td class="${ic(r[2])}">${f(r[2])}</td></tr>`).join('')}</tbody>
-        </table></div>
-      </div>
-    </div>`;
+    ${tbl4('🏦 Nifty Bank Stocks',bank)}`;
 }
 
 /* ══════════════════════════════════════════════
