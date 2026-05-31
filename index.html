@@ -190,12 +190,16 @@ function fetchSheet(gid){
 
 /* fetchSheet2 — for Corporate Actions (separate Google Sheet) */
 async function fetchSheet2(gid){
-  // Use CSV export — preserves merged cell company names that gviz skips
-  const url=`https://docs.google.com/spreadsheets/d/${SID2}/export?format=csv&gid=${gid}&t=${Date.now()}`;
-  const res=await fetch(url);
-  if(!res.ok) throw new Error('CSV fetch failed: '+res.status);
-  const text=await res.text();
-  return parseCSV(text);
+  return new Promise((res,rej)=>{
+    const cb='__gs_'+(++_n);
+    const t=setTimeout(()=>{delete window[cb];rej(new Error('Timeout'));},20000);
+    window[cb]=data=>{clearTimeout(t);delete window[cb];try{res(toRows(data));}catch(e){rej(e);}};
+    const s=document.createElement('script');
+    s.onerror=()=>{clearTimeout(t);delete window[cb];rej(new Error('Load failed'));};
+    s.src=`https://docs.google.com/spreadsheets/d/${SID2}/gviz/tq?gid=${gid}&tqx=out:json;responseHandler:${cb}&t=${Date.now()}`;
+    document.head.appendChild(s);
+    s.onload=()=>{try{document.head.removeChild(s);}catch(e){}};
+  });
 }
 
 function parseCSV(text){
