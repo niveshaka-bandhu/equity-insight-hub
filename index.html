@@ -227,7 +227,7 @@ function toRows(data){
 
 /* ── Helpers ── */
 const $=id=>document.getElementById(id);
-const f=v=>{const s=String(v||'').trim();return(!s||s==='-'||s==='--'||s==='N/A'||s==='#N/A')?'—':s;};
+const f=v=>String(v||'').trim()||'—';
 const clean=v=>String(v||'').replace(/\*/g,'').trim();
 function ic(v){
   const s=String(v||'').replace(/,/g,'').replace(/\*/g,'').trim();
@@ -508,10 +508,32 @@ function renderMarket(rows){
     }
   }
 
-    // ALL BSE RIGHT: G=col[6]=Company, H=col[7]=Price, I=col[8]=%Change
+  // ── DETECT BSE right-block (% only, no change col) ──────────────
+  // Same logic — probe SENSEX30 Gainers row (idx 21)
+  const probe2 = rows[21] || [];
+  let BPC=9, BFC=10; // BSE price, pct
+  for(let ci=7; ci<=11; ci++){
+    const v=String(probe2[ci]||'').replace(/,/g,'');
+    if(v && !isNaN(parseFloat(v)) && parseFloat(v)>0){
+      BPC=ci; BFC=ci+1; break;
+    }
+  }
+
+  // ── DATA EXTRACTORS ─────────────────────────────────────────────
+  // Left block: [1]=name [2]=price [3]=chg [4]=pct
+  const Lg = (s,e) => rows.slice(s,e)
+    .filter(r => r[1]&&r[1].trim() && r[2]&&!isNaN(parseFloat(String(r[2]).replace(/,/g,''))))
+    .map(r => [r[1],r[2],r[3],r[4]]);
+
+  // Right NSE block: detected cols
+  const RgNSE = (s,e) => rows.slice(s,e)
+    .filter(r => r[6]&&r[6].trim() && r[PC]&&!isNaN(parseFloat(String(r[PC]).replace(/,/g,''))))
+    .map(r => [r[6], r[PC], r[CC], r[FC]]);
+
+  // Right BSE block: % only
   const RgBSE = (s,e) => rows.slice(s,e)
-    .filter(r => r[6]&&r[6].trim() && r[7]&&!isNaN(parseFloat(String(r[7]).replace(/,/g,''))))
-    .map(r => [r[6], r[7], r[8]]);
+    .filter(r => r[6]&&r[6].trim() && r[BPC]&&!isNaN(parseFloat(String(r[BPC]).replace(/,/g,''))))
+    .map(r => [r[6], r[BPC], r[BFC]]);
 
 
   // ── SLICES ──────────────────────────────────────────────────────
@@ -529,9 +551,9 @@ function renderMarket(rows){
   // Scan each row for 'Adv:' or 'Dec:' label, take next non-empty cell
 // Adv/Dec: col I (gviz[8]), rows 38-41 (gviz idx 37-40)
 const bseAdv = (rows[28]||[])[8] || '—';
-  const bseDec = (rows[29]||[])[8] || '—';
-  const nseAdv = (rows[30]||[])[8] || '—';
-  const nseDec = (rows[31]||[])[8] || '—';
+const bseDec = (rows[29]||[])[8] || '—';
+const nseAdv = (rows[30]||[])[8] || '—';
+const nseDec = (rows[31]||[])[8] || '—';
 
   // ── TABLE BUILDERS ───────────────────────────────────────────────
   const TH4=`<thead><tr><th>Company</th><th>Price ₹</th><th>Change</th><th>% Chg</th></tr></thead>`;
