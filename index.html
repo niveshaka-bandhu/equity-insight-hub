@@ -227,7 +227,7 @@ function toRows(data){
 
 /* ── Helpers ── */
 const $=id=>document.getElementById(id);
-const f=v=>String(v||'').trim()||'—';
+const f=v=>{const s=String(v||'').trim();return(!s||s==='-'||s==='--'||s==='N/A'||s==='#N/A'||s==='#REF!')?'—':s;};
 const clean=v=>String(v||'').replace(/\*/g,'').trim();
 function ic(v){
   const s=String(v||'').replace(/,/g,'').replace(/\*/g,'').trim();
@@ -549,22 +549,25 @@ function renderMarket(rows){
 
   // ── ADVANCE / DECLINE ────────────────────────────────────────────
   // Scan each row for 'Adv:' or 'Dec:' label, take next non-empty cell
-  function getAdv(rowIdx, label){
+  // Adv/Dec confirmed from sheet screenshot:
+  // Sheet row 38 = gviz idx 37: col G='BSE', col H='Adv:', col I=count
+  // Sheet row 39 = gviz idx 38: col H='Dec:', col I=count
+  // Sheet row 40 = gviz idx 39: col G='NSE', col H='Adv:', col I=count
+  // Sheet row 41 = gviz idx 40: col H='Dec:', col I=count
+  // Col I = gviz[8], but gviz may shift → try [8] then [7] then scan
+  function getAdv(rowIdx){
     const r = rows[rowIdx] || [];
-    for(let ci=5; ci<12; ci++){
-      if((r[ci]||'').trim()===label){
-        // next cell
-        for(let ni=ci+1; ni<12; ni++){
-          if(r[ni]&&r[ni].trim()) return r[ni];
-        }
-      }
+    // Scan cols 6-10 for a numeric value (the count)
+    for(let ci=6; ci<=10; ci++){
+      const v=String(r[ci]||'').trim();
+      if(v && !isNaN(parseFloat(v)) && parseFloat(v)>100) return v;
     }
     return '—';
   }
-  const bseAdv = getAdv(30,'Adv:');
-  const bseDec = getAdv(31,'Dec:');
-  const nseAdv = getAdv(32,'Adv:');
-  const nseDec = getAdv(33,'Dec:');
+  const bseAdv = getAdv(37);
+  const bseDec = getAdv(38);
+  const nseAdv = getAdv(39);
+  const nseDec = getAdv(40);
 
   // ── TABLE BUILDERS ───────────────────────────────────────────────
   const TH4=`<thead><tr><th>Company</th><th>Price ₹</th><th>Change</th><th>% Chg</th></tr></thead>`;
