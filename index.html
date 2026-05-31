@@ -465,57 +465,105 @@ function renderIndian(rows){
    Adv/Dec: col[6]='BSE'/'NSE', col[7]='Adv:'/'Dec:', col[8]=count
 ══════════════════════════════════════════════ */
 function renderMarket(rows){
-  /* CONFIRMED from CSV (idx = CSV row - 1):
-     LEFT cols:  [1]=Company [2]=Price [3]=Change [4]=%Change
-     RIGHT NSE:  [6]=Company [7]=Price [8]=Change [9]=%Change
-     RIGHT BSE:  [6]=Company [7]=Price [8]=%Change (no separate change)
-     Nifty50 Gainers:  idx 4-8   (CSV 5-9)
-     Nifty50 Losers:   idx 12-16 (CSV 13-17)
-     SENSEX30 Gainers: idx 21-25 (CSV 22-26)
-     SENSEX30 Losers:  idx 29-33 (CSV 30-34)
-     ALL NSE Gainers:  idx 4-8   right cols [6,7,8,9]
-     ALL NSE Losers:   idx 12-16 right cols [6,7,8,9]
-     ALL BSE Gainers:  idx 21-25 right cols [6,7,8]
-     ALL BSE Losers:   idx 29-33 right cols [6,7,8]
-     Nifty Bank:       idx 39-50 (CSV 40-51)
-     Adv/Dec:
-       idx 37: col[6]='BSE' col[7]='Adv:' col[8]=count
-       idx 38: col[7]='Dec:' col[8]=count
-       idx 39: col[6]='NSE' col[7]='Adv:' col[8]=count
-       idx 40: col[7]='Dec:' col[8]=count
+  /*
+   CONFIRMED from CSV analysis (col indices in gviz):
+   ── Nifty50 / SENSEX30 LEFT block:
+      [1]=Company  [2]=Price  [3]=Change  [4]=%Change
+   ── ALL NSE RIGHT block:
+      [6]=Company  [9]=Price  [10]=Change  [11]=%Change
+      (cols 7,8 are blank merged cells → gviz may skip them → price shifts to [7])
+   ── ALL BSE RIGHT block:
+      [6]=Company  [9]=Price  [10]=%Change  (no change col)
+   ── Adv/Dec:
+      row[38]: [6]='BSE' [7]='Adv:' [8]=count
+      row[39]: [7]='Dec:' [8]=count
+      row[40]: [6]='NSE' [7]='Adv:' [8]=count
+      row[41]: [7]='Dec:' [8]=count
+
+   ROW RANGES (gviz 0-based = CSV row - 1):
+      Nifty50 Gainers:  idx 4-8   (CSV rows 5-9)
+      Nifty50 Losers:   idx 12-16 (CSV rows 13-17)
+      SENSEX30 Gainers: idx 21-25 (CSV rows 22-26)
+      SENSEX30 Losers:  idx 29-33 (CSV rows 30-34)
+      ALL NSE Gainers:  idx 4-8   right cols
+      ALL NSE Losers:   idx 12-16 right cols
+      ALL BSE Gainers:  idx 21-25 right cols
+      ALL BSE Losers:   idx 29-33 right cols
+      Nifty Bank:       idx 39-50 (CSV rows 40-51) left cols
+      Adv/Dec:          idx 38-41
   */
 
-  // LEFT: [1]=name [2]=price [3]=chg [4]=pct
+  // ── DETECT NSE right-block price column ─────────────────────────
+  // In CSV: col[9]=price. gviz may skip blank cols 7,8 → price at col[7]
+  // Probe first NSE data row (idx 4) to find first numeric col after col[6]
+  const probe = rows[4] || [];
+  let PC=9, CC=10, FC=11; // defaults from CSV
+  for(let ci=7; ci<=11; ci++){
+    const v=String(probe[ci]||'').replace(/,/g,'');
+    if(v && !isNaN(parseFloat(v)) && parseFloat(v)>0){
+      PC=ci; CC=ci+1; FC=ci+2; break;
+    }
+  }
+
+  // ── DETECT BSE right-block (% only, no change col) ──────────────
+  // Same logic — probe SENSEX30 Gainers row (idx 21)
+  const probe2 = rows[21] || [];
+  let BPC=9, BFC=10; // BSE price, pct
+  for(let ci=7; ci<=11; ci++){
+    const v=String(probe2[ci]||'').replace(/,/g,'');
+    if(v && !isNaN(parseFloat(v)) && parseFloat(v)>0){
+      BPC=ci; BFC=ci+1; break;
+    }
+  }
+
+  // ── DATA EXTRACTORS ─────────────────────────────────────────────
+  // Left block: [1]=name [2]=price [3]=chg [4]=pct
   const Lg = (s,e) => rows.slice(s,e)
-    .filter(r=>r[1]&&r[1].trim()&&r[2]&&r[2]!=='#N/A'&&!isNaN(parseFloat(String(r[2]).replace(/,/g,''))))
-    .map(r=>[r[1],r[2],r[3]==='#N/A'?'—':r[3],r[4]==='#N/A'?'—':r[4]]);
+    .filter(r => r[1]&&r[1].trim() && r[2]&&!isNaN(parseFloat(String(r[2]).replace(/,/g,''))))
+    .map(r => [r[1],r[2],r[3],r[4]]);
 
-  // RIGHT NSE: [6]=name [7]=price [8]=chg [9]=pct
+  // Right NSE block: detected cols
   const RgNSE = (s,e) => rows.slice(s,e)
-    .filter(r=>r[6]&&r[6].trim()&&r[7]&&r[7]!=='#N/A'&&!isNaN(parseFloat(String(r[7]).replace(/,/g,''))))
-    .map(r=>[r[6],r[7],r[8]==='#N/A'?'—':r[8],r[9]==='#N/A'?'—':r[9]]);
+    .filter(r => r[6]&&r[6].trim() && r[PC]&&!isNaN(parseFloat(String(r[PC]).replace(/,/g,''))))
+    .map(r => [r[6], r[PC], r[CC], r[FC]]);
 
-  // RIGHT BSE: [6]=name [7]=price [8]=pct (no separate change col)
+  // Right BSE block: % only
   const RgBSE = (s,e) => rows.slice(s,e)
-    .filter(r=>r[6]&&r[6].trim()&&r[7]&&r[7]!=='#N/A'&&!isNaN(parseFloat(String(r[7]).replace(/,/g,''))))
-    .map(r=>[r[6],r[7],r[8]==='#N/A'?'—':r[8]]);
+    .filter(r => r[6]&&r[6].trim() && r[BPC]&&!isNaN(parseFloat(String(r[BPC]).replace(/,/g,''))))
+    .map(r => [r[6], r[BPC], r[BFC]]);
 
-  const n50g  = Lg(4,  9);
-  const n50l  = Lg(12, 17);
-  const nseG  = RgNSE(4,  9);
-  const nseL  = RgNSE(12, 17);
-  const s30g  = Lg(21, 26);
-  const s30l  = Lg(29, 34);
-  const bseG  = RgBSE(21, 26);
-  const bseL  = RgBSE(29, 34);
-  const bank  = Lg(39, 51);
 
-  // Adv/Dec — confirmed positions
-  const bseAdv = (rows[37]||[])[8]||'—';
-  const bseDec = (rows[38]||[])[8]||'—';
-  const nseAdv = (rows[39]||[])[8]||'—';
-  const nseDec = (rows[40]||[])[8]||'—';
+  // ── SLICES ──────────────────────────────────────────────────────
+  const n50g    = Lg(0, 5);     // Nifty50 Gainers
+  const n50l    = Lg(6, 12);    // Nifty50 Losers
+  const nseG    = RgNSE(0,  5);  // ALL NSE Gainers
+  const nseL    = RgNSE(6, 12); // ALL NSE Losers
+  const s30g    = Lg(13, 20);    // SENSEX30 Gainers
+  const s30l    = Lg(21, 27);    // SENSEX30 Losers
+  const bseG    = RgBSE(13, 20); // ALL BSE Gainers
+  const bseL    = RgBSE(20, 27); // ALL BSE Losers
+  const bank    = Lg(29, 42);    // Nifty Bank stocks (idx 39-50)
 
+  // ── ADVANCE / DECLINE ────────────────────────────────────────────
+  // Scan each row for 'Adv:' or 'Dec:' label, take next non-empty cell
+  function getAdv(rowIdx, label){
+    const r = rows[rowIdx] || [];
+    for(let ci=5; ci<12; ci++){
+      if((r[ci]||'').trim()===label){
+        // next cell
+        for(let ni=ci+1; ni<12; ni++){
+          if(r[ni]&&r[ni].trim()) return r[ni];
+        }
+      }
+    }
+    return '—';
+  }
+  const bseAdv = getAdv(30,'Adv:');
+  const bseDec = getAdv(31,'Dec:');
+  const nseAdv = getAdv(32,'Adv:');
+  const nseDec = getAdv(33,'Dec:');
+
+  // ── TABLE BUILDERS ───────────────────────────────────────────────
   const TH4=`<thead><tr><th>Company</th><th>Price ₹</th><th>Change</th><th>% Chg</th></tr></thead>`;
   const TH3=`<thead><tr><th>Company</th><th>Price ₹</th><th>% Chg</th></tr></thead>`;
 
@@ -523,7 +571,8 @@ function renderMarket(rows){
     <div class="tch">${title}</div>
     <div class="tscr"><table>${TH4}<tbody>
       ${data.map(r=>`<tr>
-        <td><strong>${f(r[0])}</strong></td><td>${f(r[1])}</td>
+        <td><strong>${f(r[0])}</strong></td>
+        <td>${f(r[1])}</td>
         <td class="${ic(r[2])}">${f(r[2])}</td>
         <td class="${ic(r[3])}">${f(r[3])}</td>
       </tr>`).join('')||'<tr><td colspan="4" style="color:#aaa;padding:10px;text-align:center">No data</td></tr>'}
@@ -533,23 +582,27 @@ function renderMarket(rows){
     <div class="tch">${title}</div>
     <div class="tscr"><table>${TH3}<tbody>
       ${data.map(r=>`<tr>
-        <td><strong>${f(r[0])}</strong></td><td>${f(r[1])}</td>
+        <td><strong>${f(r[0])}</strong></td>
+        <td>${f(r[1])}</td>
         <td class="${ic(r[2])}">${f(r[2])}</td>
       </tr>`).join('')||'<tr><td colspan="3" style="color:#aaa;padding:10px;text-align:center">No data</td></tr>'}
     </tbody></table></div></div>`;
 
   $('s-market').innerHTML=`
-    <div class="stitle">📈 Movers — NSE &amp; BSE</div>
+    <div class="stitle">📈 📈 Movers — NSE &amp; BSE</div>
+
     <div class="adrow">
       <div class="adbox"><div class="adlbl">BSE Advances</div><div class="adnum up">${bseAdv}</div></div>
       <div class="adbox"><div class="adlbl">BSE Declines</div><div class="adnum dn">${bseDec}</div></div>
       <div class="adbox"><div class="adlbl">NSE Advances</div><div class="adnum up">${nseAdv}</div></div>
       <div class="adbox"><div class="adlbl">NSE Declines</div><div class="adnum dn">${nseDec}</div></div>
     </div>
+
     <div class="g2">${tbl4('🟢 NIFTY 50 Top Gainers',n50g)}${tbl4('🔴 NIFTY 50 Top Losers',n50l)}</div>
     <div class="g2">${tbl4('🟢 All NSE Top Gainers',nseG)}${tbl4('🔴 All NSE Top Losers',nseL)}</div>
     <div class="g2">${tbl4('🟢 SENSEX 30 Gainers',s30g)}${tbl4('🔴 SENSEX 30 Losers',s30l)}</div>
     <div class="g2">${tbl3('🟢 All BSE Gainers',bseG)}${tbl3('🔴 All BSE Losers',bseL)}</div>
+    ${tbl4('🏦 Nifty Bank Stocks',bank)}
     ${tbl4('🏦 Nifty Bank Stocks',bank)}`;
 }
 
@@ -962,26 +1015,65 @@ function buildTicker(gRows,fRows){
 const DATA={};
 async function loadAll(){
   const btn=$('rbtn'); btn.textContent='⟳ Loading…'; btn.disabled=true;
+  // Load ONLY Global on start for fast initial load
+  try{DATA.global=await fetchSheet(GIDS.global);}catch(e){console.warn('global',e.message);}
+  if(DATA.global?.length) try{renderGlobal(DATA.global);}catch(e){console.error('Global',e);}
+  try{buildTicker(DATA.global||[],[]);}catch(e){}
+  const now=new Date();
+  $('ts').textContent=`Live · Updated ${now.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'})} IST`;
+  btn.textContent='⟳ Refresh'; btn.disabled=false;
+}
 
-  // Main sheet tabs
-  await Promise.allSettled(Object.entries(GIDS).map(async([k,gid])=>{
-    try{DATA[k]=await fetchSheet(gid);}
-    catch(e){console.warn(k,e.message);}
+// Track loaded tabs
+const LOADED={'global':true};
+
+async function loadTab(key){
+  if(LOADED[key]) return; // already loaded
+  LOADED[key]=true;
+  const div=$('s-'+key);
+  div.innerHTML='<div class="loading"><div class="spin"></div>Loading…</div>';
+
+  try{
+    if(key==='corporate'){
+      await Promise.allSettled(Object.entries(CORP_GIDS).map(async([k,gid])=>{
+        try{DATA['corp_'+k]=await fetchSheet2(gid);}catch(e){console.warn('corp_'+k,e.message);}
+      }));
+      renderCorporate();
+    } else if(GIDS[key]){
+      DATA[key]=await fetchSheet(GIDS[key]);
+      if(key==='futures')  renderFutures(DATA.futures||[]);
+      if(key==='indian')   renderIndian(DATA.indian||[]);
+      if(key==='market')   renderMarket(DATA.market||[]);
+      if(key==='ipo')      renderIPO(DATA.ipo||[]);
+      if(key==='currency') renderCurrency(DATA.currency||[]);
+      // Update ticker once futures loaded
+      if(key==='futures') buildTicker(DATA.global||[],DATA.futures||[]);
+    }
+  } catch(e){ console.error(key,e); }
+}
+
+async function refreshAll(){
+  // Refresh all already-loaded tabs
+  const btn=$('rbtn'); btn.textContent='⟳ Loading…'; btn.disabled=true;
+  const keys=Object.keys(LOADED);
+  await Promise.allSettled(keys.map(async k=>{
+    try{
+      if(k==='corporate'){
+        await Promise.allSettled(Object.entries(CORP_GIDS).map(async([ck,gid])=>{
+          try{DATA['corp_'+ck]=await fetchSheet2(gid);}catch(e){}
+        }));
+        renderCorporate();
+      } else if(GIDS[k]){
+        DATA[k]=await fetchSheet(GIDS[k]);
+        if(k==='global')   renderGlobal(DATA.global||[]);
+        if(k==='futures')  renderFutures(DATA.futures||[]);
+        if(k==='indian')   renderIndian(DATA.indian||[]);
+        if(k==='market')   renderMarket(DATA.market||[]);
+        if(k==='ipo')      renderIPO(DATA.ipo||[]);
+        if(k==='currency') renderCurrency(DATA.currency||[]);
+      }
+    } catch(e){ console.error(k,e); }
   }));
-
-  // Corporate Actions — 4 sub-sheets from separate Google Sheet
-  await Promise.allSettled(Object.entries(CORP_GIDS).map(async([k,gid])=>{
-    try{DATA['corp_'+k]=await fetchSheet2(gid);}
-    catch(e){console.warn('corp_'+k,e.message);}
-  }));
-
-  if(DATA.global?.length)   try{renderGlobal(DATA.global);}    catch(e){console.error('Global',e);}
-  if(DATA.futures?.length)  try{renderFutures(DATA.futures);}  catch(e){console.error('Futures',e);}
-  if(DATA.indian?.length)   try{renderIndian(DATA.indian);}    catch(e){console.error('Indian',e);}
-  if(DATA.market?.length)   try{renderMarket(DATA.market);}    catch(e){console.error('Market',e);}
-  if(DATA.ipo?.length)      try{renderIPO(DATA.ipo);}          catch(e){console.error('IPO',e);}
-  if(DATA.currency?.length) try{renderCurrency(DATA.currency);}catch(e){console.error('Currency',e);}
-  try{renderCorporate();}catch(e){console.error('Corporate',e);}
   try{buildTicker(DATA.global||[],DATA.futures||[]);}catch(e){}
   const now=new Date();
   $('ts').textContent=`Live · Updated ${now.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'})} IST`;
@@ -993,13 +1085,13 @@ function showTab(key,btn){
   document.querySelectorAll('.nb').forEach(b=>b.classList.remove('on'));
   $('s-'+key).classList.add('on'); btn.classList.add('on');
   window.scrollTo({top:0,behavior:'smooth'});
+  loadTab(key); // lazy load if not yet loaded
 }
 function showInv(id,btn){
   document.querySelectorAll('.ipanel').forEach(p=>p.classList.remove('on'));
   document.querySelectorAll('.itb').forEach(b=>b.classList.remove('on'));
   $(id).classList.add('on'); btn.classList.add('on');
 }
-function refreshAll(){loadAll();}
 
 loadAll();
 setInterval(loadAll,5*60*1000);
