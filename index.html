@@ -549,22 +549,11 @@ function renderMarket(rows){
 
   // ── ADVANCE / DECLINE ────────────────────────────────────────────
   // Scan each row for 'Adv:' or 'Dec:' label, take next non-empty cell
-  function getAdv(rowIdx, label){
-    const r = rows[rowIdx] || [];
-    for(let ci=7; ci<12; ci++){
-      if((r[ci]||'').trim()===label){
-        // next cell
-        for(let ni=ci+1; ni<12; ni++){
-          if(r[ni]&&r[ni].trim()) return r[ni];
-        }
-      }
-    }
-    return '—';
-  }
-  const bseAdv = getAdv(37,'Adv:');
-  const bseDec = getAdv(38,'Dec:');
-  const nseAdv = getAdv(39,'Adv:');
-  const nseDec = getAdv(40,'Dec:');
+// Adv/Dec: col I (gviz[8]), rows 38-41 (gviz idx 37-40)
+const bseAdv = (rows[37]||[])[8] || '—';
+const bseDec = (rows[38]||[])[8] || '—';
+const nseAdv = (rows[39]||[])[8] || '—';
+const nseDec = (rows[40]||[])[8] || '—';
 
   // ── TABLE BUILDERS ───────────────────────────────────────────────
   const TH4=`<thead><tr><th>Company</th><th>Price ₹</th><th>Change</th><th>% Chg</th></tr></thead>`;
