@@ -545,7 +545,7 @@ function renderMarket(rows){
   const s30l    = Lg(21, 27);    // SENSEX30 Losers
   const bseG    = RgBSE(13, 20); // ALL BSE Gainers
   const bseL    = RgBSE(20, 27); // ALL BSE Losers
-  const bank    = Lg(39, 51);    // Nifty Bank stocks (idx 39-50)
+  const bank    = Lg(29, 42);    // Nifty Bank stocks
 
   // ── ADVANCE / DECLINE ────────────────────────────────────────────
   // Scan each row for 'Adv:' or 'Dec:' label, take next non-empty cell
@@ -605,7 +605,6 @@ function renderMarket(rows){
     <div class="g2">${tbl4('🟢 All NSE Top Gainers',nseG)}${tbl4('🔴 All NSE Top Losers',nseL)}</div>
     <div class="g2">${tbl4('🟢 SENSEX 30 Gainers',s30g)}${tbl4('🔴 SENSEX 30 Losers',s30l)}</div>
     <div class="g2">${tbl3('🟢 All BSE Gainers',bseG)}${tbl3('🔴 All BSE Losers',bseL)}</div>
-    ${tbl4('🏦 Nifty Bank Stocks',bank)}
     ${tbl4('🏦 Nifty Bank Stocks',bank)}`;
 }
 
