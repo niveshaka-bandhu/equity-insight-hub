@@ -511,7 +511,7 @@ function renderMarket(rows){
   // ── DETECT BSE right-block (% only, no change col) ──────────────
   // Same logic — probe SENSEX30 Gainers row (idx 21)
   const probe2 = rows[21] || [];
-  let BPC=7, BFC=8; // BSE price, pct
+  let BPC=7, BFC=9; // BSE price, pct
   for(let ci=7; ci<=11; ci++){
     const v=String(probe2[ci]||'').replace(/,/g,'');
     if(v && !isNaN(parseFloat(v)) && parseFloat(v)>0){
