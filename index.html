@@ -991,14 +991,26 @@ function showCorpTab(key, btn, color){
 /* ── TICKER ── */
 function buildTicker(gRows,fRows){
   const items=[];
-  gRows.slice(1).filter(r=>r[2]&&r[3]).slice(0,8).forEach(r=>{
+
+  // Global indices to show (name contains these keywords)
+  const G_NAMES=['NIFTY 50','SENSEX','INDIA VIX','DOW JONES','NASDAQ','S&P 500','NIKKEI','SHENZEN','HANG SENG','IBOVESPA','EURONEXT','DAX','CAC 40'];
+  // Futures to show
+  const F_NAMES=['DOW FUTURES','NASDAQ FUTURES','FTSE FUTURES','EURO STOXX FUTURES','NIKKEI FUTURES','NIFTY FUTURES','GIFT NIFTY FUTURES','US DOLLAR INDEX','BITCOIN FUTURES'];
+
+  gRows.slice(1).filter(r=>r[2]&&r[3]).forEach(r=>{
+    const name=(r[2]||'').toUpperCase();
+    if(!G_NAMES.some(k=>name.includes(k.toUpperCase()))) return;
     const pos=parseFloat(r[4]||'0')>=0;
-    items.push(`<div class="ti"><span class="tn">${f(r[2])}</span><span class="tv">${f(r[3])}</span><span class="tc ${pos?'up':'dn'}">${f(r[5])}%</span></div>`);
+    items.push(`<div class="ti"><span class="tn">${f(r[2])}</span><span class="tv">${f(r[3])}</span><span class="tc ${pos?'up':'dn'}">${pctFmt(r[5])}</span></div>`);
   });
-  fRows.filter(r=>r[0]&&r[2]&&r[0]!=='Symbol'&&r[0]!=='Close'&&r[0]!=='Gift Nifty').slice(0,6).forEach(r=>{
+
+  fRows.filter(r=>r[0]&&r[2]&&r[0]!=='Symbol'&&r[0]!=='Close'&&r[0]!=='Gift Nifty').forEach(r=>{
+    const name=(r[0]||'').toUpperCase();
+    if(!F_NAMES.some(k=>name.includes(k.toUpperCase()))) return;
     const pos=!String(r[3]||'').startsWith('-');
-    items.push(`<div class="ti"><span class="tn">${f(r[0])}</span><span class="tv">${f(r[2])}</span><span class="tc ${pos?'up':'dn'}">${f(r[4])}</span></div>`);
+    items.push(`<div class="ti"><span class="tn">${f(r[0])}</span><span class="tv">${f(r[2])}</span><span class="tc ${pos?'up':'dn'}">${pctFmt(r[4])}</span></div>`);
   });
+
   $('tick').innerHTML=[...items,...items].join('')||'<div class="ti"><span class="tn">Live</span></div>';
 }
 
