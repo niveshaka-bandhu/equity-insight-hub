@@ -150,7 +150,8 @@ footer a{color:#6ea8fe}
     <button class="rbtn" id="rbtn" onclick="refreshAll()">⟳ Refresh</button>
   </div>
 </header>
-<div class="ticker"><div class="tscrl" id="tick"><div class="ti"><span class="tn">Loading live data…</span></div></div></div>
+<div class="ticker"><div class="tscrl" id="tick1"><div class="ti"><span class="tn">Loading…</span></div></div></div>
+<div class="ticker" style="border-top:1px solid #f0f0f0"><div class="tscrl" id="tick2"><div class="ti"><span class="tn">Loading…</span></div></div></div>
 
 <div class="wrap">
   <div class="sec on" id="s-global"><div class="loading"><div class="spin"></div>Loading…</div></div>
@@ -990,30 +991,32 @@ function showCorpTab(key, btn, color){
 
 /* ── TICKER ── */
 function buildTicker(gRows,fRows){
-  const items=[];
-
-  // Global indices to show (name contains these keywords)
   const G_NAMES=['NIFTY 50','SENSEX','INDIA VIX','DOW JONES','NASDAQ','S&P 500','NIKKEI','SHENZEN','HANG SENG','IBOVESPA','EURONEXT','DAX','CAC 40'];
-  // Futures to show
   const F_NAMES=['DOW FUTURES','NASDAQ FUTURES','FTSE FUTURES','EURO STOXX FUTURES','NIKKEI FUTURES','NIFTY FUTURES','GIFT NIFTY FUTURES','US DOLLAR INDEX','BITCOIN FUTURES'];
 
-  gRows.slice(1).filter(r=>r[2]&&r[3]).forEach(r=>{
+  const gItems=[], fItems=[];
+
+  // Scan ALL rows (not slice(1)) to catch NIFTY 50 even if gviz puts it at row 0
+  gRows.filter(r=>r[2]&&r[3]).forEach(r=>{
     const name=(r[2]||'').toUpperCase();
     if(!G_NAMES.some(k=>name.includes(k.toUpperCase()))) return;
     const pos=parseFloat(r[4]||'0')>=0;
-    items.push(`<div class="ti"><span class="tn">${f(r[2])}</span><span class="tv">${f(r[3])}</span><span class="tc ${pos?'up':'dn'}">${pctFmt(r[5])}</span></div>`);
+    gItems.push(`<div class="ti"><span class="tn">${f(r[2])}</span><span class="tv">${f(r[3])}</span><span class="tc ${pos?'up':'dn'}">${pctFmt(r[5])}</span></div>`);
   });
 
   fRows.filter(r=>r[0]&&r[2]&&r[0]!=='Symbol'&&r[0]!=='Close'&&r[0]!=='Gift Nifty').forEach(r=>{
     const name=(r[0]||'').toUpperCase();
     if(!F_NAMES.some(k=>name.includes(k.toUpperCase()))) return;
     const pos=!String(r[3]||'').startsWith('-');
-    items.push(`<div class="ti"><span class="tn">${f(r[0])}</span><span class="tv">${f(r[2])}</span><span class="tc ${pos?'up':'dn'}">${pctFmt(r[4])}</span></div>`);
+    fItems.push(`<div class="ti"><span class="tn">${f(r[0])}</span><span class="tv">${f(r[2])}</span><span class="tc ${pos?'up':'dn'}">${pctFmt(r[4])}</span></div>`);
   });
 
-  $('tick').innerHTML=[...items,...items].join('')||'<div class="ti"><span class="tn">Live</span></div>';
+  // Row 1: Indices
+  const t1=document.getElementById('tick1');
+  const t2=document.getElementById('tick2');
+  if(t1) t1.innerHTML=[...gItems,...gItems].join('')||'<div class="ti"><span class="tn">Loading…</span></div>';
+  if(t2) t2.innerHTML=[...fItems,...fItems].join('')||'<div class="ti"><span class="tn">Loading…</span></div>';
 }
-
 /* ── LOAD ALL ── */
 const DATA={};
 async function loadAll(){
