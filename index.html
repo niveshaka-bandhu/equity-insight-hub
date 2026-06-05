@@ -284,6 +284,25 @@ function renderDashboard(rows){
   Rows 42-43(idx 42-43): col[0]=Date col[1]=Net FII col[2]=Net DII
   */
 
+  // Confirmed from sheet screenshots:
+  // Row 1 (idx 0): ET Top header
+  // Rows 2-6 (idx 1-5): ET Top news
+  // Row 7 (idx 6): ET Recent header
+  // Rows 8-12 (idx 7-11): ET Recent news
+  // Row 13 (idx 12): LM Company header
+  // Rows 14-18 (idx 13-17): LM Company news
+  // Row 19 (idx 18): LM Market header
+  // Rows 20-24 (idx 19-23): LM Market news
+  // Row 25 (idx 24): Indian Indices header
+  // Row 26 (idx 25): column headers — skip
+  // Rows 27-34 (idx 26-33): Indian Indices data
+  // Row 35 (idx 34): Global Indices header
+  // Row 36 (idx 35): column headers — skip
+  // Rows 37-41 (idx 36-40): Global Indices data
+  // Row 42 (idx 41): FII/DII headers — skip
+  // Rows 43-44 (idx 42-43): FII/DII data
+  // col[0]=A col[1]=B col[2]=C col[3]=D
+
   const etTop     = rows.slice(1,  6).filter(r=>r[0]&&r[0].trim());
   const etRecent  = rows.slice(7,  12).filter(r=>r[0]&&r[0].trim());
   const lmCompany = rows.slice(13, 18).filter(r=>r[0]&&r[0].trim());
@@ -316,7 +335,7 @@ function renderDashboard(rows){
     <td><strong>${f(r[0])}</strong></td>
     <td>${f(r[1])}</td>
     <td class="${ic(r[2])}">${f(r[2])}</td>
-    <td class="${ic(r[3])}">${f(r[3])}%</td>
+    <td class="${ic(r[3])}">${f(r[3])}</td>
   </tr>`;
 
   $('s-dashboard').innerHTML=`
