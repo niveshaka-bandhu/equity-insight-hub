@@ -284,7 +284,7 @@ function renderDashboard(rows){
   Rows 42-43(idx 42-43): col[0]=Date col[1]=Net FII col[2]=Net DII
   */
 
-  // gviz skips single-cell rows (section headers) — find sections dynamically
+  console.log('Dashboard rows:', rows.length, rows.map((r,i)=>`[${i}]${r[0]||''}|${r[1]||''}`).join(' || '));
   function findSection(keyword){
     return rows.findIndex(r=>(r[0]||'').toLowerCase().includes(keyword.toLowerCase()));
   }
