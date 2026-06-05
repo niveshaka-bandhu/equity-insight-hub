@@ -284,32 +284,33 @@ function renderDashboard(rows){
   Rows 42-43(idx 42-43): col[0]=Date col[1]=Net FII col[2]=Net DII
   */
 
-  // Confirmed from sheet screenshots:
-  // Row 1 (idx 0): ET Top header
-  // Rows 2-6 (idx 1-5): ET Top news
-  // Row 7 (idx 6): ET Recent header
-  // Rows 8-12 (idx 7-11): ET Recent news
-  // Row 13 (idx 12): LM Company header
-  // Rows 14-18 (idx 13-17): LM Company news
-  // Row 19 (idx 18): LM Market header
-  // Rows 20-24 (idx 19-23): LM Market news
-  // Row 25 (idx 24): Indian Indices header
-  // Row 26 (idx 25): column headers — skip
-  // Rows 27-34 (idx 26-33): Indian Indices data
-  // Row 35 (idx 34): Global Indices header
-  // Row 36 (idx 35): column headers — skip
-  // Rows 37-41 (idx 36-40): Global Indices data
-  // Row 42 (idx 41): FII/DII headers — skip
-  // Rows 43-44 (idx 42-43): FII/DII data
-  // col[0]=A col[1]=B col[2]=C col[3]=D
+  // gviz skips single-cell rows (section headers) — find sections dynamically
+  function findSection(keyword){
+    return rows.findIndex(r=>(r[0]||'').toLowerCase().includes(keyword.toLowerCase()));
+  }
 
-  const etTop     = rows.slice(1,  6).filter(r=>r[0]&&r[0].trim());
-  const etRecent  = rows.slice(7,  12).filter(r=>r[0]&&r[0].trim());
-  const lmCompany = rows.slice(13, 18).filter(r=>r[0]&&r[0].trim());
-  const lmMarket  = rows.slice(19, 24).filter(r=>r[0]&&r[0].trim());
-  const indIdx    = rows.slice(26, 34).filter(r=>r[0]&&r[0].trim());
-  const glbIdx    = rows.slice(36, 41).filter(r=>r[0]&&r[0].trim());
-  const fiiDii    = rows.slice(42, 44).filter(r=>r[0]&&r[0].trim());
+  const etTopIdx     = findSection('Economic times Top');
+  const etRecentIdx  = findSection('Economic times Recent');
+  const lmCompanyIdx = findSection('Livemint Company');
+  const lmMarketIdx  = findSection('Livemint Market');
+  const indIdxHdr    = findSection('Indian Indices');
+  const glbIdxHdr    = findSection('Global Indices');
+  const fiiHdr       = findSection('Date');
+
+  // Data = rows after header, stop before next section
+  const getNews = (start, end) => start<0?[]:rows.slice(start+1, end>0?end:start+6)
+    .filter(r=>r[0]&&r[0].trim()&&r[1]&&r[1].includes('http'));
+
+  const getIdx = (start) => start<0?[]:rows.slice(start+2, start+12)
+    .filter(r=>r[0]&&r[0].trim()&&r[1]&&!isNaN(parseFloat(String(r[1]).replace(/,/g,''))));
+
+  const etTop     = getNews(etTopIdx,  etRecentIdx);
+  const etRecent  = getNews(etRecentIdx, lmCompanyIdx);
+  const lmCompany = getNews(lmCompanyIdx, lmMarketIdx);
+  const lmMarket  = getNews(lmMarketIdx, indIdxHdr);
+  const indIdx    = getIdx(indIdxHdr);
+  const glbIdx    = getIdx(glbIdxHdr);
+  const fiiDii    = fiiHdr>=0 ? rows.slice(fiiHdr+1, fiiHdr+3).filter(r=>r[0]&&r[0].trim()&&r[0]!=='Date') : [];
 
   // News section: col[0]=headline col[1]=url col[2]=time
   const newsBlock = (title, icon, items, color) => `
