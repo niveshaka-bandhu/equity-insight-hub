@@ -1123,17 +1123,23 @@ function buildTicker(gRows,fRows){
 const DATA={};
 async function loadAll(){
   const btn=$('rbtn'); btn.textContent='⟳ Loading…'; btn.disabled=true;
-  // Load ONLY Global on start for fast initial load
-  try{DATA.global=await fetchSheet(GIDS.global);}catch(e){console.warn('global',e.message);}
-  if(DATA.global?.length) try{renderGlobal(DATA.global);}catch(e){console.error('Global',e);}
-  try{buildTicker(DATA.global||[],[]);}catch(e){}
+  // Load Dashboard, Global and Futures in parallel on start
+  await Promise.allSettled([
+    fetchSheet(GIDS.dashboard).then(d=>{DATA.dashboard=d;}).catch(e=>console.warn('dashboard',e.message)),
+    fetchSheet(GIDS.global).then(d=>{DATA.global=d;}).catch(e=>console.warn('global',e.message)),
+    fetchSheet(GIDS.futures).then(d=>{DATA.futures=d;}).catch(e=>console.warn('futures',e.message)),
+  ]);
+  if(DATA.dashboard?.length) try{renderDashboard(DATA.dashboard);}catch(e){console.error('Dashboard',e);}
+  if(DATA.global?.length)    try{renderGlobal(DATA.global);}catch(e){console.error('Global',e);}
+  if(DATA.futures?.length)   try{renderFutures(DATA.futures);}catch(e){console.error('Futures',e);}
+  try{buildTicker(DATA.global||[], DATA.futures||[]);}catch(e){}
   const now=new Date();
   $('ts').textContent=`Live · Updated ${now.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'})} IST`;
   btn.textContent='⟳ Refresh'; btn.disabled=false;
 }
 
-// Track loaded tabs
-const LOADED={'dashboard':true,'global':false};
+// Track loaded tabs — dashboard, global, futures pre-loaded
+const LOADED={'dashboard':true,'global':true,'futures':true};
 
 async function loadTab(key){
   if(LOADED[key]) return; // already loaded
@@ -1149,13 +1155,13 @@ async function loadTab(key){
       renderCorporate();
     } else if(GIDS[key]){
       DATA[key]=await fetchSheet(GIDS[key]);
-      if(key==='futures')  renderFutures(DATA.futures||[]);
-      if(key==='indian')   renderIndian(DATA.indian||[]);
-      if(key==='market')   renderMarket(DATA.market||[]);
-      if(key==='ipo')      renderIPO(DATA.ipo||[]);
-      if(key==='currency') renderCurrency(DATA.currency||[]);
-      // Update ticker once futures loaded
-      if(key==='futures') buildTicker(DATA.global||[],DATA.futures||[]);
+      if(key==='dashboard') renderDashboard(DATA.dashboard||[]);
+      if(key==='futures')   renderFutures(DATA.futures||[]);
+      if(key==='futures')   buildTicker(DATA.global||[],DATA.futures||[]);
+      if(key==='indian')    renderIndian(DATA.indian||[]);
+      if(key==='market')    renderMarket(DATA.market||[]);
+      if(key==='ipo')       renderIPO(DATA.ipo||[]);
+      if(key==='currency')  renderCurrency(DATA.currency||[]);
     }
   } catch(e){ console.error(key,e); }
 }
