@@ -266,56 +266,52 @@ const MKT_TH3=`<thead><tr><th>Company</th><th>Price ₹</th><th>% Chg</th></tr><
 
 function renderDashboard(rows){
   /*
-  Dashboard sheet (GID 236316251) structure:
-  Row 0  (idx 0):  "Economic times Top stories" — section header
-  Rows 1-5  (idx 1-5):   ET Top stories: [0]=Title [1]=URL [2]=Date
-  Row 6  (idx 6):  "Economic times Recent Stories"
-  Rows 7-11 (idx 7-11):  ET Recent: [0]=Title [1]=URL [2]=Date
-  Row 12 (idx 12): "Livemint Company News"
-  Rows 13-17(idx 13-17): Livemint Company: [0]=Title [1]=URL [2]=Date
-  Row 18 (idx 18): "Livemint Market News"
-  Rows 19-23(idx 19-23): Livemint Market: [0]=Title [1]=URL [2]=Date
-  Row 24 (idx 24): "Indian Indices"
-  Row 25 (idx 25): headers
-  Rows 26-33(idx 26-33): Indian Indices: [0]=Index [1]=Price [2]=Change [3]=%Chg
-  Row 34 (idx 34): "Global Indices"
-  Row 35 (idx 35): headers
-  Rows 36-40(idx 36-40): Global Indices: [0]=Index [1]=Price [2]=Change [3]=%Chg
-  Row 41 (idx 41): FII/DII headers: [0]=Date [1]=Net FII [2]=Net DII
-  Rows 42-43(idx 42-43): FII/DII data
+  Row 0  (idx 0):  "Economic times Top stories" header
+  Rows 1-5  (idx 1-5):   col[0]=Title  col[1]=URL  col[2]=Date
+  Row 6  (idx 6):  "Economic times Recent Stories" header
+  Rows 7-11 (idx 7-11):  col[0]=Title  col[1]=URL  col[2]=Date
+  Row 12 (idx 12): "Livemint Company News" header
+  Rows 13-17(idx 13-17): col[0]=Title  col[1]=URL  col[2]=Date
+  Row 18 (idx 18): "Livemint Market News" header
+  Rows 19-23(idx 19-23): col[0]=Title  col[1]=URL  col[2]=Date
+  Row 24 (idx 24): "Indian Indices" header
+  Row 25 (idx 25): column headers
+  Rows 26-33(idx 26-33): col[0]=Index col[1]=Price col[2]=Change col[3]=%Chg
+  Row 34 (idx 34): "Global Indices" header
+  Row 35 (idx 35): column headers
+  Rows 36-40(idx 36-40): col[0]=Index col[1]=Price col[2]=Change col[3]=%Chg
+  Row 41 (idx 41): FII/DII headers
+  Rows 42-43(idx 42-43): col[0]=Date col[1]=Net FII col[2]=Net DII
   */
 
-  // News sections
   const etTop     = rows.slice(1,  6).filter(r=>r[0]&&r[0].trim());
   const etRecent  = rows.slice(7,  12).filter(r=>r[0]&&r[0].trim());
   const lmCompany = rows.slice(13, 18).filter(r=>r[0]&&r[0].trim());
   const lmMarket  = rows.slice(19, 24).filter(r=>r[0]&&r[0].trim());
+  const indIdx    = rows.slice(26, 34).filter(r=>r[0]&&r[0].trim());
+  const glbIdx    = rows.slice(36, 41).filter(r=>r[0]&&r[0].trim());
+  const fiiDii    = rows.slice(42, 44).filter(r=>r[0]&&r[0].trim());
 
-  // Indices
-  const indIndices = rows.slice(26, 34).filter(r=>r[0]&&r[0].trim());
-  const glbIndices = rows.slice(36, 41).filter(r=>r[0]&&r[0].trim());
-
-  // FII/DII
-  const fiiDii = rows.slice(42, 44).filter(r=>r[0]&&r[0].trim());
-
-  // News card builder
-  const newsSection = (title, icon, items, color) => `
+  // News section: col[0]=headline col[1]=url col[2]=time
+  const newsBlock = (title, icon, items, color) => `
     <div class="tcw">
       <div class="tch" style="color:${color}">${icon} ${title}</div>
-      <div style="padding:4px 0">
+      <div>
         ${items.map(r=>`
-          <div style="padding:10px 14px;border-bottom:1px solid #f5f5f5;display:flex;justify-content:space-between;align-items:flex-start;gap:12px">
-            <a href="${r[1]||'#'}" target="_blank" rel="noopener"
-               style="font-size:12px;font-weight:500;color:#1a1a1a;text-decoration:none;line-height:1.5;flex:1"
-               onmouseover="this.style.color='var(--mc)'" onmouseout="this.style.color='#1a1a1a'">
+          <div style="padding:10px 14px;border-bottom:1px solid #f5f5f5">
+            <a href="${(r[1]||'').trim()}" target="_blank" rel="noopener"
+               style="font-size:12.5px;font-weight:500;color:#1a1a1a;text-decoration:none;line-height:1.5;display:block"
+               onmouseover="this.style.color='var(--mc)'"
+               onmouseout="this.style.color='#1a1a1a'">
               ${f(r[0])}
             </a>
-            <span style="font-size:10px;color:#aaa;white-space:nowrap;flex-shrink:0">${formatDate(r[2]||'')}</span>
+            <div style="font-size:10px;color:#aaa;margin-top:3px">${formatNewsDate(r[2]||'')}</div>
           </div>`).join('')}
       </div>
     </div>`;
 
-  // Index table row
+  // Index table
+  const idxTH = `<thead><tr><th>Index</th><th>Price</th><th>Change</th><th>% Chg</th></tr></thead>`;
   const idxRow = r => `<tr>
     <td><strong>${f(r[0])}</strong></td>
     <td>${f(r[1])}</td>
@@ -323,24 +319,20 @@ function renderDashboard(rows){
     <td class="${ic(r[3])}">${f(r[3])}%</td>
   </tr>`;
 
-  const idxTH = `<thead><tr><th>Index</th><th>Price</th><th>Change</th><th>% Chg</th></tr></thead>`;
-
   $('s-dashboard').innerHTML=`
     <div class="stitle">📊 Dashboard</div>
 
-    <!-- Indices row -->
     <div class="g2">
       <div class="tcw">
         <div class="tch" style="color:#0d47a1">🇮🇳 Indian Indices</div>
-        <div class="tscr"><table>${idxTH}<tbody>${indIndices.map(idxRow).join('')}</tbody></table></div>
+        <div class="tscr"><table>${idxTH}<tbody>${indIdx.map(idxRow).join('')}</tbody></table></div>
       </div>
       <div class="tcw">
         <div class="tch" style="color:#0d47a1">🌍 Global Indices</div>
-        <div class="tscr"><table>${idxTH}<tbody>${glbIndices.map(idxRow).join('')}</tbody></table></div>
+        <div class="tscr"><table>${idxTH}<tbody>${glbIdx.map(idxRow).join('')}</tbody></table></div>
       </div>
     </div>
 
-    <!-- FII/DII -->
     ${fiiDii.length?`<div class="tcw">
       <div class="tch" style="color:#6a1b9a">💹 FII / DII Activity</div>
       <div class="tscr"><table>
@@ -353,18 +345,17 @@ function renderDashboard(rows){
       </table></div>
     </div>`:''}
 
-    <!-- News in 2 columns -->
     <div class="g2">
-      ${newsSection('ET Top Stories','📰', etTop,'#c0392b')}
-      ${newsSection('ET Recent Stories','🗞️', etRecent,'#e07b00')}
+      ${newsBlock('ET Top Stories','📰',etTop,'#c0392b')}
+      ${newsBlock('ET Recent Stories','🗞️',etRecent,'#e07b00')}
     </div>
     <div class="g2">
-      ${newsSection('Livemint Company News','🏢', lmCompany,'#0d47a1')}
-      ${newsSection('Livemint Market News','📈', lmMarket,'#1a7a4a')}
+      ${newsBlock('Livemint Company News','🏢',lmCompany,'#0d47a1')}
+      ${newsBlock('Livemint Market News','📈',lmMarket,'#1a7a4a')}
     </div>`;
 }
 
-function formatDate(d){
+function formatNewsDate(d){
   if(!d) return '';
   try{
     const dt=new Date(d);
@@ -1142,7 +1133,7 @@ async function loadAll(){
 }
 
 // Track loaded tabs
-const LOADED={'dashboard':true};
+const LOADED={'dashboard':true,'global':false};
 
 async function loadTab(key){
   if(LOADED[key]) return; // already loaded
