@@ -1021,10 +1021,13 @@ function buildTicker(gRows,fRows){
 const DATA={};
 async function loadAll(){
   const btn=$('rbtn'); btn.textContent='⟳ Loading…'; btn.disabled=true;
-  // Load ONLY Global on start for fast initial load
-  try{DATA.global=await fetchSheet(GIDS.global);}catch(e){console.warn('global',e.message);}
-  if(DATA.global?.length) try{renderGlobal(DATA.global);}catch(e){console.error('Global',e);}
-  try{buildTicker(DATA.global||[],[]);}catch(e){}
+  // Load Global and Futures together on start
+await Promise.allSettled([
+  fetchSheet(GIDS.global).then(d=>{DATA.global=d;}).catch(e=>console.warn('global',e.message)),
+  fetchSheet(GIDS.futures).then(d=>{DATA.futures=d;LOADED['futures']=true;}).catch(e=>console.warn('futures',e.message)),
+]);
+if(DATA.global?.length)  try{renderGlobal(DATA.global);}catch(e){console.error('Global',e);}
+try{buildTicker(DATA.global||[], DATA.futures||[]);}catch(e){}
   const now=new Date();
   $('ts').textContent=`Live · Updated ${now.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'})} IST`;
   btn.textContent='⟳ Refresh'; btn.disabled=false;
