@@ -1024,7 +1024,7 @@ async function loadAll(){
   // Load Global and Futures together on start
 await Promise.allSettled([
   fetchSheet(GIDS.global).then(d=>{DATA.global=d;}).catch(e=>console.warn('global',e.message)),
-  fetchSheet(GIDS.futures).then(d=>{DATA.futures=d;LOADED['futures']=true;}).catch(e=>console.warn('futures',e.message)),
+  fetchSheet(GIDS.futures).then(d=>{DATA.futures=d;LOADED['futures']=true;if(d?.length)renderFutures(d);}).catch(e=>console.warn('futures',e.message)),
 ]);
 if(DATA.global?.length)  try{renderGlobal(DATA.global);}catch(e){console.error('Global',e);}
 try{buildTicker(DATA.global||[], DATA.futures||[]);}catch(e){}
