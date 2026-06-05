@@ -284,36 +284,24 @@ function renderDashboard(rows){
   Rows 42-43(idx 42-43): col[0]=Date col[1]=Net FII col[2]=Net DII
   */
 
-  console.log('Dashboard rows:', rows.length, rows.map((r,i)=>`[${i}]${r[0]||''}|${r[1]||''}`).join(' || '));
-  function findSection(keyword){
-    return rows.findIndex(r=>(r[0]||'').toLowerCase().includes(keyword.toLowerCase()));
-  }
+  /* CONFIRMED from console debug - gviz returns 18 rows, skips all news/header rows:
+     [0-7]   = Indian Indices (NIFTY50, SENSEX, BANK, AUTO, ENERGY, IT, METAL, PHARMA)
+     [8]     = "Global Indices" header (kept because col B has value)
+     [9]     = "Index" column header
+     [10-14] = Global Indices data
+     [15]    = "Date" FII header
+     [16-17] = FII/DII data
+     News rows completely skipped by gviz (IMPORTFEED/single-col rows)
+  */
+  const indIdx = rows.slice(0,  8).filter(r=>r[0]&&r[0].trim()&&r[1]&&!isNaN(parseFloat(String(r[1]).replace(/,/g,''))));
+  const glbIdx = rows.slice(10, 15).filter(r=>r[0]&&r[0].trim()&&r[1]&&!isNaN(parseFloat(String(r[1]).replace(/,/g,''))));
+  const fiiDii = rows.slice(16, 18).filter(r=>r[0]&&r[0].trim());
 
-  const etTopIdx     = findSection('Economic times Top');
-  const etRecentIdx  = findSection('Economic times Recent');
-  const lmCompanyIdx = findSection('Livemint Company');
-  const lmMarketIdx  = findSection('Livemint Market');
-  const indIdxHdr    = findSection('Indian Indices');
-  const glbIdxHdr    = findSection('Global Indices');
-  const fiiHdr       = findSection('Date');
-
-  // Data = rows after header, stop before next section
-  const getNews = (start, end) => start<0?[]:rows.slice(start+1, end>0?end:start+6)
-    .filter(r=>r[0]&&r[0].trim()&&r[1]&&r[1].includes('http'));
-
-  const getIdx = (start) => start<0?[]:rows.slice(start+2, start+12)
-    .filter(r=>r[0]&&r[0].trim()&&r[1]&&!isNaN(parseFloat(String(r[1]).replace(/,/g,''))));
-
-  const etTop     = getNews(etTopIdx,  etRecentIdx);
-  const etRecent  = getNews(etRecentIdx, lmCompanyIdx);
-  const lmCompany = getNews(lmCompanyIdx, lmMarketIdx);
-  const lmMarket  = getNews(lmMarketIdx, indIdxHdr);
-  const indIdx    = getIdx(indIdxHdr);
-  const glbIdx    = getIdx(glbIdxHdr);
-  const fiiDii    = fiiHdr>=0 ? rows.slice(fiiHdr+1, fiiHdr+3).filter(r=>r[0]&&r[0].trim()&&r[0]!=='Date') : [];
+  // News skipped by gviz — empty arrays
+  const etTop = [], etRecent = [], lmCompany = [], lmMarket = [];
 
   // News section: col[0]=headline col[1]=url col[2]=time
-  const newsBlock = (title, icon, items, color) => `
+  const newsBlock = (title, icon, items, color) => items.length===0 ? '' : `
     <div class="tcw">
       <div class="tch" style="color:${color}">${icon} ${title}</div>
       <div>
