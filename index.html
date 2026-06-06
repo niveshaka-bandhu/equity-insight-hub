@@ -307,45 +307,59 @@ function renderDashboard(rows){
     {key:'lmMarket',  url:'https://www.livemint.com/rss/markets',                       color:'#1a7a4a'},
   ];
 
-  // Parse RSS XML text into items array
+  // Fetch news with multiple proxy fallbacks
+  async function fetchRSS(url){
+    const proxies=[
+      `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`,
+      `https://corsproxy.io/?${encodeURIComponent(url)}`,
+      `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`,
+    ];
+    for(const proxy of proxies){
+      try{
+        const res=await fetch(proxy,{signal:AbortSignal.timeout(8000)});
+        if(!res.ok) continue;
+        const text=proxy.includes('allorigins')?
+          (await res.json()).contents :
+          await res.text();
+        if(text&&text.includes('<item>')) return text;
+      }catch(e){continue;}
+    }
+    return null;
+  }
+
   function parseRSS(xml){
     const items=[];
-    const parser=new DOMParser();
-    const doc=parser.parseFromString(xml,'text/xml');
-    doc.querySelectorAll('item').forEach(item=>{
-      items.push({
-        title: item.querySelector('title')?.textContent?.trim()||'',
-        link:  item.querySelector('link')?.textContent?.trim()||
-               item.querySelector('guid')?.textContent?.trim()||'#',
-        date:  item.querySelector('pubDate')?.textContent?.trim()||'',
+    try{
+      const parser=new DOMParser();
+      const doc=parser.parseFromString(xml,'text/xml');
+      doc.querySelectorAll('item').forEach(item=>{
+        const title=item.querySelector('title')?.textContent?.replace(/<!\[CDATA\[|\]\]>/g,'')?.trim()||'';
+        const link=item.querySelector('link')?.textContent?.trim()||
+                   item.querySelector('guid')?.textContent?.trim()||'#';
+        const date=item.querySelector('pubDate')?.textContent?.trim()||'';
+        if(title) items.push({title,link,date});
       });
-    });
+    }catch(e){}
     return items.slice(0,5);
   }
 
-  // Fetch using allorigins CORS proxy
   NEWS_FEEDS.forEach(async feed=>{
     const el=document.getElementById('news-'+feed.key);
     if(!el) return;
-    try{
-      const proxy='https://api.allorigins.win/get?url='+encodeURIComponent(feed.url);
-      const res=await fetch(proxy);
-      const data=await res.json();
-      const items=parseRSS(data.contents||'');
-      if(!items.length){el.innerHTML='<div class="news-loading">No news available</div>';return;}
-      el.innerHTML=items.map(item=>`
-        <div style="padding:10px 14px;border-bottom:1px solid #f5f5f5">
-          <a href="${item.link}" target="_blank" rel="noopener"
-             style="font-size:12.5px;font-weight:500;color:#1a1a1a;text-decoration:none;line-height:1.5;display:block"
-             onmouseover="this.style.color='var(--mc)'"
-             onmouseout="this.style.color='#1a1a1a'">
-            ${item.title}
-          </a>
-          <div style="font-size:10px;color:#aaa;margin-top:3px">${formatNewsDate(item.date)}</div>
-        </div>`).join('');
-    }catch(e){
-      el.innerHTML='<div class="news-loading">Could not load news</div>';
-    }
+    const xml=await fetchRSS(feed.url);
+    if(!xml){el.innerHTML='<div class="news-loading">Could not load news</div>';return;}
+    const items=parseRSS(xml);
+    if(!items.length){el.innerHTML='<div class="news-loading">No news available</div>';return;}
+    el.innerHTML=items.map(item=>`
+      <div style="padding:10px 14px;border-bottom:1px solid #f5f5f5">
+        <a href="${item.link}" target="_blank" rel="noopener"
+           style="font-size:12.5px;font-weight:500;color:#1a1a1a;text-decoration:none;line-height:1.5;display:block"
+           onmouseover="this.style.color='var(--mc)'"
+           onmouseout="this.style.color='#1a1a1a'">
+          ${item.title}
+        </a>
+        <div style="font-size:10px;color:#aaa;margin-top:3px">${formatNewsDate(item.date)}</div>
+      </div>`).join('');
   });
 
   // News section: col[0]=headline col[1]=url col[2]=time
