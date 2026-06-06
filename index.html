@@ -300,42 +300,51 @@ function renderDashboard(rows){
   const fiiDii = rows.slice(16, 18).filter(r=>r[0]&&r[0].trim());
 
   // Fetch news via RSS2JSON proxy (no CORS issues)
-  const RSS_PROXY = 'https://api.rss2json.com/v1/api.json?rss_url=';
   const NEWS_FEEDS = [
-    {key:'etTop',     url:'https://cfo.economictimes.indiatimes.com/rss/topstories',    title:'ET Top Stories',       icon:'📰', color:'#c0392b'},
-    {key:'etRecent',  url:'https://cfo.economictimes.indiatimes.com/rss/recentstories', title:'ET Recent Stories',    icon:'🗞️', color:'#e07b00'},
-    {key:'lmCompany', url:'https://www.livemint.com/rss/companies',                     title:'Livemint Company News',icon:'🏢', color:'#0d47a1'},
-    {key:'lmMarket',  url:'https://www.livemint.com/rss/markets',                       title:'Livemint Market News', icon:'📈', color:'#1a7a4a'},
+    {key:'etTop',     url:'https://cfo.economictimes.indiatimes.com/rss/topstories',    color:'#c0392b'},
+    {key:'etRecent',  url:'https://cfo.economictimes.indiatimes.com/rss/recentstories', color:'#e07b00'},
+    {key:'lmCompany', url:'https://www.livemint.com/rss/companies',                     color:'#0d47a1'},
+    {key:'lmMarket',  url:'https://www.livemint.com/rss/markets',                       color:'#1a7a4a'},
   ];
 
-  // Show loading placeholders
-  NEWS_FEEDS.forEach(feed=>{
-    const el = document.getElementById('news-'+feed.key);
-    if(el) el.innerHTML = '<div class="news-loading">Loading news…</div>';
-  });
+  // Parse RSS XML text into items array
+  function parseRSS(xml){
+    const items=[];
+    const parser=new DOMParser();
+    const doc=parser.parseFromString(xml,'text/xml');
+    doc.querySelectorAll('item').forEach(item=>{
+      items.push({
+        title: item.querySelector('title')?.textContent?.trim()||'',
+        link:  item.querySelector('link')?.textContent?.trim()||
+               item.querySelector('guid')?.textContent?.trim()||'#',
+        date:  item.querySelector('pubDate')?.textContent?.trim()||'',
+      });
+    });
+    return items.slice(0,5);
+  }
 
-  // Fetch all feeds in parallel
+  // Fetch using allorigins CORS proxy
   NEWS_FEEDS.forEach(async feed=>{
+    const el=document.getElementById('news-'+feed.key);
+    if(!el) return;
     try{
-      const res = await fetch(RSS_PROXY + encodeURIComponent(feed.url) + '&count=5');
-      const data = await res.json();
-      const items = (data.items||[]).slice(0,5);
-      const el = document.getElementById('news-'+feed.key);
-      if(!el) return;
-      if(!items.length){ el.innerHTML='<div class="news-loading">No news available</div>'; return; }
-      el.innerHTML = items.map(item=>`
+      const proxy='https://api.allorigins.win/get?url='+encodeURIComponent(feed.url);
+      const res=await fetch(proxy);
+      const data=await res.json();
+      const items=parseRSS(data.contents||'');
+      if(!items.length){el.innerHTML='<div class="news-loading">No news available</div>';return;}
+      el.innerHTML=items.map(item=>`
         <div style="padding:10px 14px;border-bottom:1px solid #f5f5f5">
-          <a href="${item.link||'#'}" target="_blank" rel="noopener"
+          <a href="${item.link}" target="_blank" rel="noopener"
              style="font-size:12.5px;font-weight:500;color:#1a1a1a;text-decoration:none;line-height:1.5;display:block"
              onmouseover="this.style.color='var(--mc)'"
              onmouseout="this.style.color='#1a1a1a'">
-            ${item.title||''}
+            ${item.title}
           </a>
-          <div style="font-size:10px;color:#aaa;margin-top:3px">${formatNewsDate(item.pubDate||'')}</div>
+          <div style="font-size:10px;color:#aaa;margin-top:3px">${formatNewsDate(item.date)}</div>
         </div>`).join('');
     }catch(e){
-      const el = document.getElementById('news-'+feed.key);
-      if(el) el.innerHTML='<div class="news-loading">Could not load news</div>';
+      el.innerHTML='<div class="news-loading">Could not load news</div>';
     }
   });
 
@@ -368,7 +377,16 @@ function renderDashboard(rows){
 
   $('s-dashboard').innerHTML=`
     <div class="stitle">📊 Dashboard</div>
-
+    <!-- NEWS FIRST -->
+    <div class="g2">
+      <div class="tcw"><div class="tch" style="color:#c0392b">📰 ET Top Stories</div><div id="news-etTop"><div class="news-loading">Loading…</div></div></div>
+      <div class="tcw"><div class="tch" style="color:#e07b00">🗞️ ET Recent Stories</div><div id="news-etRecent"><div class="news-loading">Loading…</div></div></div>
+    </div>
+    <div class="g2">
+      <div class="tcw"><div class="tch" style="color:#0d47a1">🏢 Livemint Company News</div><div id="news-lmCompany"><div class="news-loading">Loading…</div></div></div>
+      <div class="tcw"><div class="tch" style="color:#1a7a4a">📈 Livemint Market News</div><div id="news-lmMarket"><div class="news-loading">Loading…</div></div></div>
+    </div>
+    <!-- INDICES -->
     <div class="g2">
       <div class="tcw">
         <div class="tch" style="color:#0d47a1">🇮🇳 Indian Indices</div>
@@ -390,16 +408,7 @@ function renderDashboard(rows){
           <td class="${ic(r[2])}">${f(r[2])}</td>
         </tr>`).join('')}</tbody>
       </table></div>
-    </div>`:''}
-
-    <div class="g2">
-      <div class="tcw"><div class="tch" style="color:#c0392b">📰 ET Market News</div><div id="news-etTop"><div class="news-loading">Loading…</div></div></div>
-      <div class="tcw"><div class="tch" style="color:#e07b00">🗞️ ET Economy News</div><div id="news-etRecent"><div class="news-loading">Loading…</div></div></div>
-    </div>
-    <div class="g2">
-      <div class="tcw"><div class="tch" style="color:#0d47a1">🏢 Livemint Company News</div><div id="news-lmCompany"><div class="news-loading">Loading…</div></div></div>
-      <div class="tcw"><div class="tch" style="color:#1a7a4a">📈 Livemint Market News</div><div id="news-lmMarket"><div class="news-loading">Loading…</div></div></div>
-    </div>`;
+    </div>`:''}`;
 }
 
 function formatNewsDate(d){
