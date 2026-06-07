@@ -292,6 +292,7 @@ function renderDashboard(rows){
      Index rows: col[0]=name, col[1]=numeric price
      FII rows: col[0]=date (contains 2026), col[1]=Net FII, col[2]=Net DII
   */
+  console.log('DB rows:',rows.length, rows.slice(0,5).map((r,i)=>`[${i}]${r[0]?.substring(0,20)}|${r[1]?.substring(0,20)}|${r[2]?.substring(0,15)}`).join(' || '));
   const newsRows  = rows.filter(r=>(r[1]||'').includes('http')&&r[0]&&r[0].trim());
   const idxRows   = rows.filter(r=>r[0]&&r[0].trim()&&r[1]&&!isNaN(parseFloat(String(r[1]).replace(/,/g,'')))&&!(r[0]||'').includes('2026'));
   const fiiDii    = rows.filter(r=>r[0]&&(r[0].includes('2026')||r[0].includes('-06-'))&&r[1]&&!isNaN(parseFloat(String(r[1]).replace(/,/g,''))));
