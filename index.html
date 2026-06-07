@@ -286,100 +286,46 @@ function renderDashboard(rows){
   Rows 42-43(idx 42-43): col[0]=Date col[1]=Net FII col[2]=Net DII
   */
 
-  /* CONFIRMED from console debug - gviz returns 18 rows, skips all news/header rows:
-     [0-7]   = Indian Indices (NIFTY50, SENSEX, BANK, AUTO, ENERGY, IT, METAL, PHARMA)
-     [8]     = "Global Indices" header (kept because col B has value)
-     [9]     = "Index" column header
-     [10-14] = Global Indices data
-     [15]    = "Date" FII header
-     [16-17] = FII/DII data
-     News rows completely skipped by gviz (IMPORTFEED/single-col rows)
+  /* Sheet has news in IMPORTFEED rows — gviz returns them when sheet is loaded.
+     Detect by col[1] containing URL (http).
+     News rows: col[0]=Title, col[1]=URL, col[2]=Date
+     Index rows: col[0]=name, col[1]=numeric price
+     FII rows: col[0]=date (contains 2026), col[1]=Net FII, col[2]=Net DII
   */
-  const indIdx = rows.slice(0,  8).filter(r=>r[0]&&r[0].trim()&&r[1]&&!isNaN(parseFloat(String(r[1]).replace(/,/g,''))));
-  const glbIdx = rows.slice(10, 15).filter(r=>r[0]&&r[0].trim()&&r[1]&&!isNaN(parseFloat(String(r[1]).replace(/,/g,''))));
-  const fiiDii = rows.slice(16, 18).filter(r=>r[0]&&r[0].trim());
+  const newsRows  = rows.filter(r=>(r[1]||'').includes('http')&&r[0]&&r[0].trim());
+  const idxRows   = rows.filter(r=>r[0]&&r[0].trim()&&r[1]&&!isNaN(parseFloat(String(r[1]).replace(/,/g,'')))&&!(r[0]||'').includes('2026'));
+  const fiiDii    = rows.filter(r=>r[0]&&(r[0].includes('2026')||r[0].includes('-06-'))&&r[1]&&!isNaN(parseFloat(String(r[1]).replace(/,/g,''))));
 
-  // Fetch news via RSS2JSON proxy (no CORS issues)
-  const NEWS_FEEDS = [
-    {key:'etTop',     url:'https://cfo.economictimes.indiatimes.com/rss/topstories',    color:'#c0392b'},
-    {key:'etRecent',  url:'https://cfo.economictimes.indiatimes.com/rss/recentstories', color:'#e07b00'},
-    {key:'lmCompany', url:'https://www.livemint.com/rss/companies',                     color:'#0d47a1'},
-    {key:'lmMarket',  url:'https://www.livemint.com/rss/markets',                       color:'#1a7a4a'},
-  ];
+  // 4 sections of 5 news each
+  const etTop     = newsRows.slice(0,  5);
+  const etRecent  = newsRows.slice(5,  10);
+  const lmCompany = newsRows.slice(10, 15);
+  const lmMarket  = newsRows.slice(15, 20);
 
-  // Fetch news with multiple proxy fallbacks
-  async function fetchRSS(url){
-    const proxies=[
-      `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`,
-      `https://corsproxy.io/?${encodeURIComponent(url)}`,
-      `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`,
-    ];
-    for(const proxy of proxies){
-      try{
-        const res=await fetch(proxy,{signal:AbortSignal.timeout(8000)});
-        if(!res.ok) continue;
-        const text=proxy.includes('allorigins')?
-          (await res.json()).contents :
-          await res.text();
-        if(text&&text.includes('<item>')) return text;
-      }catch(e){continue;}
-    }
-    return null;
-  }
+  // Indices: first 8 = Indian, next 5 = Global
+  const indIdx    = idxRows.slice(0, 8);
+  const glbIdx    = idxRows.slice(8, 13);
 
-  function parseRSS(xml){
-    const items=[];
-    try{
-      const parser=new DOMParser();
-      const doc=parser.parseFromString(xml,'text/xml');
-      doc.querySelectorAll('item').forEach(item=>{
-        const title=item.querySelector('title')?.textContent?.replace(/<!\[CDATA\[|\]\]>/g,'')?.trim()||'';
-        const link=item.querySelector('link')?.textContent?.trim()||
-                   item.querySelector('guid')?.textContent?.trim()||'#';
-        const date=item.querySelector('pubDate')?.textContent?.trim()||'';
-        if(title) items.push({title,link,date});
-      });
-    }catch(e){}
-    return items.slice(0,5);
-  }
-
-  NEWS_FEEDS.forEach(async feed=>{
-    const el=document.getElementById('news-'+feed.key);
-    if(!el) return;
-    const xml=await fetchRSS(feed.url);
-    if(!xml){el.innerHTML='<div class="news-loading">Could not load news</div>';return;}
-    const items=parseRSS(xml);
-    if(!items.length){el.innerHTML='<div class="news-loading">No news available</div>';return;}
-    el.innerHTML=items.map(item=>`
-      <div style="padding:10px 14px;border-bottom:1px solid #f5f5f5">
-        <a href="${item.link}" target="_blank" rel="noopener"
-           style="font-size:12.5px;font-weight:500;color:#1a1a1a;text-decoration:none;line-height:1.5;display:block"
-           onmouseover="this.style.color='var(--mc)'"
-           onmouseout="this.style.color='#1a1a1a'">
-          ${item.title}
-        </a>
-        <div style="font-size:10px;color:#aaa;margin-top:3px">${formatNewsDate(item.date)}</div>
-      </div>`).join('');
-  });
-
-  // News section: col[0]=headline col[1]=url col[2]=time
-  const newsBlock = (title, icon, items, color) => items.length===0 ? '' : `
-    <div class="tcw">
+  // News block builder from sheet data
+  function newsBlock(title, icon, items, color, elId){
+    if(!items.length) return `<div class="tcw"><div class="tch" style="color:${color}">${icon} ${title}</div><div class="news-loading">No data</div></div>`;
+    return `<div class="tcw">
       <div class="tch" style="color:${color}">${icon} ${title}</div>
-      <div>
-        ${items.map(r=>`
-          <div style="padding:10px 14px;border-bottom:1px solid #f5f5f5">
-            <a href="${(r[1]||'').trim()}" target="_blank" rel="noopener"
-               style="font-size:12.5px;font-weight:500;color:#1a1a1a;text-decoration:none;line-height:1.5;display:block"
-               onmouseover="this.style.color='var(--mc)'"
-               onmouseout="this.style.color='#1a1a1a'">
-              ${f(r[0])}
-            </a>
-            <div style="font-size:10px;color:#aaa;margin-top:3px">${formatNewsDate(r[2]||'')}</div>
-          </div>`).join('')}
+      <div>${items.map(r=>`
+        <div style="padding:10px 14px;border-bottom:1px solid #f5f5f5">
+          <a href="${(r[1]||'').trim()}" target="_blank" rel="noopener"
+             style="font-size:12.5px;font-weight:500;color:#1a1a1a;text-decoration:none;line-height:1.5;display:block"
+             onmouseover="this.style.color='var(--mc)'"
+             onmouseout="this.style.color='#1a1a1a'">
+            ${f(r[0])}
+          </a>
+          <div style="font-size:10px;color:#aaa;margin-top:3px">${formatNewsDate(r[2]||'')}</div>
+        </div>`).join('')}
       </div>
     </div>`;
+  }
 
+  // News section: col[0]=headline col[1]=url col[2]=time
   // Index table
   const idxTH = `<thead><tr><th>Index</th><th>Price</th><th>Change</th><th>% Chg</th></tr></thead>`;
   const idxRow = r => `<tr>
@@ -393,12 +339,12 @@ function renderDashboard(rows){
     <div class="stitle">📊 Dashboard</div>
     <!-- NEWS FIRST -->
     <div class="g2">
-      <div class="tcw"><div class="tch" style="color:#c0392b">📰 ET Top Stories</div><div id="news-etTop"><div class="news-loading">Loading…</div></div></div>
-      <div class="tcw"><div class="tch" style="color:#e07b00">🗞️ ET Recent Stories</div><div id="news-etRecent"><div class="news-loading">Loading…</div></div></div>
+      ${newsBlock('ET Top Stories','📰',etTop,'#c0392b')}
+      ${newsBlock('ET Recent Stories','🗞️',etRecent,'#e07b00')}
     </div>
     <div class="g2">
-      <div class="tcw"><div class="tch" style="color:#0d47a1">🏢 Livemint Company News</div><div id="news-lmCompany"><div class="news-loading">Loading…</div></div></div>
-      <div class="tcw"><div class="tch" style="color:#1a7a4a">📈 Livemint Market News</div><div id="news-lmMarket"><div class="news-loading">Loading…</div></div></div>
+      ${newsBlock('Livemint Company News','🏢',lmCompany,'#0d47a1')}
+      ${newsBlock('Livemint Market News','📈',lmMarket,'#1a7a4a')}
     </div>
     <!-- INDICES -->
     <div class="g2">
