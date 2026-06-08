@@ -187,7 +187,7 @@ function fetchSheet(gid){
     window[cb]=data=>{clearTimeout(t);delete window[cb];try{res(toRows(data));}catch(e){rej(e);}};
     const s=document.createElement('script');
     s.onerror=()=>{clearTimeout(t);delete window[cb];rej(new Error('Load failed GID '+gid));};
-    s.src=`https://docs.google.com/spreadsheets/d/${SID}/gviz/tq?gid=${gid}&tqx=out:json;responseHandler:${cb}&t=${Date.now()}`;
+  s.src=`https://docs.google.com/spreadsheets/d/${SID}/gviz/tq?gid=${gid}&tq=select%20*&tqx=out:json;responseHandler:${cb}&t=${Date.now()}`;
     document.head.appendChild(s);
     s.onload=()=>{try{document.head.removeChild(s);}catch(e){}};
   });
