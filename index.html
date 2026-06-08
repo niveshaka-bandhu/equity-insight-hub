@@ -759,8 +759,9 @@ function renderIPO(rows){
 
   const listed  = rows.slice(1, gmpStart > 0 ? gmpStart : 22)
                       .filter(r => r[0]&&r[0].trim()&&r[0]!=='Company Name');
+  const gmpEnd  = rows.findIndex((r,i) => i > gmpStart && String(r[0]||'').trim()==='Company' && String(r[1]||'').includes('Issue Date'));
   const gmp     = gmpStart > 0
-                ? rows.slice(gmpStart+2, expertsStart > 0 ? expertsStart : gmpStart+15)
+                ? rows.slice(gmpStart+2, gmpEnd > 0 ? gmpEnd : gmpStart+15)
                       .filter(r => r[0]&&r[0].trim()&&r[0]!=='*IPO Name*')
                 : [];
   const expertsEnd = subsStart > 0 ? subsStart : expertsStart + 25;
@@ -774,11 +775,12 @@ function renderIPO(rows){
                 : [];
 
   // Issue Dates: rows between GMP end and Experts start
-  const datesBlock  = (gmpStart > 0 && expertsStart > 0)
-                ? rows.slice(gmpStart + 12, expertsStart)
-                      .map(r=>r[0]).filter(v=>v&&v.trim()&&v!=='Company')
-                : [];
-  const dates = datesBlock;
+  const datesHeaderIdx = rows.findIndex(r =>
+    String(r[0]||'').trim()==='Company' && String(r[1]||'').includes('Issue Date'));
+  const dates = datesHeaderIdx > 0
+    ? rows.slice(datesHeaderIdx+1, expertsStart > 0 ? expertsStart : datesHeaderIdx+15)
+          .map(r=>r[0]).filter(v=>v&&v.trim())
+    : [];
 
   const sbadge = s => {
     const l=(s||'').toLowerCase();
