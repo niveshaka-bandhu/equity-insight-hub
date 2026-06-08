@@ -174,7 +174,7 @@ footer a{color:#6ea8fe}
 
 <script>
 const SID='1xoUJqge0b4SQmZSRLZyoBBcokXrUrFVt8fBFoef28NQ';
-const GIDS={dashboard:236316251,global:572014590,futures:2063758158,indian:139113774,market:1259430707,ipo:536891537,currency:1847303228};
+const GIDS={dashboard:236316251,news:194974677,global:572014590,futures:2063758158,indian:139113774,market:1259430707,ipo:536891537,currency:1847303228};
 const SID2='1_7_7lctIPNdHjUd3wNp0hu6xMjqhG3Tw0fNJO_fxWJg';
 const CORP_GIDS={today:203302293,dividends:1718274952,bonus:1235071159,splits:1616300885,rights:1541450036};
 
@@ -266,7 +266,8 @@ const STOCK_TH=`<thead><tr><th>Company</th><th>Price ₹</th><th>Chg</th><th>%Ch
 const MKT_TH4=`<thead><tr><th>Company</th><th>Price ₹</th><th>Change</th><th>% Chg</th></tr></thead>`;
 const MKT_TH3=`<thead><tr><th>Company</th><th>Price ₹</th><th>% Chg</th></tr></thead>`;
 
-function renderDashboard(rows){
+function renderDashboard(rows, newsRows){
+  newsRows = newsRows || [];
   /*
   Row 0  (idx 0):  "Economic times Top stories" header
   Rows 1-5  (idx 1-5):   col[0]=Title  col[1]=URL  col[2]=Date
@@ -293,7 +294,7 @@ function renderDashboard(rows){
      FII rows: col[0]=date (contains 2026), col[1]=Net FII, col[2]=Net DII
   */
   console.log('DB rows:',rows.length, rows.slice(0,5).map((r,i)=>`[${i}]${r[0]?.substring(0,20)}|${r[1]?.substring(0,20)}|${r[2]?.substring(0,15)}`).join(' || '));
-  const newsRows  = rows.filter(r=>(r[1]||'').includes('http')&&r[0]&&r[0].trim());
+  if(!newsRows.length) newsRows = rows.filter(r=>(r[1]||'').includes('http')&&r[0]&&r[0].trim());
   const idxRows   = rows.filter(r=>r[0]&&r[0].trim()&&r[1]&&!isNaN(parseFloat(String(r[1]).replace(/,/g,'')))&&!(r[0]||'').includes('2026'));
   const fiiDii    = rows.filter(r=>r[0]&&(r[0].includes('2026')||r[0].includes('-06-'))&&r[1]&&!isNaN(parseFloat(String(r[1]).replace(/,/g,''))));
 
@@ -1143,10 +1144,11 @@ async function loadAll(){
   // Load Dashboard, Global and Futures in parallel on start
   await Promise.allSettled([
     fetchSheet(GIDS.dashboard).then(d=>{DATA.dashboard=d;}).catch(e=>console.warn('dashboard',e.message)),
+    fetchSheet(GIDS.news).then(d=>{DATA.news=d;}).catch(e=>console.warn('news',e.message)),
     fetchSheet(GIDS.global).then(d=>{DATA.global=d;}).catch(e=>console.warn('global',e.message)),
     fetchSheet(GIDS.futures).then(d=>{DATA.futures=d;}).catch(e=>console.warn('futures',e.message)),
   ]);
-  if(DATA.dashboard?.length) try{renderDashboard(DATA.dashboard);}catch(e){console.error('Dashboard',e);}
+  if(DATA.dashboard?.length) try{renderDashboard(DATA.dashboard, DATA.news||[]);}catch(e){console.error('Dashboard',e);}
   if(DATA.global?.length)    try{renderGlobal(DATA.global);}catch(e){console.error('Global',e);}
   if(DATA.futures?.length)   try{renderFutures(DATA.futures);}catch(e){console.error('Futures',e);}
   try{buildTicker(DATA.global||[], DATA.futures||[]);}catch(e){}
@@ -1172,7 +1174,7 @@ async function loadTab(key){
       renderCorporate();
     } else if(GIDS[key]){
       DATA[key]=await fetchSheet(GIDS[key]);
-      if(key==='dashboard') renderDashboard(DATA.dashboard||[]);
+     if(key==='dashboard') renderDashboard(DATA.dashboard||[], DATA.news||[]);
       if(key==='futures')   renderFutures(DATA.futures||[]);
       if(key==='futures')   buildTicker(DATA.global||[],DATA.futures||[]);
       if(key==='indian')    renderIndian(DATA.indian||[]);
@@ -1196,7 +1198,7 @@ async function refreshAll(){
         renderCorporate();
       } else if(GIDS[k]){
         DATA[k]=await fetchSheet(GIDS[k]);
-        if(k==='dashboard') renderDashboard(DATA.dashboard||[]);
+        if(k==='dashboard') renderDashboard(DATA.dashboard||[], DATA.news||[]);
         if(k==='global')   renderGlobal(DATA.global||[]);
         if(k==='futures')  renderFutures(DATA.futures||[]);
         if(k==='indian')   renderIndian(DATA.indian||[]);
