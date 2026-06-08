@@ -294,7 +294,15 @@ function renderDashboard(rows, newsRows){
      FII rows: col[0]=date (contains 2026), col[1]=Net FII, col[2]=Net DII
   */
   console.log('DB rows:',rows.length, rows.slice(0,5).map((r,i)=>`[${i}]${r[0]?.substring(0,20)}|${r[1]?.substring(0,20)}|${r[2]?.substring(0,15)}`).join(' || '));
-  if(!newsRows.length) newsRows = rows.filter(r=>(r[1]||'').includes('http')&&r[0]&&r[0].trim());
+ if(!newsRows.length) newsRows = rows.filter(r=>(r[1]||'').includes('http')&&r[0]&&r[0].trim());
+  else {
+    // News sheet: row1=NEWS FEED header, row2=subheader, row3+ = data
+    // col[0]=section label (or blank), col[1]=headline, col[2]=URL, col[3]=date
+    // Skip header rows (no URL in col[2]), keep only real news rows, remap to [headline, url, date]
+    newsRows = newsRows
+      .filter(r=>(r[2]||'').includes('http') && r[1] && r[1].trim())
+      .map(r=>[r[1], r[2], r[3]]);
+  }
   const idxRows   = rows.filter(r=>r[0]&&r[0].trim()&&r[1]&&!isNaN(parseFloat(String(r[1]).replace(/,/g,'')))&&!(r[0]||'').includes('2026'));
   const fiiDii    = rows.filter(r=>r[0]&&(r[0].includes('2026')||r[0].includes('-06-'))&&r[1]&&!isNaN(parseFloat(String(r[1]).replace(/,/g,''))));
 
