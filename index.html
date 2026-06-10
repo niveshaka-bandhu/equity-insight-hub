@@ -212,6 +212,11 @@ async function fetchSheetCSV(gid){
   return parseCSV(text);
 }
 
+/* fetchIPOTypes — fetches cols A,G from IPO sheet forcing gviz to return Type column */
+function fetchIPOTypes(){
+  return fetchSheet(GIDS.ipo, '&tq=select%20A%2CG');
+}
+
 function parseCSV(text){
   const rows=[];
   const lines=text.split(/\r?\n/);
@@ -747,6 +752,21 @@ const nseDec = (rows[31]||[])[8] || '—';
             data: col[0]=IPO [1]=Type [2]=Open [3]=Close [4]=QIB [5]=NII [6]=Retail [7]=Total
    KEY FIX: Use SEPARATE section detection — stop each section at next blank block
 ══════════════════════════════════════════════ */
+/* patchIPOTypes — merges col G (Type) from a dedicated select A,G fetch into the main rows array.
+   gviz blanks col G when no other section uses it; the targeted fetch forces it to be returned. */
+function patchIPOTypes(rows, typeRows){
+  if(!typeRows||!typeRows.length) return rows;
+  // Build a map of name → type from the targeted fetch (cols: [0]=A=name, [1]=G=type)
+  const map={};
+  typeRows.forEach(r=>{ if(r[0]&&r[1]) map[String(r[0]).trim().toLowerCase()]=String(r[1]).trim(); });
+  return rows.map(r=>{
+    if(!r[0]) return r;
+    const key=String(r[0]).trim().toLowerCase();
+    if(map[key]&&!r[6]) { const nr=[...r]; nr[6]=map[key]; return nr; }
+    return r;
+  });
+}
+
 function renderIPO(rows){
   /* CONFIRMED from CSV:
      Recently Listed: idx 2-21  col[0-10]
@@ -774,7 +794,7 @@ function renderIPO(rows){
   const gmpEnd  = rows.findIndex((r,i) => i > gmpStart && clean(r[0])==='company' && String(r[1]||'').toLowerCase().includes('issue date'));
   const gmp     = gmpStart > 0
                 ? rows.slice(gmpStart+2, gmpEnd > 0 ? gmpEnd : gmpStart+15)
-                      .filter(r => r[0]&&r[0].trim()&&clean(r[0])!=='ipo name')
+                      .filter(r => r[0]&&r[0].trim()&&clean(r[0])!=='ipo name'&&r[1]&&r[1].trim()&&r[1].trim()!=='—')
                 : [];
   const expertsEnd = subsStart > 0 ? subsStart : expertsStart + 25;
   const experts = expertsStart > 0
@@ -1199,6 +1219,7 @@ async function loadAll(){
         DATA.ipo2 = await fetchSheet(GIDS.ipo2, '&tq=select%20*%20limit%20200%20offset%2022');
       }catch(e2){console.warn('ipo gviz fallback failed',e2.message);}
     }),
+    fetchIPOTypes().then(d=>{DATA.ipoTypes=d;}).catch(e=>console.warn('ipoTypes',e.message)),
   ]);
   if(DATA.dashboard?.length) try{renderDashboard(DATA.dashboard, DATA.news||[]);}catch(e){console.error('Dashboard',e);}
   if(DATA.global?.length)    try{renderGlobal(DATA.global);}catch(e){console.error('Global',e);}
@@ -1233,6 +1254,7 @@ async function loadTab(key){
           DATA.ipo  = await fetchSheet(GIDS.ipo,  '&tq=select%20*%20limit%2022%20offset%200');
           DATA.ipo2 = await fetchSheet(GIDS.ipo2, '&tq=select%20*%20limit%20200%20offset%2022');
         }
+        try{ DATA.ipoTypes=await fetchIPOTypes(); }catch(e){}
       } else {
         DATA[key]=await fetchSheet(GIDS[key]);
       }
@@ -1241,7 +1263,7 @@ async function loadTab(key){
       if(key==='futures')   buildTicker(DATA.global||[],DATA.futures||[]);
       if(key==='indian')    renderIndian(DATA.indian||[]);
       if(key==='market')    renderMarket(DATA.market||[]);
-      if(key==='ipo')       renderIPO((DATA.ipo||[]).concat(DATA.ipo2||[]));
+      if(key==='ipo')       renderIPO(patchIPOTypes((DATA.ipo||[]).concat(DATA.ipo2||[]), DATA.ipoTypes||[]));
       if(key==='currency')  renderCurrency(DATA.currency||[]);
     }
   } catch(e){ console.error(key,e); }
@@ -1267,6 +1289,7 @@ async function refreshAll(){
             DATA.ipo  = await fetchSheet(GIDS.ipo,  '&tq=select%20*%20limit%2022%20offset%200');
             DATA.ipo2 = await fetchSheet(GIDS.ipo2, '&tq=select%20*%20limit%20200%20offset%2022');
           }
+          try{ DATA.ipoTypes=await fetchIPOTypes(); }catch(e){}
         } else {
           DATA[k]=await fetchSheet(GIDS[k]);
         }
@@ -1275,7 +1298,7 @@ async function refreshAll(){
         if(k==='futures')  renderFutures(DATA.futures||[]);
         if(k==='indian')   renderIndian(DATA.indian||[]);
         if(k==='market')   renderMarket(DATA.market||[]);
-        if(k==='ipo')      renderIPO((DATA.ipo||[]).concat(DATA.ipo2||[]));
+        if(k==='ipo')      renderIPO(patchIPOTypes((DATA.ipo||[]).concat(DATA.ipo2||[]), DATA.ipoTypes||[]));
         if(k==='currency') renderCurrency(DATA.currency||[]);
       }
     } catch(e){ console.error(k,e); }
