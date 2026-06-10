@@ -750,7 +750,8 @@ function renderIPO(rows){
 
  // Use dynamic section detection instead of hardcoded indices
   // because gviz skips blank/merged rows causing index drift
-  const findIdx = (keyword, col=1) => rows.findIndex(r => String(r[col]||'').includes(keyword));
+  const findIdx = (keyword, col=1) => rows.findIndex(r => String(r[col]||'').toLowerCase().includes(keyword.toLowerCase()));
+  const clean = v => String(v||'').replace(/\*/g,'').trim().toLowerCase();
 
   const gmpStart     = findIdx('Grey Market Premium');
   const datesStart   = findIdx('Issue Date', 0) > -1 ? rows.findIndex(r=>String(r[1]||'').trim()==='' && String(r[0]||'').includes('Comp')) : findIdx('Issue Date');
@@ -759,24 +760,24 @@ function renderIPO(rows){
 
   const listed  = rows.slice(1, gmpStart > 0 ? gmpStart : 22)
                       .filter(r => r[0]&&r[0].trim()&&r[0]!=='Company Name');
-  const gmpEnd  = rows.findIndex((r,i) => i > gmpStart && String(r[0]||'').trim()==='Company' && String(r[1]||'').includes('Issue Date'));
+  const gmpEnd  = rows.findIndex((r,i) => i > gmpStart && clean(r[0])==='company' && String(r[1]||'').toLowerCase().includes('issue date'));
   const gmp     = gmpStart > 0
                 ? rows.slice(gmpStart+2, gmpEnd > 0 ? gmpEnd : gmpStart+15)
-                      .filter(r => r[0]&&r[0].trim()&&r[0]!=='*IPO Name*')
+                      .filter(r => r[0]&&r[0].trim()&&clean(r[0])!=='ipo name')
                 : [];
   const expertsEnd = subsStart > 0 ? subsStart : expertsStart + 25;
   const experts = expertsStart > 0
                 ? rows.slice(expertsStart+2, expertsEnd)
-                      .filter(r => r[0]&&r[0].trim()&&r[0]!=='Company')
+                      .filter(r => r[0]&&r[0].trim()&&clean(r[0])!=='company')
                 : [];
   const subs    = subsStart > 0
                 ? rows.slice(subsStart+2)
-                      .filter(r => r[0]&&r[0].trim()&&r[0]!=='IPO')
+                      .filter(r => r[0]&&r[0].trim()&&clean(r[0])!=='ipo')
                 : [];
 
   // Issue Dates: rows between GMP end and Experts start
   const datesHeaderIdx = rows.findIndex(r =>
-    String(r[0]||'').trim()==='Company' && String(r[1]||'').includes('Issue Date'));
+    clean(r[0])==='company' && String(r[1]||'').toLowerCase().includes('issue date'));
   const dates = datesHeaderIdx > 0
     ? rows.slice(datesHeaderIdx+1, expertsStart > 0 ? expertsStart : datesHeaderIdx+15)
           .map(r=>r[0]).filter(v=>v&&v.trim())
@@ -825,7 +826,7 @@ function renderIPO(rows){
       </table></div>`
     },
     {
-      k:'experts', label:'🎓 Experts', count:experts.length, color:'#e07b00',
+      k:'experts', label:"🎓 Expert's Advice", count:experts.length, color:'#e07b00',
       html:`<div class="tscr"><table>
         <thead><tr><th>Company</th>
           <th style="color:var(--green)">Apply</th>
