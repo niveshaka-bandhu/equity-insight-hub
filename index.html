@@ -212,9 +212,10 @@ async function fetchSheetCSV(gid){
   return parseCSV(text);
 }
 
-/* fetchIPOTypes — fetches cols A,G from IPO sheet forcing gviz to return Type column */
+/* fetchIPOTypes — fetches cols A,G from IPO sheet forcing gviz to return Type column.
+   Filters to only rows where G contains exchange/board keywords to avoid subscription number collision. */
 function fetchIPOTypes(){
-  return fetchSheet(GIDS.ipo, '&tq=select%20A%2CG');
+  return fetchSheet(GIDS.ipo, '&tq=select%20A%2CG%20where%20G%20contains%20%27SME%27%20or%20G%20contains%20%27Mainboard%27%20or%20G%20contains%20%27Main%20Board%27');
 }
 
 function parseCSV(text){
