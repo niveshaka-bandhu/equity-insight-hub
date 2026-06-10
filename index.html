@@ -825,12 +825,12 @@ function renderIPO(rows){
       k:'gmp', label:'📋 GMP', count:gmp.length, color:'#0d47a1',
       html:`<div class="tscr"><table>
         <thead><tr><th>IPO Name</th><th>GMP</th><th>Price Band</th>
-          <th>Est. Listing</th><th>Date</th><th>Type</th><th>Status</th><th>Updated</th></tr></thead>
+          <th>Est. Listing</th><th>Date</th><th>Type</th><th>Updated</th></tr></thead>
         <tbody>${gmp.map(r=>`<tr>
           <td><strong>${st(r[0])}</strong></td>
           <td class="${ic(st(r[1]))}" style="font-weight:600">${st(r[1])}</td>
           <td>${st(r[3])}</td><td>${st(r[4])}</td><td>${st(r[5])}</td>
-          <td>${tbadge(r[6])}</td><td>${sbadge(st(r[7]))}</td>
+          <td>${tbadge(r[6])}</td>
           <td style="color:#aaa;font-size:11px">${st(r[8])}</td>
         </tr>`).join('')}</tbody>
       </table></div>`
@@ -840,14 +840,12 @@ function renderIPO(rows){
       html:`<div class="tscr"><table>
         <thead><tr><th>Company</th>
           <th style="color:var(--green)">Apply</th>
-          <th style="color:var(--green)">May Apply</th>
           <th style="color:var(--orange)">Neutral</th>
           <th style="color:var(--red)">Avoid</th>
           <th style="color:#aaa">Not Rated</th></tr></thead>
         <tbody>${experts.map(r=>`<tr>
           <td><strong>${f(r[0])}</strong></td>
           <td style="color:var(--green);font-weight:600;text-align:center">${f(r[1])}</td>
-          <td style="color:var(--green);text-align:center">${f(r[2])}</td>
           <td style="color:var(--orange);text-align:center">${f(r[3])}</td>
           <td style="color:var(--red);font-weight:600;text-align:center">${f(r[4])}</td>
           <td style="color:#aaa;text-align:center">${f(r[5])}</td>
