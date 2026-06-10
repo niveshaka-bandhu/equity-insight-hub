@@ -203,6 +203,15 @@ async function fetchSheet2(gid){
   return parseCSV(text);
 }
 
+/* fetchSheetCSV — CSV export from main sheet (SID), avoids gviz type-inference issues */
+async function fetchSheetCSV(gid){
+  const url=`https://docs.google.com/spreadsheets/d/${SID}/export?format=csv&gid=${gid}&t=${Date.now()}`;
+  const res=await fetch(url);
+  if(!res.ok) throw new Error('CSV fetch failed: '+res.status);
+  const text=await res.text();
+  return parseCSV(text);
+}
+
 function parseCSV(text){
   const rows=[];
   const lines=text.split(/\r?\n/);
@@ -1184,8 +1193,7 @@ async function loadAll(){
     fetchSheet(GIDS.news).then(d=>{DATA.news=d;}).catch(e=>console.warn('news',e.message)),
     fetchSheet(GIDS.global).then(d=>{DATA.global=d;}).catch(e=>console.warn('global',e.message)),
     fetchSheet(GIDS.futures).then(d=>{DATA.futures=d;}).catch(e=>console.warn('futures',e.message)),
-    fetchSheet(GIDS.ipo,  '&tq=select%20*%20limit%2022%20offset%200').then(d=>{DATA.ipo=d;}).catch(e=>console.warn('ipo',e.message)),
-    fetchSheet(GIDS.ipo2, '&tq=select%20*%20limit%20200%20offset%2022').then(d=>{DATA.ipo2=d;}).catch(e=>console.warn('ipo2',e.message)),
+    fetchSheetCSV(GIDS.ipo).then(d=>{DATA.ipo=d; DATA.ipo2=[];}).catch(e=>console.warn('ipo',e.message)),
   ]);
   if(DATA.dashboard?.length) try{renderDashboard(DATA.dashboard, DATA.news||[]);}catch(e){console.error('Dashboard',e);}
   if(DATA.global?.length)    try{renderGlobal(DATA.global);}catch(e){console.error('Global',e);}
@@ -1213,10 +1221,7 @@ async function loadTab(key){
       renderCorporate();
     } else if(GIDS[key]){
       if(key==='ipo'){
-        await Promise.all([
-          fetchSheet(GIDS.ipo,  '&tq=select%20*%20limit%2022%20offset%200').then(d=>{DATA.ipo=d;}).catch(e=>console.warn('ipo',e.message)),
-          fetchSheet(GIDS.ipo2, '&tq=select%20*%20limit%20200%20offset%2022').then(d=>{DATA.ipo2=d;}).catch(e=>console.warn('ipo2',e.message)),
-        ]);
+        DATA.ipo=await fetchSheetCSV(GIDS.ipo); DATA.ipo2=[];
       } else {
         DATA[key]=await fetchSheet(GIDS[key]);
       }
@@ -1244,10 +1249,7 @@ async function refreshAll(){
         renderCorporate();
       } else if(GIDS[k]){
         if(k==='ipo'){
-          await Promise.all([
-            fetchSheet(GIDS.ipo,  '&tq=select%20*%20limit%2022%20offset%200').then(d=>{DATA.ipo=d;}).catch(e=>console.warn('ipo',e.message)),
-            fetchSheet(GIDS.ipo2, '&tq=select%20*%20limit%20200%20offset%2022').then(d=>{DATA.ipo2=d;}).catch(e=>console.warn('ipo2',e.message)),
-          ]);
+          DATA.ipo=await fetchSheetCSV(GIDS.ipo); DATA.ipo2=[];
         } else {
           DATA[k]=await fetchSheet(GIDS[k]);
         }
