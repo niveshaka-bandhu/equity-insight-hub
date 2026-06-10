@@ -764,7 +764,9 @@ function renderIPO(rows){
 
   const gmpStart     = findIdx('Grey Market Premium');
   const datesStart   = findIdx('Issue Date', 0) > -1 ? rows.findIndex(r=>String(r[1]||'').trim()==='' && String(r[0]||'').includes('Comp')) : findIdx('Issue Date');
-  const expertsStart = findIdx("Expert");
+  const expertsStart = rows.findIndex(r =>
+    String(r[1]||'').toLowerCase().includes('expert') ||
+    String(r[0]||'').toLowerCase().includes('expert'));
   const subsStart    = findIdx('IPO Subscription Status');
 
   const listed  = rows.slice(1, gmpStart > 0 ? gmpStart : 22)
@@ -822,12 +824,11 @@ function renderIPO(rows){
     {
       k:'gmp', label:'📋 GMP', count:gmp.length, color:'#0d47a1',
       html:`<div class="tscr"><table>
-        <thead><tr><th>IPO Name</th><th>GMP</th><th>Trend</th><th>Price Band</th>
+        <thead><tr><th>IPO Name</th><th>GMP</th><th>Price Band</th>
           <th>Est. Listing</th><th>Date</th><th>Type</th><th>Status</th><th>Updated</th></tr></thead>
         <tbody>${gmp.map(r=>`<tr>
           <td><strong>${st(r[0])}</strong></td>
           <td class="${ic(st(r[1]))}" style="font-weight:600">${st(r[1])}</td>
-          <td style="font-size:16px;text-align:center">${f(r[2])}</td>
           <td>${st(r[3])}</td><td>${st(r[4])}</td><td>${st(r[5])}</td>
           <td>${tbadge(r[6])}</td><td>${sbadge(st(r[7]))}</td>
           <td style="color:#aaa;font-size:11px">${st(r[8])}</td>
