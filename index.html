@@ -1193,7 +1193,13 @@ async function loadAll(){
     fetchSheet(GIDS.news).then(d=>{DATA.news=d;}).catch(e=>console.warn('news',e.message)),
     fetchSheet(GIDS.global).then(d=>{DATA.global=d;}).catch(e=>console.warn('global',e.message)),
     fetchSheet(GIDS.futures).then(d=>{DATA.futures=d;}).catch(e=>console.warn('futures',e.message)),
-    fetchSheetCSV(GIDS.ipo).then(d=>{DATA.ipo=d; DATA.ipo2=[];}).catch(e=>console.warn('ipo',e.message)),
+    fetchSheetCSV(GIDS.ipo).then(d=>{DATA.ipo=d; DATA.ipo2=[];}).catch(async e=>{
+      console.warn('ipo csv failed, fallback gviz:',e.message);
+      try{
+        DATA.ipo  = await fetchSheet(GIDS.ipo,  '&tq=select%20*%20limit%2022%20offset%200');
+        DATA.ipo2 = await fetchSheet(GIDS.ipo2, '&tq=select%20*%20limit%20200%20offset%2022');
+      }catch(e2){console.warn('ipo gviz fallback failed',e2.message);}
+    }),
   ]);
   if(DATA.dashboard?.length) try{renderDashboard(DATA.dashboard, DATA.news||[]);}catch(e){console.error('Dashboard',e);}
   if(DATA.global?.length)    try{renderGlobal(DATA.global);}catch(e){console.error('Global',e);}
@@ -1221,7 +1227,13 @@ async function loadTab(key){
       renderCorporate();
     } else if(GIDS[key]){
       if(key==='ipo'){
-        DATA.ipo=await fetchSheetCSV(GIDS.ipo); DATA.ipo2=[];
+        try{
+          DATA.ipo=await fetchSheetCSV(GIDS.ipo); DATA.ipo2=[];
+        }catch(e){
+          console.warn('ipo csv failed, fallback gviz:',e.message);
+          DATA.ipo  = await fetchSheet(GIDS.ipo,  '&tq=select%20*%20limit%2022%20offset%200');
+          DATA.ipo2 = await fetchSheet(GIDS.ipo2, '&tq=select%20*%20limit%20200%20offset%2022');
+        }
       } else {
         DATA[key]=await fetchSheet(GIDS[key]);
       }
@@ -1249,7 +1261,13 @@ async function refreshAll(){
         renderCorporate();
       } else if(GIDS[k]){
         if(k==='ipo'){
-          DATA.ipo=await fetchSheetCSV(GIDS.ipo); DATA.ipo2=[];
+          try{
+            DATA.ipo=await fetchSheetCSV(GIDS.ipo); DATA.ipo2=[];
+          }catch(e){
+            console.warn('ipo csv failed, fallback gviz:',e.message);
+            DATA.ipo  = await fetchSheet(GIDS.ipo,  '&tq=select%20*%20limit%2022%20offset%200');
+            DATA.ipo2 = await fetchSheet(GIDS.ipo2, '&tq=select%20*%20limit%20200%20offset%2022');
+          }
         } else {
           DATA[k]=await fetchSheet(GIDS[k]);
         }
