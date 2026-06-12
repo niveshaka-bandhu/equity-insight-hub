@@ -1076,7 +1076,7 @@ function renderCorporate(){
     // Skip header row only if first row's col[0] looks like a header label
     const headerWords = ['company','event','type','announced'];
     const isHeader = rows[0] && headerWords.some(w=>(rows[0][0]||'').toLowerCase().includes(w));
-    return rows.slice(isHeader?1:0).filter(r => r[0]&&r[0].trim());
+    return rows.slice(isHeader?1:0).filter(r => r[0]&&r[0].trim()&&r[0].toLowerCase().trim()!=='no data found');
   }
 
   const todayData  = parseTodayActions(DATA['corp_today']  || []);
@@ -1111,7 +1111,7 @@ function renderCorporate(){
 
   // Today's actions table
   function makeTodayTable(rows){
-    if(!rows.length) return '<p style="padding:20px;color:#aaa;text-align:center">No corporate actions today</p>';
+    if(!rows.length) return '<p style="padding:20px;color:#aaa;text-align:center">No corporate actions today 🎉</p>';
     return `<div class="tscr"><table>
       <thead><tr><th>Company</th><th>Action</th><th>Announced Date</th><th>Ex-Date</th><th>Dividend (₹)</th><th>Ratio</th></tr></thead>
       <tbody>${rows.map(r=>`<tr>
@@ -1127,7 +1127,7 @@ function renderCorporate(){
   }
 
   const TABS = [
-    {k:'today',  label:'Today',     count:todayData.length,  color:'#555555', html:makeTodayTable(todayData)},
+    {k:'today',  label:"Today's Events", count:todayData.length,  color:'#555555', html:makeTodayTable(todayData)},
     {k:'div',    label:'Dividends', count:divData.length,    color:'#1a7a4a', html:makeTable(divData,   'Dividend (₹)')},
     {k:'bonus',  label:'Bonus',     count:bonusData.length,  color:'#0d47a1', html:makeTable(bonusData, 'Ratio')},
     {k:'splits', label:'Splits',    count:splitData.length,  color:'#e07b00', html:makeTable(splitData, 'Split Ratio')},
