@@ -176,7 +176,7 @@ footer a{color:#6ea8fe}
 const SID='1xoUJqge0b4SQmZSRLZyoBBcokXrUrFVt8fBFoef28NQ';
 const GIDS={dashboard:236316251,news:194974677,global:572014590,futures:2063758158,indian:139113774,market:1259430707,ipo:536891537,ipo2:536891537,currency:1847303228};
 const SID2='1_7_7lctIPNdHjUd3wNp0hu6xMjqhG3Tw0fNJO_fxWJg';
-const CORP_GIDS={today:203302293,dividends:1718274952,bonus:1235071159,splits:1616300885,rights:1541450036};
+const CORP_GIDS={today:203302293,dividends:1718274952,bonus:1235071159,splits:1616300885};
 
 /* ── JSONP fetch ── */
 let _n=0;
@@ -212,10 +212,10 @@ async function fetchSheetCSV(gid){
   return parseCSV(text);
 }
 
-/* fetchIPOTypes — fetches cols A,G from IPO sheet forcing gviz to return Type column.
-   Filters to only rows where G contains exchange/board keywords to avoid subscription number collision. */
+/* fetchIPOTypes — fetches cols A,F,G from IPO sheet forcing gviz to return Date/Type columns.
+   Filters to only GMP rows (G contains SME/Mainboard) to avoid collisions with other sections. */
 function fetchIPOTypes(){
-  return fetchSheet(GIDS.ipo, '&tq=select%20A%2CG%20where%20G%20contains%20%27SME%27%20or%20G%20contains%20%27Mainboard%27%20or%20G%20contains%20%27Main%20Board%27');
+  return fetchSheet(GIDS.ipo, '&tq=select%20A%2CF%2CG%20where%20G%20contains%20%27SME%27%20or%20G%20contains%20%27Mainboard%27%20or%20G%20contains%20%27Main%20Board%27');
 }
 
 function parseCSV(text){
@@ -753,18 +753,27 @@ const nseDec = (rows[31]||[])[8] || '—';
             data: col[0]=IPO [1]=Type [2]=Open [3]=Close [4]=QIB [5]=NII [6]=Retail [7]=Total
    KEY FIX: Use SEPARATE section detection — stop each section at next blank block
 ══════════════════════════════════════════════ */
-/* patchIPOTypes — merges col G (Type) from a dedicated select A,G fetch into the main rows array.
-   gviz blanks col G when no other section uses it; the targeted fetch forces it to be returned. */
+/* patchIPOTypes — merges col F (Date) and col G (Type) from a dedicated fetch into the main rows array.
+   gviz blanks these cols when other sections don't use them consistently; the targeted fetch forces them. */
 function patchIPOTypes(rows, typeRows){
   if(!typeRows||!typeRows.length) return rows;
-  // Build a map of name → type from the targeted fetch (cols: [0]=A=name, [1]=G=type)
+  // typeRows: [0]=A=name, [1]=F=date, [2]=G=type
   const map={};
-  typeRows.forEach(r=>{ if(r[0]&&r[1]) map[String(r[0]).trim().toLowerCase()]=String(r[1]).trim(); });
+  typeRows.forEach(r=>{ if(r[0]) map[String(r[0]).trim().toLowerCase()]={date:r[1],type:r[2]}; });
   return rows.map(r=>{
     if(!r[0]) return r;
     const key=String(r[0]).trim().toLowerCase();
-    if(map[key]&&!r[6]) { const nr=[...r]; nr[6]=map[key]; return nr; }
-    return r;
+    const m=map[key];
+    if(!m) return r;
+    const nr=[...r];
+    if(m.date && !nr[5]) {
+      let d=String(m.date);
+      const dm=d.match(/^Date\((\d+),(\d+),(\d+)\)/);
+      if(dm) d=new Date(+dm[1],+dm[2],+dm[3]).toLocaleDateString('en-GB',{day:'2-digit',month:'short'});
+      nr[5]=d;
+    }
+    if(m.type && !nr[6]) nr[6]=m.type;
+    return nr;
   });
 }
 
@@ -1074,7 +1083,6 @@ function renderCorporate(){
   const divData    = parseCards(DATA['corp_dividends'] || [], 5);
   const bonusData  = parseCards(DATA['corp_bonus']     || [], 5);
   const splitData  = parseCards(DATA['corp_splits']    || [], 5);
-  const rightsData = parseCards(DATA['corp_rights']    || [], 6);
 
   function makeTable(cards, valHeader, showExtra=false, extraHeader='Details'){
     if(!cards.length) return '<p style="padding:20px;color:#aaa;text-align:center">No data available</p>';
@@ -1123,7 +1131,6 @@ function renderCorporate(){
     {k:'div',    label:'Dividends', count:divData.length,    color:'#1a7a4a', html:makeTable(divData,   'Dividend (₹)')},
     {k:'bonus',  label:'Bonus',     count:bonusData.length,  color:'#0d47a1', html:makeTable(bonusData, 'Ratio')},
     {k:'splits', label:'Splits',    count:splitData.length,  color:'#e07b00', html:makeTable(splitData, 'Split Ratio')},
-    {k:'rights', label:'Rights',    count:rightsData.length, color:'#c0392b', html:makeTable(rightsData,'Ratio', true, 'Premium')},
   ];
 
   $('s-corporate').innerHTML = `
