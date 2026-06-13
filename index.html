@@ -250,7 +250,7 @@ const $=id=>document.getElementById(id);
 const f=v=>String(v||'').trim()||'—';
 const clean=v=>String(v||'').replace(/\*/g,'').trim();
 function ic(v){
-  const s=String(v||'').replace(/,/g,'').replace(/\*/g,'').trim();
+  const s=String(v||'').replace(/,/g,'').replace(/\*/g,'').replace(/^--/,'-').trim();
   if(!s||s==='—'||s==='-') return '';
   const n=parseFloat(s);
   return isNaN(n)?'':n<0?'cn':n>0?'cp':'';
@@ -680,6 +680,7 @@ function renderMarket(rows){
     .map(r => {
       let pct = r[BFC];
       if((!pct || !String(pct).trim()) && r[BPC+2] && String(r[BPC+2]).trim()) pct = r[BPC+2];
+      if(pct) pct = String(pct).replace(/^--/,'-');
       return [r[6], r[BPC], pct];
     });
 
