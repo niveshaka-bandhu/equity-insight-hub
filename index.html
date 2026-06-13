@@ -674,10 +674,14 @@ function renderMarket(rows){
     .filter(r => r[6]&&r[6].trim() && r[PC]&&!isNaN(parseFloat(String(r[PC]).replace(/,/g,''))))
     .map(r => [r[6], r[PC], r[CC], r[FC]]);
 
-  // Right BSE block: % only
+  // Right BSE block: % only (try BPC+1, fallback to BPC+2 if blank — gviz may insert a gap col)
   const RgBSE = (s,e) => rows.slice(s,e)
     .filter(r => r[6]&&r[6].trim() && r[BPC]&&!isNaN(parseFloat(String(r[BPC]).replace(/,/g,''))))
-    .map(r => [r[6], r[BPC], r[BFC]]);
+    .map(r => {
+      let pct = r[BFC];
+      if((!pct || !String(pct).trim()) && r[BPC+2] && String(r[BPC+2]).trim()) pct = r[BPC+2];
+      return [r[6], r[BPC], pct];
+    });
 
 
   // ── SLICES ──────────────────────────────────────────────────────
