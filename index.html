@@ -654,7 +654,7 @@ function renderMarket(rows){
 
   // ── DETECT BSE right-block (% only, no change col) ──────────────
   // Same logic — probe SENSEX30 Gainers row (idx 21)
-  const probe2 = rows[21] || [];
+  const probe2 = rows[15] || [];
   let BPC=7, BFC=9; // BSE price, pct
   for(let ci=7; ci<=11; ci++){
     const v=String(probe2[ci]||'').replace(/,/g,'');
@@ -691,7 +691,7 @@ function renderMarket(rows){
   const nseL    = RgNSE(6, 12); // ALL NSE Losers
   const s30g    = Lg(13, 20);    // SENSEX30 Gainers
   const s30l    = Lg(21, 27);    // SENSEX30 Losers
-  const bseG    = RgBSE(13, 20); // ALL BSE Gainers
+  const bseG    = RgBSE(12, 19); // ALL BSE Gainers
   const bseL    = RgBSE(21, 27); // ALL BSE Losers
   const bank    = Lg(29, 42);    // Nifty Bank stocks
 
