@@ -216,9 +216,9 @@ async function fetchSheetCSV(gid){
 function fetchIPOTypes(){
   return fetchSheet(GIDS.ipo, '&tq=select%20A%2CG%20where%20G%20contains%20%27SME%27%20or%20G%20contains%20%27Mainboard%27%20or%20G%20contains%20%27Main%20Board%27');
 }
-/* fetchIPODates — forces col F to return as formatted string to bypass gviz date-type inference */
+/* fetchIPODates — fetches A,F for GMP rows; col F now plain-text formatted in sheet */
 function fetchIPODates(){
-  return fetchSheet(GIDS.ipo, '&tq=select%20A%2Cformat(F%2C%27dd-MMM%27)%20where%20G%20contains%20%27SME%27%20or%20G%20contains%20%27Mainboard%27%20or%20G%20contains%20%27Main%20Board%27');
+  return fetchSheet(GIDS.ipo, '&tq=select%20A%2CF%20where%20G%20contains%20%27SME%27%20or%20G%20contains%20%27Mainboard%27%20or%20G%20contains%20%27Main%20Board%27');
 }
 
 function parseCSV(text){
@@ -765,7 +765,14 @@ const nseDec = (rows[31]||[])[8] || '—';
 function patchIPOTypes(rows, typeRows, dateRows){
   const tmap={}, dmap={};
   (typeRows||[]).forEach(r=>{ if(r[0]&&r[1]) tmap[String(r[0]).trim().toLowerCase()]=String(r[1]).trim(); });
-  (dateRows||[]).forEach(r=>{ if(r[0]&&r[1]) dmap[String(r[0]).trim().toLowerCase()]=String(r[1]).trim(); });
+  (dateRows||[]).forEach(r=>{
+    if(!r[0]||!r[1]) return;
+    let d=String(r[1]).trim();
+    // gviz returns dates as Date(yyyy,m,d) — convert to readable dd-Mon
+    const dm=d.match(/^Date\((\d+),(\d+),(\d+)\)/);
+    if(dm) d=new Date(+dm[1],+dm[2],+dm[3]).toLocaleDateString('en-IN',{day:'2-digit',month:'short'});
+    dmap[String(r[0]).trim().toLowerCase()]=d;
+  });
   return rows.map(r=>{
     if(!r[0]) return r;
     const key=String(r[0]).trim().toLowerCase();
