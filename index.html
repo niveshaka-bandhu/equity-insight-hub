@@ -216,9 +216,9 @@ async function fetchSheetCSV(gid){
 function fetchIPOTypes(){
   return fetchSheet(GIDS.ipo, '&tq=select%20A%2CG%20where%20G%20contains%20%27SME%27%20or%20G%20contains%20%27Mainboard%27%20or%20G%20contains%20%27Main%20Board%27');
 }
-/* fetchIPODates — fetches col A,F to get date range text; separate fetch avoids gviz date-type inference */
+/* fetchIPODates — fetches GMP rows directly by offset to get all columns including date text */
 function fetchIPODates(){
-  return fetchSheet(GIDS.ipo, '&tq=select%20A%2CF%20where%20F%20is%20not%20null%20and%20not%20F%20matches%20%27%5C%5Cd%2B%27');
+  return fetchSheet(GIDS.ipo, '&tq=select%20A%2CF%20limit%2015%20offset%2024');
 }
 
 function parseCSV(text){
