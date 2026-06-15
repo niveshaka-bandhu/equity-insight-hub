@@ -216,6 +216,10 @@ async function fetchSheetCSV(gid){
 function fetchIPOTypes(){
   return fetchSheet(GIDS.ipo, '&tq=select%20A%2CG%20where%20G%20contains%20%27SME%27%20or%20G%20contains%20%27Mainboard%27%20or%20G%20contains%20%27Main%20Board%27');
 }
+/* fetchIPODates — fetches GMP rows directly by offset to get all columns including date text */
+function fetchIPODates(){
+  return fetchSheet(GIDS.ipo, '&tq=select%20A%2CF%20limit%2015%20offset%2024');
+}
 
 function parseCSV(text){
   const rows=[];
@@ -757,17 +761,23 @@ const nseDec = (rows[31]||[])[8] || '—';
             data: col[0]=IPO [1]=Type [2]=Open [3]=Close [4]=QIB [5]=NII [6]=Retail [7]=Total
    KEY FIX: Use SEPARATE section detection — stop each section at next blank block
 ══════════════════════════════════════════════ */
-/* patchIPOTypes — merges Type (col G) from targeted fetch into main rows array */
-function patchIPOTypes(rows, typeRows){
-  if(!typeRows||!typeRows.length) return rows;
+/* patchIPOTypes — merges Type (col G) and Date (col F) from targeted fetches into the main rows array */
+function patchIPOTypes(rows, typeRows, dateRows){
+  // Build type map: name → type
   const tmap={};
-  typeRows.forEach(r=>{ if(r[0]&&r[1]) tmap[String(r[0]).trim().toLowerCase()]=String(r[1]).trim(); });
+  (typeRows||[]).forEach(r=>{ if(r[0]&&r[1]) tmap[String(r[0]).trim().toLowerCase()]=String(r[1]).trim(); });
+  // Build date map: name → date text
+  const dmap={};
+  (dateRows||[]).forEach(r=>{ if(r[0]&&r[1]) dmap[String(r[0]).trim().toLowerCase()]=String(r[1]).trim(); });
   return rows.map(r=>{
     if(!r[0]) return r;
     const key=String(r[0]).trim().toLowerCase();
-    const t=tmap[key];
-    if(!t||r[6]) return r;
-    const nr=[...r]; nr[6]=t; return nr;
+    const t=tmap[key], d=dmap[key];
+    if(!t&&!d) return r;
+    const nr=[...r];
+    if(d && (!nr[5]||!String(nr[5]).trim()||String(nr[5]).trim()==='—')) nr[5]=d;
+    if(t && (!nr[6]||!String(nr[6]).trim()||String(nr[6]).trim()==='—')) nr[6]=t;
+    return nr;
   });
 }
 
@@ -849,11 +859,11 @@ function renderIPO(rows){
       k:'gmp', label:'📋 GMP', count:gmp.length, color:'#0d47a1',
       html:`<div class="tscr"><table>
         <thead><tr><th>IPO Name</th><th>GMP</th><th>Price Band</th>
-          <th>Est. Listing</th><th>Type</th><th>Updated</th></tr></thead>
+          <th>Est. Listing</th><th>Date</th><th>Type</th><th>Updated</th></tr></thead>
         <tbody>${gmp.map(r=>`<tr>
           <td><strong>${st(r[0])}</strong></td>
           <td class="${ic(st(r[1]))}" style="font-weight:600">${st(r[1])}</td>
-          <td>${st(r[3])}</td><td>${st(r[4])}</td>
+          <td>${st(r[3])}</td><td>${st(r[4])}</td><td>${st(r[5])}</td>
           <td>${tbadge(r[6])}</td>
           <td style="color:#aaa;font-size:11px">${st(r[8])}</td>
         </tr>`).join('')}</tbody>
@@ -1222,7 +1232,7 @@ async function loadAll(){
       }catch(e2){console.warn('ipo gviz fallback failed',e2.message);}
     }),
     fetchIPOTypes().then(d=>{DATA.ipoTypes=d;}).catch(e=>console.warn('ipoTypes',e.message)),
-    
+    fetchIPODates().then(d=>{DATA.ipoDates=d;}).catch(e=>console.warn('ipoDates',e.message)),
   ]);
   if(DATA.dashboard?.length) try{renderDashboard(DATA.dashboard, DATA.news||[]);}catch(e){console.error('Dashboard',e);}
   if(DATA.global?.length)    try{renderGlobal(DATA.global);}catch(e){console.error('Global',e);}
@@ -1257,7 +1267,7 @@ async function loadTab(key){
           DATA.ipo  = await fetchSheet(GIDS.ipo,  '&tq=select%20*%20limit%2022%20offset%200');
           DATA.ipo2 = await fetchSheet(GIDS.ipo2, '&tq=select%20*%20limit%20200%20offset%2022');
         }
-        try{ DATA.ipoTypes=await fetchIPOTypes(); }catch(e){}
+        try{ DATA.ipoTypes=await fetchIPOTypes(); DATA.ipoDates=await fetchIPODates(); }catch(e){}
       } else {
         DATA[key]=await fetchSheet(GIDS[key]);
       }
@@ -1266,7 +1276,7 @@ async function loadTab(key){
       if(key==='futures')   buildTicker(DATA.global||[],DATA.futures||[]);
       if(key==='indian')    renderIndian(DATA.indian||[]);
       if(key==='market')    renderMarket(DATA.market||[]);
-      if(key==='ipo')       renderIPO(patchIPOTypes((DATA.ipo||[]).concat(DATA.ipo2||[]), DATA.ipoTypes||[]));
+      if(key==='ipo')       renderIPO(patchIPOTypes((DATA.ipo||[]).concat(DATA.ipo2||[]), DATA.ipoTypes||[], DATA.ipoDates||[]));
       if(key==='currency')  renderCurrency(DATA.currency||[]);
     }
   } catch(e){ console.error(key,e); }
@@ -1292,7 +1302,7 @@ async function refreshAll(){
             DATA.ipo  = await fetchSheet(GIDS.ipo,  '&tq=select%20*%20limit%2022%20offset%200');
             DATA.ipo2 = await fetchSheet(GIDS.ipo2, '&tq=select%20*%20limit%20200%20offset%2022');
           }
-          try{ DATA.ipoTypes=await fetchIPOTypes(); }catch(e){}
+          try{ DATA.ipoTypes=await fetchIPOTypes(); DATA.ipoDates=await fetchIPODates(); }catch(e){}
         } else {
           DATA[k]=await fetchSheet(GIDS[k]);
         }
@@ -1301,7 +1311,7 @@ async function refreshAll(){
         if(k==='futures')  renderFutures(DATA.futures||[]);
         if(k==='indian')   renderIndian(DATA.indian||[]);
         if(k==='market')   renderMarket(DATA.market||[]);
-        if(k==='ipo')      renderIPO(patchIPOTypes((DATA.ipo||[]).concat(DATA.ipo2||[]), DATA.ipoTypes||[]));
+        if(k==='ipo')      renderIPO(patchIPOTypes((DATA.ipo||[]).concat(DATA.ipo2||[]), DATA.ipoTypes||[], DATA.ipoDates||[]));
         if(k==='currency') renderCurrency(DATA.currency||[]);
       }
     } catch(e){ console.error(k,e); }
