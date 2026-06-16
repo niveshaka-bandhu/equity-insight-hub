@@ -1331,16 +1331,21 @@ async function refreshAll(){
   btn.textContent='⟳ Refresh'; btn.disabled=false;
 }
 
-function renderCalculators(){
-  const calcs = [
-    {name:'Investment Calculator',                url:'https://docs.google.com/spreadsheets/d/1xoUJqge0b4SQmZSRLZyoBBcokXrUrFVt8fBFoef28NQ/edit'},
-    {name:'Financial Independence Calculator',    url:'https://docs.google.com/spreadsheets/d/1xoUJqge0b4SQmZSRLZyoBBcokXrUrFVt8fBFoef28NQ/edit'},
-    {name:'Buy or Rent a House Calculator',       url:'https://docs.google.com/spreadsheets/d/1xoUJqge0b4SQmZSRLZyoBBcokXrUrFVt8fBFoef28NQ/edit'},
-    {name:'Pay off vs Invest',                    url:'https://docs.google.com/spreadsheets/d/1xoUJqge0b4SQmZSRLZyoBBcokXrUrFVt8fBFoef28NQ/edit'},
-    {name:'EMI Calculator',                       url:'https://docs.google.com/spreadsheets/d/1xoUJqge0b4SQmZSRLZyoBBcokXrUrFVt8fBFoef28NQ/edit'},
-    {name:'Other Financial Calculators',          url:'https://docs.google.com/spreadsheets/d/1xoUJqge0b4SQmZSRLZyoBBcokXrUrFVt8fBFoef28NQ/edit'},
-    {name:'EV vs ICE',                            url:'https://docs.google.com/spreadsheets/d/1xoUJqge0b4SQmZSRLZyoBBcokXrUrFVt8fBFoef28NQ/edit'},
-  ];
+async function renderCalculators(){
+  $('s-calculators').innerHTML='<div class="loading"><div class="spin"></div>Loading…</div>';
+  let calcs=[];
+  try{
+    // News & Links sheet GID 194974677, rows 26-32 = calculators (offset 25, limit 8)
+    // col[1]=name, col[2]=url (hyperlink)
+    const rows = await fetchSheet(GIDS.news, '&tq=select%20B%2CC%20limit%208%20offset%2025');
+    calcs = rows.filter(r=>r[0]&&r[0].trim()&&r[1]&&String(r[1]).includes('http'))
+                .map(r=>({name:String(r[0]).trim(), url:String(r[1]).trim()}));
+  }catch(e){ console.warn('calc fetch failed',e.message); }
+
+  const names=['Investment Calculator','Financial Independence Calculator',
+    'Buy or Rent a House Calculator','Pay off vs Invest',
+    'EMI Calculator','Other Financial Calculators','EV vs ICE'];
+
   $('s-calculators').innerHTML=`
     <div class="stitle">🧮 Financial Calculators</div>
     <div style="margin:12px 16px;padding:12px 16px;background:#fff8e1;border-left:4px solid #f59e0b;border-radius:6px;font-size:13px;color:#7c5a00;line-height:1.7">
@@ -1349,8 +1354,8 @@ function renderCalculators(){
       &nbsp;➜&nbsp; Select <strong>.xlsx</strong> or <strong>.ods</strong> format &nbsp;➜&nbsp; Download
     </div>
     <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;padding:16px">
-      ${calcs.map(c=>`
-        <a href="${c.url}" target="_blank" rel="noopener"
+      ${(calcs.length ? calcs : names.map(n=>({name:n,url:''}))).map(c=>`
+        <a href="${c.url||'#'}" ${c.url?'target="_blank" rel="noopener"':''}
            style="display:flex;align-items:center;gap:12px;padding:16px 18px;
                   background:#fff;border:1px solid #e5e7eb;border-radius:10px;
                   text-decoration:none;color:#1a237e;font-weight:600;font-size:14px;
@@ -1359,7 +1364,7 @@ function renderCalculators(){
            onmouseout="this.style.boxShadow='0 1px 4px rgba(0,0,0,0.06)'">
           <span style="font-size:22px">📊</span>
           <span>${c.name}</span>
-          <span style="margin-left:auto;font-size:16px;color:#aaa">↗</span>
+          ${c.url?'<span style="margin-left:auto;font-size:16px;color:#aaa">↗</span>':''}
         </a>`).join('')}
     </div>
     <p style="margin:4px 16px 16px;font-size:11px;color:#bbb">Source: Niveshaka-bandhu Financial Tools</p>
