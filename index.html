@@ -149,6 +149,7 @@ footer a{color:#6ea8fe}
       <button class="nb"     onclick="showTab('ipo',this)">🏦 IPO</button>
       <button class="nb"     onclick="showTab('currency',this)">💱 Currencies</button>
       <button class="nb"     onclick="showTab('corporate',this)">📋 Corporate Actions</button>
+      <button class="nb"     onclick="showTab('calculators',this)">🧮 Calculators</button>
     </nav>
     <button class="rbtn" id="rbtn" onclick="refreshAll()">⟳ Refresh</button>
   </div>
@@ -165,6 +166,7 @@ footer a{color:#6ea8fe}
   <div class="sec"    id="s-ipo"><div class="loading"><div class="spin"></div>Loading…</div></div>
   <div class="sec"    id="s-currency"><div class="loading"><div class="spin"></div>Loading…</div></div>
   <div class="sec"    id="s-corporate"><div class="loading"><div class="spin"></div>Loading…</div></div>
+  <div class="sec"    id="s-calculators"></div>
 </div>
 
 <footer>
@@ -215,10 +217,6 @@ async function fetchSheetCSV(gid){
 /* fetchIPOTypes — fetches cols A,G filtered to GMP rows to get Type without subscription number collision */
 function fetchIPOTypes(){
   return fetchSheet(GIDS.ipo, '&tq=select%20A%2CG%20where%20G%20contains%20%27SME%27%20or%20G%20contains%20%27Mainboard%27%20or%20G%20contains%20%27Main%20Board%27');
-}
-/* fetchIPODates — fetches A,F for rows 25-40 (GMP section) with no filter to avoid query failures */
-function fetchIPODates(){
-  return fetchSheet(GIDS.ipo, '&tq=select%20A%2CF%20limit%2016%20offset%2024');
 }
 
 function parseCSV(text){
@@ -863,12 +861,11 @@ function renderIPO(rows){
       k:'gmp', label:'📋 GMP', count:gmp.length, color:'#0d47a1',
       html:`<div class="tscr"><table>
         <thead><tr><th>IPO Name</th><th>GMP</th><th>Price Band</th>
-          <th>Est. Listing</th><th>Date</th><th>Type</th><th>Updated</th></tr></thead>
+          <th>Est. Listing</th><th>Type</th><th>Updated</th></tr></thead>
         <tbody>${gmp.map(r=>`<tr>
           <td><strong>${st(r[0])}</strong></td>
           <td class="${ic(st(r[1]))}" style="font-weight:600">${st(r[1])}</td>
           <td>${st(r[3])}</td><td>${st(r[4])}</td>
-          <td>${st(r[5])}</td>
           <td>${tbadge(r[6])}</td>
           <td style="color:#aaa;font-size:11px">${st(r[8])}</td>
         </tr>`).join('')}</tbody>
@@ -1242,7 +1239,6 @@ async function loadAll(){
       }catch(e2){console.warn('ipo gviz fallback failed',e2.message);}
     }),
     fetchIPOTypes().then(d=>{DATA.ipoTypes=d;}).catch(e=>console.warn('ipoTypes',e.message)),
-    fetchIPODates().then(d=>{DATA.ipoDates=d;}).catch(e=>console.warn('ipoDates',e.message)),
     
   ]);
   if(DATA.dashboard?.length) try{renderDashboard(DATA.dashboard, DATA.news||[]);}catch(e){console.error('Dashboard',e);}
@@ -1264,7 +1260,9 @@ async function loadTab(key){
   div.innerHTML='<div class="loading"><div class="spin"></div>Loading…</div>';
 
   try{
-    if(key==='corporate'){
+    if(key==='calculators'){
+      renderCalculators();
+    } else if(key==='corporate'){
       await Promise.allSettled(Object.entries(CORP_GIDS).map(async([k,gid])=>{
         try{DATA['corp_'+k]=await fetchSheet2(gid);}catch(e){console.warn('corp_'+k,e.message);}
       }));
@@ -1278,7 +1276,7 @@ async function loadTab(key){
           DATA.ipo  = await fetchSheet(GIDS.ipo,  '&tq=select%20*%20limit%2022%20offset%200');
           DATA.ipo2 = await fetchSheet(GIDS.ipo2, '&tq=select%20*%20limit%20200%20offset%2022');
         }
-        try{ DATA.ipoTypes=await fetchIPOTypes(); DATA.ipoDates=await fetchIPODates(); }catch(e){}
+        try{ DATA.ipoTypes=await fetchIPOTypes(); }catch(e){}
       } else {
         DATA[key]=await fetchSheet(GIDS[key]);
       }
@@ -1287,7 +1285,7 @@ async function loadTab(key){
       if(key==='futures')   buildTicker(DATA.global||[],DATA.futures||[]);
       if(key==='indian')    renderIndian(DATA.indian||[]);
       if(key==='market')    renderMarket(DATA.market||[]);
-      if(key==='ipo')       renderIPO(patchIPOTypes((DATA.ipo||[]).concat(DATA.ipo2||[]), DATA.ipoTypes||[], DATA.ipoDates||[]));
+      if(key==='ipo')       renderIPO(patchIPOTypes((DATA.ipo||[]).concat(DATA.ipo2||[]), DATA.ipoTypes||[]));
       if(key==='currency')  renderCurrency(DATA.currency||[]);
     }
   } catch(e){ console.error(key,e); }
@@ -1313,7 +1311,7 @@ async function refreshAll(){
             DATA.ipo  = await fetchSheet(GIDS.ipo,  '&tq=select%20*%20limit%2022%20offset%200');
             DATA.ipo2 = await fetchSheet(GIDS.ipo2, '&tq=select%20*%20limit%20200%20offset%2022');
           }
-          try{ DATA.ipoTypes=await fetchIPOTypes(); DATA.ipoDates=await fetchIPODates(); }catch(e){}
+          try{ DATA.ipoTypes=await fetchIPOTypes(); }catch(e){}
         } else {
           DATA[k]=await fetchSheet(GIDS[k]);
         }
@@ -1322,7 +1320,7 @@ async function refreshAll(){
         if(k==='futures')  renderFutures(DATA.futures||[]);
         if(k==='indian')   renderIndian(DATA.indian||[]);
         if(k==='market')   renderMarket(DATA.market||[]);
-        if(k==='ipo')      renderIPO(patchIPOTypes((DATA.ipo||[]).concat(DATA.ipo2||[]), DATA.ipoTypes||[], DATA.ipoDates||[]));
+        if(k==='ipo')      renderIPO(patchIPOTypes((DATA.ipo||[]).concat(DATA.ipo2||[]), DATA.ipoTypes||[]));
         if(k==='currency') renderCurrency(DATA.currency||[]);
       }
     } catch(e){ console.error(k,e); }
@@ -1331,6 +1329,41 @@ async function refreshAll(){
   const now=new Date();
   $('ts').textContent=`Live · Updated ${now.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'})} IST`;
   btn.textContent='⟳ Refresh'; btn.disabled=false;
+}
+
+function renderCalculators(){
+  const calcs = [
+    {name:'Investment Calculator',                url:'https://docs.google.com/spreadsheets/d/1xoUJqge0b4SQmZSRLZyoBBcokXrUrFVt8fBFoef28NQ/edit'},
+    {name:'Financial Independence Calculator',    url:'https://docs.google.com/spreadsheets/d/1xoUJqge0b4SQmZSRLZyoBBcokXrUrFVt8fBFoef28NQ/edit'},
+    {name:'Buy or Rent a House Calculator',       url:'https://docs.google.com/spreadsheets/d/1xoUJqge0b4SQmZSRLZyoBBcokXrUrFVt8fBFoef28NQ/edit'},
+    {name:'Pay off vs Invest',                    url:'https://docs.google.com/spreadsheets/d/1xoUJqge0b4SQmZSRLZyoBBcokXrUrFVt8fBFoef28NQ/edit'},
+    {name:'EMI Calculator',                       url:'https://docs.google.com/spreadsheets/d/1xoUJqge0b4SQmZSRLZyoBBcokXrUrFVt8fBFoef28NQ/edit'},
+    {name:'Other Financial Calculators',          url:'https://docs.google.com/spreadsheets/d/1xoUJqge0b4SQmZSRLZyoBBcokXrUrFVt8fBFoef28NQ/edit'},
+    {name:'EV vs ICE',                            url:'https://docs.google.com/spreadsheets/d/1xoUJqge0b4SQmZSRLZyoBBcokXrUrFVt8fBFoef28NQ/edit'},
+  ];
+  $('s-calculators').innerHTML=`
+    <div class="stitle">🧮 Financial Calculators</div>
+    <div style="margin:12px 16px;padding:12px 16px;background:#fff8e1;border-left:4px solid #f59e0b;border-radius:6px;font-size:13px;color:#7c5a00;line-height:1.7">
+      📥 <strong>How to download:</strong>
+      Open Link &nbsp;➜&nbsp; Go to <strong>File → Share and Export or Download</strong>
+      &nbsp;➜&nbsp; Select <strong>.xlsx</strong> or <strong>.ods</strong> format &nbsp;➜&nbsp; Download
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;padding:16px">
+      ${calcs.map(c=>`
+        <a href="${c.url}" target="_blank" rel="noopener"
+           style="display:flex;align-items:center;gap:12px;padding:16px 18px;
+                  background:#fff;border:1px solid #e5e7eb;border-radius:10px;
+                  text-decoration:none;color:#1a237e;font-weight:600;font-size:14px;
+                  box-shadow:0 1px 4px rgba(0,0,0,0.06);transition:box-shadow 0.2s"
+           onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,0.12)'"
+           onmouseout="this.style.boxShadow='0 1px 4px rgba(0,0,0,0.06)'">
+          <span style="font-size:22px">📊</span>
+          <span>${c.name}</span>
+          <span style="margin-left:auto;font-size:16px;color:#aaa">↗</span>
+        </a>`).join('')}
+    </div>
+    <p style="margin:4px 16px 16px;font-size:11px;color:#bbb">Source: Niveshaka-bandhu Financial Tools</p>
+  `;
 }
 
 function showTab(key,btn){
