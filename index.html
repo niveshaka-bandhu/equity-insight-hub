@@ -422,17 +422,12 @@ function renderDashboard(rows, newsRows){
 function buildDashMovers(){
   const rows = DATA.market || [];
   if(!rows.length) return '';
-  const probe = rows[4] || [];
-  let PC=9, CC=10, FC=11;
-  for(let ci=7; ci<=11; ci++){
-    const v=String(probe[ci]||'').replace(/,/g,'');
-    if(v && !isNaN(parseFloat(v)) && parseFloat(v)>0){ PC=ci; CC=ci+1; FC=ci+2; break; }
-  }
-  const RgNSE = (s,e) => rows.slice(s,e)
-    .filter(r => r[6]&&r[6].trim() && r[PC]&&!isNaN(parseFloat(String(r[PC]).replace(/,/g,''))))
-    .map(r => [r[6], r[PC], r[CC], r[FC]]);
-  const gainers = RgNSE(4, 9).slice(0,5);
-  const losers  = RgNSE(12,17).slice(0,5);
+  // Nifty50 left block: [1]=name [2]=price [3]=chg [4]=pct
+  const Lg = (s,e) => rows.slice(s,e)
+    .filter(r => r[1]&&r[1].trim() && r[2]&&!isNaN(parseFloat(String(r[2]).replace(/,/g,''))))
+    .map(r => [r[1],r[2],r[3],r[4]]);
+  const gainers = Lg(4, 9).slice(0,5);
+  const losers  = Lg(12,17).slice(0,5);
   if(!gainers.length && !losers.length) return '';
   const tbl = (title, color, items) => `<div class="tcw">
     <div class="tch" style="color:${color}">${title}
@@ -449,8 +444,8 @@ function buildDashMovers(){
     </table></div>
   </div>`;
   return `<div class="g2">
-    ${tbl('Top NSE Gainers','#1a7a4a',gainers)}
-    ${tbl('Top NSE Losers','#c0392b',losers)}
+    ${tbl('Nifty 50 Gainers','#1a7a4a',gainers)}
+    ${tbl('Nifty 50 Losers','#c0392b',losers)}
   </div>`;
 }
 
