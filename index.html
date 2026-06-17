@@ -153,15 +153,15 @@ footer a{color:var(--mc)}
            onerror="this.style.display='none'"/>
     </div>
     <nav>
-      <button class="nb on"  onclick="showTab('dashboard',this)">📊 Dashboard</button>
-      <button class="nb"     onclick="showTab('global',this)">🌍 Global</button>
-      <button class="nb"     onclick="showTab('futures',this)">📉 Futures</button>
+      <button class="nb on"  onclick="showTab('dashboard',this)">Dashboard</button>
+      <button class="nb"     onclick="showTab('global',this)">Global</button>
+      <button class="nb"     onclick="showTab('futures',this)">Futures</button>
       <button class="nb"     onclick="showTab('indian',this)">Indian</button>
-      <button class="nb"     onclick="showTab('market',this)">📈 Movers</button>
-      <button class="nb"     onclick="showTab('ipo',this)">🏦 IPO</button>
-      <button class="nb"     onclick="showTab('currency',this)">💱 Currencies</button>
-      <button class="nb"     onclick="showTab('corporate',this)">📋 Corporate Actions</button>
-      <button class="nb"     onclick="showTab('calculators',this)">🧮 Calculators</button>
+      <button class="nb"     onclick="showTab('market',this)">Movers</button>
+      <button class="nb"     onclick="showTab('ipo',this)">IPO</button>
+      <button class="nb"     onclick="showTab('currency',this)">Currencies</button>
+      <button class="nb"     onclick="showTab('corporate',this)">Corporate Actions</button>
+      <button class="nb"     onclick="showTab('calculators',this)">Calculators</button>
     </nav>
   </div>
 </header>
@@ -373,7 +373,7 @@ function renderDashboard(rows, newsRows){
   </tr>`;
 
   $('s-dashboard').innerHTML=`
-    <div class="stitle">📊 Dashboard</div>
+    <div class="stitle">Dashboard</div>
     <!-- NEWS FIRST -->
     <div class="g2">
       ${newsBlock('ET Top Stories','📰',etTop,'#c0392b')}
@@ -478,7 +478,7 @@ function renderGlobal(rows){
   const mkCard = r => icard(r[NC], r[PC], r[CC], r[FC], r[HC], r[LC], r[TC]);
 
   $('s-global').innerHTML=`
-    <div class="stitle">🌍 Global Indices</div>
+    <div class="stitle">Global Indices</div>
     <div class="stitle-sm">India</div>
     <div class="igrid">${indiaWithNifty.map(mkCard).join('')}</div>
     <div class="stitle-sm">🌐 World Markets</div>
@@ -530,7 +530,7 @@ function renderFutures(rows){
       </div>`;
   }
   $('s-futures').innerHTML=`
-    <div class="stitle">📉 Index Futures</div>
+    <div class="stitle">Index Futures</div>
     <div class="disc">ℹ️ Source: Investing.com via your sheet. Times vary by exchange session.</div>
     <div class="igrid">${cards.join('')}</div>
     ${giftHtml}`;
@@ -589,7 +589,7 @@ function renderIndian(rows){
     <td style="color:#aaa">${f(r[5])}</td></tr>`;
 
   $('s-indian').innerHTML=`
-    <div class="stitle">🇮🇳 Indian Indices</div>
+    <div class="stitle">Indian Indices</div>
 
     <div class="g2">
       <div class="tcw">
@@ -742,7 +742,7 @@ const nseDec = (rows[31]||[])[8] || '—';
     </tbody></table></div></div>`;
 
   $('s-market').innerHTML=`
-    <div class="stitle">📈 📈 Movers — NSE &amp; BSE</div>
+    <div class="stitle">Movers — NSE &amp; BSE</div>
 
     <div class="adrow">
       <div class="adbox"><div class="adlbl">BSE Advances</div><div class="adnum up">${bseAdv}</div></div>
@@ -852,7 +852,7 @@ function renderIPO(rows){
 
   const TABS = [
     {
-      k:'listed', label:'📈 Listed', count:listed.length, color:'#1a7a4a',
+      k:'listed', label:'Listed', count:listed.length, color:'#1a7a4a',
       html:`<div class="tscr"><table>
         <thead><tr><th>Company</th><th>Type</th><th>Listed</th><th>Issue ₹</th>
           <th>Subs</th><th>List Open</th><th>List Close</th><th>List Gain</th>
@@ -869,7 +869,7 @@ function renderIPO(rows){
       </table></div>`
     },
     {
-      k:'gmp', label:'📋 GMP', count:gmp.length, color:'#0d47a1',
+      k:'gmp', label:'GMP', count:gmp.length, color:'#0d47a1',
       html:`<div class="tscr"><table>
         <thead><tr><th>IPO Name</th><th>GMP</th><th>Price Band</th>
           <th>Est. Listing</th><th>Type</th><th>Updated</th></tr></thead>
@@ -888,7 +888,7 @@ function renderIPO(rows){
       </p>`
     },
     {
-      k:'experts', label:"🎓 Expert's Advice", count:experts.length, color:'#e07b00',
+      k:'experts', label:"Expert's Advice", count:experts.length, color:'#e07b00',
       html:`<div class="tscr"><table>
         <thead><tr><th>Company</th>
           <th style="color:var(--green)">Apply</th>
@@ -905,7 +905,7 @@ function renderIPO(rows){
       </table></div>`
     },
     {
-      k:'subs', label:'📅 Subscription', count:subs.length, color:'#6a1b9a',
+      k:'subs', label:'Subscription', count:subs.length, color:'#6a1b9a',
       html:`<div class="tscr"><table>
         <thead><tr><th>IPO</th><th>Type</th><th>Opening Date</th><th>Closing Date</th>
           <th>QIB (X)</th><th>NII (X)</th><th>Retail (X)</th><th>Total (X)</th></tr></thead>
@@ -917,7 +917,7 @@ function renderIPO(rows){
       </table></div>`
     },
     {
-      k:'dates', label:'📆 Issue Dates', count:dates.length, color:'#555555',
+      k:'dates', label:'Issue Dates', count:dates.length, color:'#555555',
       html:`<div style="padding:10px 14px;columns:2;column-gap:20px">
         ${dates.map(d=>`<div style="padding:5px 0;border-bottom:1px solid #f5f5f5;font-size:12px;break-inside:avoid">
           📌 ${d}
@@ -927,7 +927,7 @@ function renderIPO(rows){
   ];
 
   $('s-ipo').innerHTML=`
-    <div class="stitle">🏦 IPO Corner</div>
+    <div class="stitle">IPO Corner</div>
 
     <div class="corp-tabs">
       ${TABS.map((t,i)=>`
@@ -981,7 +981,7 @@ function renderCurrency(rows){
   const comm=rows.slice(0).filter(r=>r[5]&&r[5].trim()&&r[5]!=='Symbol'&&r[5]!=='#N/A'&&r[6]&&r[6].trim());
 
   $('s-currency').innerHTML=`
-    <div class="stitle">💱 Currencies &amp; Commodities</div>
+    <div class="stitle">Currencies &amp; Commodities</div>
     <div class="g2">
       <div class="tcw">
         <div class="tch">🌐 Global Currencies vs INR</div>
@@ -1156,7 +1156,7 @@ function renderCorporate(){
   ];
 
   $('s-corporate').innerHTML = `
-    <div class="stitle">📋 Corporate Actions</div>
+    <div class="stitle">Corporate Actions</div>
 
     <div class="corp-tabs">
       ${TABS.map((t,i) => `
@@ -1351,7 +1351,7 @@ function renderCalculators(){
     {name:'EV vs ICE',                         url:'https://docs.google.com/spreadsheets/d/1-K4zM4ar4NOluWhlylicldRSeTCkhLBmACzOs1lEw8I/edit?usp=sharing'},
   ];
   $('s-calculators').innerHTML=`
-    <div class="stitle">🧮 Financial Calculators</div>
+    <div class="stitle">Financial Calculators</div>
     <div style="margin:12px 16px;padding:12px 16px;background:#fff8e1;border-left:4px solid #f59e0b;border-radius:6px;font-size:13px;color:#7c5a00;line-height:1.7">
       📥 <strong>How to download:</strong>
       Open Link &nbsp;➜&nbsp; Go to <strong>File → Share and Export or Download</strong>
