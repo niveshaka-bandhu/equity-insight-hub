@@ -386,17 +386,17 @@ function renderDashboard(rows, newsRows){
     <!-- INDICES -->
     <div class="g2">
       <div class="tcw">
-        <div class="tch" style="color:#0d47a1">🇮🇳 Indian Indices</div>
+        <div class="tch" style="color:#0d47a1">Indian Indices</div>
         <div class="tscr"><table>${idxTH}<tbody>${indIdx.map(idxRow).join('')}</tbody></table></div>
       </div>
       <div class="tcw">
-        <div class="tch" style="color:#0d47a1">🌍 Global Indices</div>
+        <div class="tch" style="color:#0d47a1">Global Indices</div>
         <div class="tscr"><table>${idxTH}<tbody>${glbIdx.map(idxRow).join('')}</tbody></table></div>
       </div>
     </div>
 
     ${fiiDii.length?`<div class="tcw">
-      <div class="tch" style="color:#6a1b9a">💹 FII / DII Activity</div>
+      <div class="tch" style="color:#6a1b9a">FII / DII Activity</div>
       <div class="tscr"><table>
         <thead><tr><th>Date</th><th>Net FII (₹ Cr)</th><th>Net DII (₹ Cr)</th></tr></thead>
         <tbody>${fiiDii.map(r=>`<tr>
@@ -984,7 +984,7 @@ function renderCurrency(rows){
     <div class="stitle">Currencies &amp; Commodities</div>
     <div class="g2">
       <div class="tcw">
-        <div class="tch">🌐 Global Currencies vs INR</div>
+        <div class="tch">Global Currencies vs INR</div>
         <div class="tscr"><table>
           <thead><tr><th>Currency</th><th>Code</th><th>Rate (₹)</th></tr></thead>
           <tbody>${curr.map(r=>`<tr>
@@ -995,7 +995,7 @@ function renderCurrency(rows){
         </table></div>
       </div>
       <div class="tcw">
-        <div class="tch">🪙 MCX Commodities</div>
+        <div class="tch">MCX Commodities</div>
         <div class="tscr"><table>
           <thead><tr><th>Commodity</th><th>Last</th><th>Chg</th><th>Chg%</th><th>High</th><th>Low</th></tr></thead>
           <tbody>${comm.map(r=>`<tr>
