@@ -426,8 +426,8 @@ function buildDashMovers(){
   const Lg = (s,e) => rows.slice(s,e)
     .filter(r => r[1]&&r[1].trim() && r[2]&&!isNaN(parseFloat(String(r[2]).replace(/,/g,''))))
     .map(r => [r[1],r[2],r[3],r[4]]);
-  const gainers = Lg(4, 9).slice(0,5);
-  const losers  = Lg(12,17).slice(0,5);
+  const gainers = Lg(0, 5).slice(0,5);
+  const losers  = Lg(6, 12).slice(0,5);
   if(!gainers.length && !losers.length) return '';
   const tbl = (title, color, items) => `<div class="tcw">
     <div class="tch" style="color:${color}">${title}
