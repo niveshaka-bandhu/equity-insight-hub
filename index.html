@@ -405,7 +405,116 @@ function renderDashboard(rows, newsRows){
           <td class="${ic(r[2])}">${f(r[2])}</td>
         </tr>`).join('')}</tbody>
       </table></div>
-    </div>`:''}`;
+    </div>`:''}
+
+    <!-- MOVERS WIDGET -->
+    ${buildDashMovers()}
+
+    <!-- IPO + CORPORATE ACTIONS WIDGETS -->
+    <div class="g2">
+      ${buildDashGMP()}
+      ${buildDashCorpToday()}
+    </div>
+  `;
+}
+
+/* ── Dashboard widget: Top 5 Gainers/Losers (NSE), links to Movers tab ── */
+function buildDashMovers(){
+  const rows = DATA.market || [];
+  if(!rows.length) return '';
+  const probe = rows[4] || [];
+  let PC=9, CC=10, FC=11;
+  for(let ci=7; ci<=11; ci++){
+    const v=String(probe[ci]||'').replace(/,/g,'');
+    if(v && !isNaN(parseFloat(v)) && parseFloat(v)>0){ PC=ci; CC=ci+1; FC=ci+2; break; }
+  }
+  const RgNSE = (s,e) => rows.slice(s,e)
+    .filter(r => r[6]&&r[6].trim() && r[PC]&&!isNaN(parseFloat(String(r[PC]).replace(/,/g,''))))
+    .map(r => [r[6], r[PC], r[CC], r[FC]]);
+  const gainers = RgNSE(4, 9).slice(0,5);
+  const losers  = RgNSE(12,17).slice(0,5);
+  if(!gainers.length && !losers.length) return '';
+  const tbl = (title, color, items) => `<div class="tcw">
+    <div class="tch" style="color:${color}">${title}
+      <a href="javascript:void(0)" onclick="showTab('market',document.querySelector('[onclick*=&quot;market&quot;]'))"
+         style="font-size:11px;font-weight:600;color:var(--mc)">View All →</a>
+    </div>
+    <div class="tscr"><table>
+      <thead><tr><th>Company</th><th>Price ₹</th><th>% Chg</th></tr></thead>
+      <tbody>${items.map(r=>`<tr>
+        <td><strong>${f(r[0])}</strong></td>
+        <td>${f(r[1])}</td>
+        <td class="${ic(r[3])}">${f(r[3])}</td>
+      </tr>`).join('')}</tbody>
+    </table></div>
+  </div>`;
+  return `<div class="g2">
+    ${tbl('Top NSE Gainers','#1a7a4a',gainers)}
+    ${tbl('Top NSE Losers','#c0392b',losers)}
+  </div>`;
+}
+
+/* ── Dashboard widget: Top 5 GMP IPOs, links to IPO tab ── */
+function buildDashGMP(){
+  const rows = (DATA.ipo||[]).concat(DATA.ipo2||[]);
+  if(!rows.length) return '<div class="tcw"><div class="tch">GMP</div><div class="news-loading">No data</div></div>';
+  const findIdx = (kw, col=1) => rows.findIndex(r => String(r[col]||'').toLowerCase().includes(kw.toLowerCase()));
+  const clean = v => String(v||'').replace(/\*/g,'').trim().toLowerCase();
+  const gmpStart = findIdx('Grey Market Premium');
+  const expertsStart = rows.findIndex(r => String(r[1]||'').toLowerCase().includes('expert') || String(r[0]||'').toLowerCase().includes('expert'));
+  const gmpEnd = rows.findIndex((r,i)=> i>gmpStart && clean(r[0])==='company' && String(r[1]||'').toLowerCase().includes('issue date'));
+  let gmp = gmpStart > 0
+    ? rows.slice(gmpStart+2, gmpEnd>0?gmpEnd:(expertsStart>0?expertsStart:gmpStart+15))
+        .filter(r => r[0]&&r[0].trim()&&clean(r[0])!=='ipo name'&&r[1]&&String(r[1]).trim()!=='—'&&/\d/.test(String(r[1])))
+    : [];
+  // Sort by GMP value descending for "top" GMP
+  gmp = gmp.slice().sort((a,b)=>{
+    const av=parseFloat(String(a[1]).replace(/[^\d.-]/g,''))||0;
+    const bv=parseFloat(String(b[1]).replace(/[^\d.-]/g,''))||0;
+    return bv-av;
+  }).slice(0,5);
+  if(!gmp.length) return '<div class="tcw"><div class="tch">GMP</div><div class="news-loading">No data</div></div>';
+  return `<div class="tcw">
+    <div class="tch" style="color:#0d47a1">Top GMP IPOs
+      <a href="javascript:void(0)" onclick="showTab('ipo',document.querySelector('[onclick*=&quot;ipo&quot;]'))"
+         style="font-size:11px;font-weight:600;color:var(--mc)">View All →</a>
+    </div>
+    <div class="tscr"><table>
+      <thead><tr><th>IPO Name</th><th>GMP</th><th>Est. Listing</th></tr></thead>
+      <tbody>${gmp.map(r=>`<tr>
+        <td><strong>${f(r[0])}</strong></td>
+        <td class="${ic(f(r[1]))}" style="font-weight:600">${f(r[1])}</td>
+        <td>${f(r[4])}</td>
+      </tr>`).join('')}</tbody>
+    </table></div>
+  </div>`;
+}
+
+/* ── Dashboard widget: Today's Corporate Actions (5 rows), links to Corporate Actions tab ── */
+function buildDashCorpToday(){
+  const rows = DATA['corp_today'] || [];
+  const headerWords = ['company','event','type','announced'];
+  const isHeader = rows[0] && headerWords.some(w=>(rows[0][0]||'').toLowerCase().includes(w));
+  const data = rows.slice(isHeader?1:0)
+    .filter(r => r[0]&&r[0].trim()&&r[0].toLowerCase().trim()!=='no data found')
+    .slice(0,5);
+  const body = data.length
+    ? data.map(r=>`<tr>
+        <td><strong>${f(r[0])}</strong></td>
+        <td>${f(r[1])}</td>
+        <td>${f(r[3])}</td>
+      </tr>`).join('')
+    : `<tr><td colspan="3" style="text-align:center;color:#aaa;padding:16px">No corporate actions today 🎉</td></tr>`;
+  return `<div class="tcw">
+    <div class="tch" style="color:#555555">Today's Corporate Actions
+      <a href="javascript:void(0)" onclick="showTab('corporate',document.querySelector('[onclick*=&quot;corporate&quot;]'))"
+         style="font-size:11px;font-weight:600;color:var(--mc)">View All →</a>
+    </div>
+    <div class="tscr"><table>
+      <thead><tr><th>Company</th><th>Action</th><th>Ex-Date</th></tr></thead>
+      <tbody>${body}</tbody>
+    </table></div>
+  </div>`;
 }
 
 function formatNewsDate(d){
@@ -1250,8 +1359,11 @@ async function loadAll(){
       }catch(e2){console.warn('ipo gviz fallback failed',e2.message);}
     }),
     fetchIPOTypes().then(d=>{DATA.ipoTypes=d;}).catch(e=>console.warn('ipoTypes',e.message)),
+    fetchSheet(GIDS.market).then(d=>{DATA.market=d;}).catch(e=>console.warn('market',e.message)),
+    fetchSheet2(CORP_GIDS.today).then(d=>{DATA['corp_today']=d;}).catch(e=>console.warn('corp_today',e.message)),
     
   ]);
+  LOADED['market']=true;
   if(DATA.dashboard?.length) try{renderDashboard(DATA.dashboard, DATA.news||[]);}catch(e){console.error('Dashboard',e);}
   if(DATA.global?.length)    try{renderGlobal(DATA.global);}catch(e){console.error('Global',e);}
   if(DATA.futures?.length)   try{renderFutures(DATA.futures);}catch(e){console.error('Futures',e);}
