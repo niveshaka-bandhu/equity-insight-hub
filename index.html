@@ -144,14 +144,16 @@ footer a{color:var(--mc)}
 .hm-title{font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:600;color:#5b4636}
 .hm-legend{display:flex;gap:4px;align-items:center;font-size:11px;color:#a8825f}
 .hm-asof{font-size:10px;color:#a8825f}
-.hm-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:6px}
-.hm-tile{border-radius:8px;padding:10px 12px;min-height:64px;display:flex;flex-direction:column;justify-content:space-between;
-  transition:.15s;cursor:default;position:relative;overflow:hidden}
+.hm-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.hm-tile{border-radius:8px;padding:9px 12px;display:flex;flex-direction:column;gap:6px;
+  transition:.15s;cursor:default}
 .hm-tile:hover{transform:translateY(-1px);box-shadow:0 4px 14px rgba(0,0,0,.12);z-index:2}
-.hm-name{font-size:11px;font-weight:700;color:#fff;line-height:1.25;
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 1px 2px rgba(0,0,0,.15)}
-.hm-pct{font-size:15px;font-weight:700;color:#fff;font-family:'Space Grotesk',sans-serif;text-shadow:0 1px 2px rgba(0,0,0,.15)}
-@media(max-width:600px){.hm-grid{grid-template-columns:repeat(auto-fill,minmax(110px,1fr))}.hm-name{font-size:10px}.hm-pct{font-size:13px}}
+.hm-name{font-size:11.5px;font-weight:700;color:#fff;line-height:1.2;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hm-row{display:flex;justify-content:space-between;align-items:baseline;gap:6px}
+.hm-price{font-size:13px;font-weight:600;color:#fff;font-family:'Space Grotesk',sans-serif;white-space:nowrap}
+.hm-pct{font-size:12.5px;font-weight:700;color:#fff;font-family:'Space Grotesk',sans-serif;white-space:nowrap}
+@media(max-width:600px){.hm-grid{grid-template-columns:repeat(auto-fill,minmax(115px,1fr))}.hm-name{font-size:10px}.hm-price,.hm-pct{font-size:11px}}
 </style>
 </head>
 <body>
@@ -730,24 +732,13 @@ function renderFutures(rows){
    Cols: [0]=Name [1]=Price [2]=Change [3]=%Chg [4]=52WH [5]=52WL [6]=DateTime
          [7]=WtCompany [8]=WtIndustry [9]=WtSymbol [10]=WtWeight
 ══════════════════════════════════════════════ */
-/* Color scale: red(loss) -> cream(flat) -> green(gain), clamped at ±3% */
+/* Solid color: green for gain, red for loss, neutral cream for flat */
 function hmColorFor(pct){
-  const clamped = Math.max(-3, Math.min(3, pct));
-  if(clamped >= 0){
-    const t = clamped/3;
-    const r = Math.round(253 + (47-253)*t);
-    const g = Math.round(232 + (158-232)*t);
-    const b = Math.round(200 + (94-200)*t);
-    return `rgb(${r},${g},${b})`;
-  } else {
-    const t = (-clamped)/3;
-    const r = Math.round(253 + (224-253)*t);
-    const g = Math.round(232 + (86-232)*t);
-    const b = Math.round(200 + (47-200)*t);
-    return `rgb(${r},${g},${b})`;
-  }
+  if(pct > 0) return '#6fbf8f';
+  if(pct < 0) return '#e8807f';
+  return '#e8ddc8';
 }
-function hmTextDark(pct){ return Math.abs(pct) < 0.5; }
+function hmTextDark(pct){ return pct === 0; }
 
 function renderHeatmapSection(title, items){
   if(!items.length) return `<div class="hm-section"><div class="hm-title">${title} (0)</div><p style="color:#aaa;padding:12px 0">No data</p></div>`;
@@ -768,13 +759,17 @@ function renderHeatmapSection(title, items){
       </div>
     </div>
     <div class="hm-grid">
-      ${sorted.map(([name,pct])=>{
+      ${sorted.map(([name,pct,price])=>{
         const bg = hmColorFor(pct);
         const dark = hmTextDark(pct);
         const sign = pct>0?'+':'';
-        return `<div class="hm-tile" style="background:${bg}" title="${f(name)}: ${sign}${pct.toFixed(2)}%">
-          <div class="hm-name" style="${dark?'color:#5b4636;text-shadow:none':''}">${f(name)}</div>
-          <div class="hm-pct" style="${dark?'color:#5b4636;text-shadow:none':''}">${sign}${pct.toFixed(2)}%</div>
+        const textStyle = dark?'color:#5b4636':'color:#fff';
+        return `<div class="hm-tile" style="background:${bg}" title="${f(name)}: ${f(price)} (${sign}${pct.toFixed(2)}%)">
+          <div class="hm-name" style="${textStyle}">${f(name)}</div>
+          <div class="hm-row">
+            <div class="hm-price" style="${textStyle}">${f(price)}</div>
+            <div class="hm-pct" style="${textStyle}">${sign}${pct.toFixed(2)}%</div>
+          </div>
         </div>`;
       }).join('')}
     </div>
@@ -790,7 +785,7 @@ function renderIndian(rows){
 
   // Filter: only rows where col[0] has a name (skip accidental blank rows)
   const hasName = r => r[0]&&r[0].trim();
-  const toItem = r => [r[0], parseFloat(String(r[3]||'0').replace(/[^\d.-]/g,''))||0];
+  const toItem = r => [r[0], parseFloat(String(r[3]||'0').replace(/[^\d.-]/g,''))||0, r[1]];
   const nse    = nseRows.filter(hasName).map(toItem);
   const bse    = bseRows.filter(hasName).map(toItem);
   const sensex = sensexRows.filter(hasName).map(toItem);
