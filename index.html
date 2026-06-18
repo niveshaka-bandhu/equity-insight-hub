@@ -602,42 +602,39 @@ function renderGlobal(rows){
 ══════════════════════════════════════════════ */
 function renderFutures(rows){
   const cards=[];
-  let giftBlock=null;
+  let giftCard=null;
   let i=0;
   while(i<rows.length){
     const r=rows[i];
     const name=(r[0]||'').trim();
-    if(name.toLowerCase()==='gift nifty'){
-      const g1=rows[i+1]||[];
-      const g3=rows[i+3]||[];
-      giftBlock={price:f(g1[5]),dir:f(g1[6]),dt:f(g1[4]),chg:f(g3[3]),pct:f(g3[4]),prev:f(g3[5])};
-      i+=5; continue;
-    }
     if(!name||name==='Symbol'||name==='Close'||!r[2]||!r[2].trim()){i++;continue;}
     const next=rows[i+1]||[];
     const tm=(next[3]||'').trim();
-    const isHL=name.toUpperCase().includes('NIFTY FUTURES')||name.toUpperCase().includes('GIFT NIFTY');
-    cards.push(icard(name,r[2],r[3],r[4],r[5],r[6],tm,isHL));
+    const isGift=name.toUpperCase().includes('GIFT NIFTY');
+    const isHL=name.toUpperCase().includes('NIFTY FUTURES')||isGift;
+    const card=icard(name,r[2],r[3],r[4],r[5],r[6],tm,isHL);
+    if(isGift && !giftCard){ giftCard={name,price:f(r[2]),chg:f(r[3]),pct:f(r[4]),hi:f(r[5]),lo:f(r[6]),tm}; }
+    else cards.push(card);
     i+=2;
   }
   let giftHtml='';
-  if(giftBlock){
-    const pos=!String(giftBlock.chg||'').startsWith('-');
-    giftHtml=`<div class="stitle-sm">🇮🇳 GIFT NIFTY — Live</div>
+  if(giftCard){
+    const pos=!String(giftCard.chg||'').trim().startsWith('-');
+    giftHtml=`<div class="stitle-sm">GIFT NIFTY — Live</div>
       <div class="gift-card">
-        <div class="gift-col"><div class="gift-lbl">Price</div><div class="gift-val">${giftBlock.price}</div></div>
-        <div class="gift-col"><div class="gift-lbl">Change</div><div class="gift-val ${pos?'up':'dn'}">${giftBlock.chg}</div></div>
-        <div class="gift-col"><div class="gift-lbl">Change %</div><div class="gift-val ${pos?'up':'dn'}">${giftBlock.pct}</div></div>
-        <div class="gift-col"><div class="gift-lbl">Prev Close</div><div class="gift-val" style="font-size:18px">${giftBlock.prev}</div></div>
-        <div class="gift-col"><div class="gift-lbl">As of</div><div style="font-size:11px;color:#666;margin-top:4px">${giftBlock.dt}</div></div>
-        <div class="gift-col"><div class="gift-lbl">Direction</div><div class="${pos?'up':'dn'}" style="font-size:16px;font-weight:700;margin-top:4px">${giftBlock.dir} ${pos?'Bullish':'Bearish'}</div></div>
+        <div class="gift-col"><div class="gift-lbl">Price</div><div class="gift-val">${giftCard.price}</div></div>
+        <div class="gift-col"><div class="gift-lbl">Change</div><div class="gift-val ${pos?'up':'dn'}">${giftCard.chg}</div></div>
+        <div class="gift-col"><div class="gift-lbl">Change %</div><div class="gift-val ${pos?'up':'dn'}">${giftCard.pct}</div></div>
+        <div class="gift-col"><div class="gift-lbl">Day High</div><div class="gift-val" style="font-size:18px">${giftCard.hi}</div></div>
+        <div class="gift-col"><div class="gift-lbl">Day Low</div><div class="gift-val" style="font-size:18px">${giftCard.lo}</div></div>
+        <div class="gift-col"><div class="gift-lbl">As of</div><div style="font-size:11px;color:#666;margin-top:4px">${giftCard.tm||'—'}</div></div>
       </div>`;
   }
   $('s-futures').innerHTML=`
     <div class="stitle">Index Futures</div>
-    <div class="disc">ℹ️ Source: Investing.com via your sheet. Times vary by exchange session.</div>
-    <div class="igrid">${cards.join('')}</div>
-    ${giftHtml}`;
+    <div class="disc">Source: Investing.com via your sheet. Times vary by exchange session.</div>
+    ${giftHtml}
+    <div class="igrid">${cards.join('')}</div>`;
 }
 
 
@@ -1310,7 +1307,7 @@ function showCorpTab(key, btn, color){
 
 /* ── TICKER ── */
 function buildTicker(gRows,fRows){
-  const G_NAMES=['NIFTY 50','SENSEX','INDIA VIX','DOW JONES','NASDAQ','S&P 500','NIKKEI','SHENZEN','HANG SENG','IBOVESPA','EURONEXT','DAX','CAC 40'];
+  const G_NAMES=['NIFTY 50','SENSEX','INDIA VIX','DOW JONES','NASDAQ','S&P 500','NIKKEI','SHENZEN','HANG SENG','KOSPI','FTSE 100','IBOVESPA','EURONEXT','DAX','CAC 40'];
   const F_NAMES=['DOW FUTURES','NASDAQ FUTURES','FTSE FUTURES','EURO STOXX FUTURES','NIKKEI FUTURES','NIFTY FUTURES','GIFT NIFTY FUTURES','US DOLLAR INDEX','BITCOIN FUTURES'];
 
   const gItems=[], fItems=[];
