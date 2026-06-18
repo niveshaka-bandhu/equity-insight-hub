@@ -137,6 +137,21 @@ footer a{color:var(--mc)}
 .live-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--green);
   box-shadow:0 0 0 0 rgba(47,158,94,.6);animation:pulse 2s infinite;margin-right:6px;vertical-align:middle}
 @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(47,158,94,.55)}70%{box-shadow:0 0 0 7px rgba(47,158,94,0)}100%{box-shadow:0 0 0 0 rgba(47,158,94,0)}}
+
+/* HEATMAP */
+.hm-section{margin-bottom:26px}
+.hm-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px;flex-wrap:wrap;gap:8px}
+.hm-title{font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:600;color:#5b4636}
+.hm-legend{display:flex;gap:4px;align-items:center;font-size:11px;color:#a8825f}
+.hm-asof{font-size:10px;color:#a8825f}
+.hm-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:6px}
+.hm-tile{border-radius:8px;padding:10px 12px;min-height:64px;display:flex;flex-direction:column;justify-content:space-between;
+  transition:.15s;cursor:default;position:relative;overflow:hidden}
+.hm-tile:hover{transform:translateY(-1px);box-shadow:0 4px 14px rgba(0,0,0,.12);z-index:2}
+.hm-name{font-size:11px;font-weight:700;color:#fff;line-height:1.25;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 1px 2px rgba(0,0,0,.15)}
+.hm-pct{font-size:15px;font-weight:700;color:#fff;font-family:'Space Grotesk',sans-serif;text-shadow:0 1px 2px rgba(0,0,0,.15)}
+@media(max-width:600px){.hm-grid{grid-template-columns:repeat(auto-fill,minmax(110px,1fr))}.hm-name{font-size:10px}.hm-pct{font-size:13px}}
 </style>
 </head>
 <body>
@@ -715,6 +730,57 @@ function renderFutures(rows){
    Cols: [0]=Name [1]=Price [2]=Change [3]=%Chg [4]=52WH [5]=52WL [6]=DateTime
          [7]=WtCompany [8]=WtIndustry [9]=WtSymbol [10]=WtWeight
 ══════════════════════════════════════════════ */
+/* Color scale: red(loss) -> cream(flat) -> green(gain), clamped at ±3% */
+function hmColorFor(pct){
+  const clamped = Math.max(-3, Math.min(3, pct));
+  if(clamped >= 0){
+    const t = clamped/3;
+    const r = Math.round(253 + (47-253)*t);
+    const g = Math.round(232 + (158-232)*t);
+    const b = Math.round(200 + (94-200)*t);
+    return `rgb(${r},${g},${b})`;
+  } else {
+    const t = (-clamped)/3;
+    const r = Math.round(253 + (224-253)*t);
+    const g = Math.round(232 + (86-232)*t);
+    const b = Math.round(200 + (47-200)*t);
+    return `rgb(${r},${g},${b})`;
+  }
+}
+function hmTextDark(pct){ return Math.abs(pct) < 0.5; }
+
+function renderHeatmapSection(title, items){
+  if(!items.length) return `<div class="hm-section"><div class="hm-title">${title} (0)</div><p style="color:#aaa;padding:12px 0">No data</p></div>`;
+  // items: [name, pctChgNumber]
+  const sorted = items.slice().sort((a,b)=>b[1]-a[1]);
+  const up = items.filter(i=>i[1]>0).length;
+  const down = items.filter(i=>i[1]<0).length;
+  const flat = items.length - up - down;
+  return `<div class="hm-section">
+    <div class="hm-head">
+      <div class="hm-title">${title} <span style="color:#a8825f;font-weight:500;font-size:12px">(${items.length})</span></div>
+      <div class="hm-legend">
+        <span style="color:var(--green);font-weight:700">▲ ${up}</span>
+        <span style="margin:0 4px">·</span>
+        <span style="color:#a8825f;font-weight:700">● ${flat}</span>
+        <span style="margin:0 4px">·</span>
+        <span style="color:var(--red);font-weight:700">▼ ${down}</span>
+      </div>
+    </div>
+    <div class="hm-grid">
+      ${sorted.map(([name,pct])=>{
+        const bg = hmColorFor(pct);
+        const dark = hmTextDark(pct);
+        const sign = pct>0?'+':'';
+        return `<div class="hm-tile" style="background:${bg}" title="${f(name)}: ${sign}${pct.toFixed(2)}%">
+          <div class="hm-name" style="${dark?'color:#5b4636;text-shadow:none':''}">${f(name)}</div>
+          <div class="hm-pct" style="${dark?'color:#5b4636;text-shadow:none':''}">${sign}${pct.toFixed(2)}%</div>
+        </div>`;
+      }).join('')}
+    </div>
+  </div>`;
+}
+
 function renderIndian(rows){
   // EXACT row slices — gviz is 0-indexed, matches CSV row - 1
   const nseRows   = rows.slice(0,  19); // CSV rows 3–21
@@ -722,57 +788,22 @@ function renderIndian(rows){
   const sensexRows= rows.slice(37, 67); // CSV rows 44–73
   const niftyRows = rows.slice(68,118); // CSV rows 76–125
 
-  // Weight rows: same rows 75–125, read col[7–10]
-  // Row 125 (CSV 126) has only weights, no stock data
-  const weightRows = rows.slice(75,126).filter(r=>r[7]&&r[7].trim()&&r[8]&&r[9]&&r[10]&&r[7]!=='Company Name');
-
   // Filter: only rows where col[0] has a name (skip accidental blank rows)
   const hasName = r => r[0]&&r[0].trim();
-  const nse    = nseRows.filter(hasName);
-  const bse    = bseRows.filter(hasName);
-  const sensex = sensexRows.filter(hasName);
-  const nifty  = niftyRows.filter(hasName);
-
-  const sectR = r=>`<tr>
-    <td><strong>${f(r[0])}</strong></td>
-    <td>${f(r[1])}</td>
-    <td class="${ic(r[2])}">${f(r[2])}</td>
-    <td class="${ic(r[3])}">${f(r[3])}%</td>
-    <td style="color:#aaa">${f(r[4])}</td>
-    <td style="color:#aaa">${f(r[5])}</td></tr>`;
-
-  const stockR = r=>`<tr>
-    <td><strong>${f(r[0])}</strong></td>
-    <td>${f(r[1])}</td>
-    <td class="${ic(r[2])}">${f(r[2])}</td>
-    <td class="${ic(r[3])}">${f(r[3])}%</td>
-    <td style="color:#aaa">${f(r[4])}</td>
-    <td style="color:#aaa">${f(r[5])}</td></tr>`;
+  const toItem = r => [r[0], parseFloat(String(r[3]||'0').replace(/[^\d.-]/g,''))||0];
+  const nse    = nseRows.filter(hasName).map(toItem);
+  const bse    = bseRows.filter(hasName).map(toItem);
+  const sensex = sensexRows.filter(hasName).map(toItem);
+  const nifty  = niftyRows.filter(hasName).map(toItem);
 
   $('s-indian').innerHTML=`
-    <div class="stitle">Indian Indices</div>
+    <div class="stitle">Indian Indices — Heatmap</div>
+    <div class="hm-asof" style="margin-bottom:14px">As on ${new Date().toLocaleString('en-IN',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'})} IST</div>
 
-    <div class="g2">
-      <div class="tcw">
-        <div class="tch">NSE Sectoral Indices</div>
-        <div class="tscr"><table>${SECT_TH}<tbody>${nse.map(sectR).join('')}</tbody></table></div>
-      </div>
-      <div class="tcw">
-        <div class="tch">BSE Sectoral Indices</div>
-        <div class="tscr"><table>${SECT_TH}<tbody>${bse.map(sectR).join('')}</tbody></table></div>
-      </div>
-    </div>
-
-    <div class="tcw">
-      <div class="tch">BSE SENSEX 30</div>
-      <div class="tscr"><table>${STOCK_TH}<tbody>${sensex.map(stockR).join('')}</tbody></table></div>
-    </div>
-
-    <div class="tcw">
-      <div class="tch">NIFTY 50 Constituents — Live Prices</div>
-      <div class="tscr"><table>${STOCK_TH}<tbody>${nifty.map(stockR).join('')}</tbody></table></div>
-    </div>
-
+    ${renderHeatmapSection('NSE Sectoral Indices', nse)}
+    ${renderHeatmapSection('BSE Sectoral Indices', bse)}
+    ${renderHeatmapSection('BSE Sensex 30', sensex)}
+    ${renderHeatmapSection('Nifty 50 Constituents', nifty)}
     `;
 }
 
