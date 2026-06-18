@@ -270,7 +270,7 @@ function ic(v){
 function pctFmt(v){const s=String(v||"").trim();if(!s||s==="—")return "—";return s.includes("%")?s:s+"%";}
 function icard(name,price,chg,pct,hi,lo,tm,hl){
   const pos=!String(chg||"").trim().startsWith("-");
-  const hls=hl?"border:2px solid #e07b00;background:#fffbf0;":"";
+  const hls=hl?"background:#fffbf0;":"";
   return `<div class="icard" style="${hls}">
     <div class="iname" style="${hl?"font-weight:700;color:#b85c00;":""}">${f(name)}</div>
     <div class="iprc">${f(price)}</div>
@@ -407,6 +407,9 @@ function renderDashboard(rows, newsRows){
       </table></div>
     </div>`:''}
 
+    <!-- FUTURES + GLOBAL WATCHLIST WIDGET -->
+    ${buildDashFuturesGlobal()}
+
     <!-- MOVERS WIDGET -->
     ${buildDashMovers()}
 
@@ -416,6 +419,56 @@ function renderDashboard(rows, newsRows){
       ${buildDashCorpToday()}
     </div>
   `;
+}
+
+/* ── Dashboard widget: Watchlist of specific Futures + Global indices ── */
+function buildDashFuturesGlobal(){
+  const fRows = DATA.futures || [];
+  const gRows = DATA.global  || [];
+  const F_WANT = ['GIFT NIFTY FUTURES','NASDAQ FUTURES','DOW FUTURES'];
+  const G_WANT = ['NIKKEI','HANG SENG','KOSPI','FTSE 100','DAX','CAC 40'];
+
+  const fItems = F_WANT.map(want=>{
+    const r = fRows.find(row => (row[0]||'').toUpperCase().trim() === want);
+    return r ? [r[0], r[2], r[3], r[4]] : null;
+  }).filter(Boolean);
+
+  const gItems = G_WANT.map(want=>{
+    const r = gRows.find(row => (row[2]||'').toUpperCase().trim() === want);
+    return r ? [r[2], r[3], r[4], r[5]] : null;
+  }).filter(Boolean);
+
+  if(!fItems.length && !gItems.length) return '';
+
+  const rowHtml = r => `<tr>
+    <td><strong>${f(r[0])}</strong></td>
+    <td>${f(r[1])}</td>
+    <td class="${ic(r[2])}">${f(r[2])}</td>
+    <td class="${ic(r[3])}">${pctFmt(r[3])}</td>
+  </tr>`;
+
+  return `<div class="g2">
+    <div class="tcw">
+      <div class="tch" style="color:#0d47a1">Key Futures
+        <a href="javascript:void(0)" onclick="showTab('futures',document.querySelector('[onclick*=&quot;futures&quot;]'))"
+           style="font-size:11px;font-weight:600;color:var(--mc)">View All →</a>
+      </div>
+      <div class="tscr"><table>
+        <thead><tr><th>Index</th><th>Price</th><th>Change</th><th>% Chg</th></tr></thead>
+        <tbody>${fItems.map(rowHtml).join('')||'<tr><td colspan="4" style="text-align:center;color:#aaa;padding:14px">Loading…</td></tr>'}</tbody>
+      </table></div>
+    </div>
+    <div class="tcw">
+      <div class="tch" style="color:#0d47a1">Key Global Indices
+        <a href="javascript:void(0)" onclick="showTab('global',document.querySelector('[onclick*=&quot;global&quot;]'))"
+           style="font-size:11px;font-weight:600;color:var(--mc)">View All →</a>
+      </div>
+      <div class="tscr"><table>
+        <thead><tr><th>Index</th><th>Price</th><th>Change</th><th>% Chg</th></tr></thead>
+        <tbody>${gItems.map(rowHtml).join('')||'<tr><td colspan="4" style="text-align:center;color:#aaa;padding:14px">Loading…</td></tr>'}</tbody>
+      </table></div>
+    </div>
+  </div>`;
 }
 
 /* ── Dashboard widget: Top 5 Gainers/Losers (NSE), links to Movers tab ── */
@@ -602,7 +655,7 @@ function renderGlobal(rows){
 ══════════════════════════════════════════════ */
 function renderFutures(rows){
   const cards=[];
-  let giftCard=null;
+  let giftCard=null, niftyCard=null;
   let i=0;
   while(i<rows.length){
     const r=rows[i];
@@ -610,30 +663,34 @@ function renderFutures(rows){
     if(!name||name==='Symbol'||name==='Close'||!r[2]||!r[2].trim()){i++;continue;}
     const next=rows[i+1]||[];
     const tm=(next[3]||'').trim();
-    const isGift=name.toUpperCase().includes('GIFT NIFTY');
-    const isHL=name.toUpperCase().includes('NIFTY FUTURES')||isGift;
+    const upper=name.toUpperCase();
+    const isGift=upper.includes('GIFT NIFTY');
+    const isNiftyFut=upper==='NIFTY FUTURES';
+    const isHL=upper.includes('NIFTY FUTURES')||isGift;
     const card=icard(name,r[2],r[3],r[4],r[5],r[6],tm,isHL);
     if(isGift && !giftCard){ giftCard={name,price:f(r[2]),chg:f(r[3]),pct:f(r[4]),hi:f(r[5]),lo:f(r[6]),tm}; }
+    else if(isNiftyFut && !niftyCard){ niftyCard={name,price:f(r[2]),chg:f(r[3]),pct:f(r[4]),hi:f(r[5]),lo:f(r[6]),tm}; }
     else cards.push(card);
     i+=2;
   }
-  let giftHtml='';
-  if(giftCard){
-    const pos=!String(giftCard.chg||'').trim().startsWith('-');
-    giftHtml=`<div class="stitle-sm">GIFT NIFTY — Live</div>
+  const mkBlock = (label, c) => {
+    if(!c) return '';
+    const pos=!String(c.chg||'').trim().startsWith('-');
+    return `<div class="stitle-sm">${label} — Live</div>
       <div class="gift-card">
-        <div class="gift-col"><div class="gift-lbl">Price</div><div class="gift-val">${giftCard.price}</div></div>
-        <div class="gift-col"><div class="gift-lbl">Change</div><div class="gift-val ${pos?'up':'dn'}">${giftCard.chg}</div></div>
-        <div class="gift-col"><div class="gift-lbl">Change %</div><div class="gift-val ${pos?'up':'dn'}">${giftCard.pct}</div></div>
-        <div class="gift-col"><div class="gift-lbl">Day High</div><div class="gift-val" style="font-size:18px">${giftCard.hi}</div></div>
-        <div class="gift-col"><div class="gift-lbl">Day Low</div><div class="gift-val" style="font-size:18px">${giftCard.lo}</div></div>
-        <div class="gift-col"><div class="gift-lbl">As of</div><div style="font-size:11px;color:#666;margin-top:4px">${giftCard.tm||'—'}</div></div>
+        <div class="gift-col"><div class="gift-lbl">Price</div><div class="gift-val">${c.price}</div></div>
+        <div class="gift-col"><div class="gift-lbl">Change</div><div class="gift-val ${pos?'up':'dn'}">${c.chg}</div></div>
+        <div class="gift-col"><div class="gift-lbl">Change %</div><div class="gift-val ${pos?'up':'dn'}">${c.pct}</div></div>
+        <div class="gift-col"><div class="gift-lbl">Day High</div><div class="gift-val" style="font-size:18px">${c.hi}</div></div>
+        <div class="gift-col"><div class="gift-lbl">Day Low</div><div class="gift-val" style="font-size:18px">${c.lo}</div></div>
+        <div class="gift-col"><div class="gift-lbl">As of</div><div style="font-size:11px;color:#666;margin-top:4px">${c.tm||'—'}</div></div>
       </div>`;
-  }
+  };
   $('s-futures').innerHTML=`
     <div class="stitle">Index Futures</div>
     <div class="disc">Source: Investing.com via your sheet. Times vary by exchange session.</div>
-    ${giftHtml}
+    ${mkBlock('GIFT NIFTY', giftCard)}
+    ${mkBlock('NIFTY FUTURES', niftyCard)}
     <div class="igrid">${cards.join('')}</div>`;
 }
 
