@@ -732,13 +732,22 @@ function renderFutures(rows){
    Cols: [0]=Name [1]=Price [2]=Change [3]=%Chg [4]=52WH [5]=52WL [6]=DateTime
          [7]=WtCompany [8]=WtIndustry [9]=WtSymbol [10]=WtWeight
 ══════════════════════════════════════════════ */
-/* Solid color: green for gain, red for loss, neutral cream for flat */
-function hmColorFor(pct){
-  if(pct > 0) return '#6fbf8f';
-  if(pct < 0) return '#e8807f';
-  return '#e8ddc8';
+/* 5-bucket graduated intensity scale: deep green (strong gain) -> light grey (flat) -> deep red (strong loss) */
+const HM_GREENS=['#bfe3cc','#8fd1a8','#5cbb80','#2f9e5e','#1a7a45']; // light -> deep
+const HM_REDS  =['#f5c4be','#ee9a91','#e8807f','#d85a52','#c0392b']; // light -> deep
+function hmBucket(abs){
+  if(abs>=2.5) return 4;
+  if(abs>=1.5) return 3;
+  if(abs>=0.75) return 2;
+  if(abs>=0.25) return 1;
+  return 0;
 }
-function hmTextDark(pct){ return pct === 0; }
+function hmColorFor(pct){
+  if(pct > 0) return HM_GREENS[hmBucket(pct)];
+  if(pct < 0) return HM_REDS[hmBucket(-pct)];
+  return '#e3e3e3'; // light grey for exactly flat
+}
+function hmTextDark(pct){ return pct === 0 || hmBucket(Math.abs(pct)) <= 1; }
 
 function renderHeatmapSection(title, items){
   if(!items.length) return `<div class="hm-section"><div class="hm-title">${title} (0)</div><p style="color:#aaa;padding:12px 0">No data</p></div>`;
