@@ -82,6 +82,7 @@ tbody td{font-size:12px;color:#6b5340;padding:8px 10px;white-space:nowrap}
 .gift-col:last-child{border-right:none}
 .gift-lbl{font-size:10px;color:#a8825f;text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px}
 .gift-val{font-family:'Space Grotesk',sans-serif;font-size:21px;font-weight:600;line-height:1;color:#5b4636}
+.gift-val.up{color:var(--green)}.gift-val.dn{color:var(--red)}
 
 /* 2-COL */
 .g2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
@@ -339,16 +340,28 @@ function renderDashboard(rows, newsRows){
   const lmCompany = newsRows.slice(10, 15);
   const lmMarket  = newsRows.slice(15, 20);
 
-  // Indices: first 8 = Indian, next 5 = Global
+  // Indices: first 8 = Indian
   const indIdx    = idxRows.slice(0, 8);
-  const glbIdx    = idxRows.slice(8, 13);
+
+  // Merge all news sources and sort by date, most recent first
+  const allNews = [
+    ...etTop.map(r=>[...r,'ET Top']),
+    ...etRecent.map(r=>[...r,'ET Recent']),
+    ...lmCompany.map(r=>[...r,'Livemint Co.']),
+    ...lmMarket.map(r=>[...r,'Livemint Mkt'])
+  ].filter(r=>r[0]&&r[1]);
+  allNews.sort((a,b)=>{
+    const da=new Date(a[2]||0), db=new Date(b[2]||0);
+    const ta=isNaN(da)?0:da.getTime(), tb=isNaN(db)?0:db.getTime();
+    return tb-ta;
+  });
 
   // News block builder from sheet data
   function newsBlock(title, icon, items, color, elId){
     if(!items.length) return `<div class="tcw"><div class="tch" style="color:${color}">${icon} ${title}</div><div class="news-loading">No data</div></div>`;
     return `<div class="tcw">
       <div class="tch" style="color:${color}">${icon} ${title}</div>
-      <div>${items.map(r=>`
+      <div style="max-height:480px;overflow-y:auto">${items.map(r=>`
         <div style="padding:10px 14px;border-bottom:1px solid #f5f5f5">
           <a href="${(r[1]||'').trim()}" target="_blank" rel="noopener"
              style="font-size:12.5px;font-weight:500;color:#1a1a1a;text-decoration:none;line-height:1.5;display:block"
@@ -356,7 +369,10 @@ function renderDashboard(rows, newsRows){
              onmouseout="this.style.color='#1a1a1a'">
             ${f(r[0])}
           </a>
-          <div style="font-size:10px;color:#aaa;margin-top:3px">${formatNewsDate(r[2]||'')}</div>
+          <div style="font-size:10px;color:#aaa;margin-top:3px;display:flex;gap:8px;align-items:center">
+            <span>${formatNewsDate(r[2]||'')}</span>
+            ${r[3]?`<span style="background:rgba(237,125,43,.12);color:var(--mc);padding:1px 6px;border-radius:4px;font-weight:600">${r[3]}</span>`:''}
+          </div>
         </div>`).join('')}
       </div>
     </div>`;
@@ -375,24 +391,11 @@ function renderDashboard(rows, newsRows){
   $('s-dashboard').innerHTML=`
     <div class="stitle">Dashboard</div>
     <!-- NEWS FIRST -->
-    <div class="g2">
-      ${newsBlock('ET Top Stories','📰',etTop,'#c0392b')}
-      ${newsBlock('ET Recent Stories','🗞️',etRecent,'#e07b00')}
-    </div>
-    <div class="g2">
-      ${newsBlock('Livemint Company News','🏢',lmCompany,'#0d47a1')}
-      ${newsBlock('Livemint Market News','📈',lmMarket,'#1a7a4a')}
-    </div>
+    ${newsBlock('Latest News','📰',allNews,'#c0392b')}
     <!-- INDICES -->
-    <div class="g2">
-      <div class="tcw">
-        <div class="tch" style="color:#0d47a1">Indian Indices</div>
-        <div class="tscr"><table>${idxTH}<tbody>${indIdx.map(idxRow).join('')}</tbody></table></div>
-      </div>
-      <div class="tcw">
-        <div class="tch" style="color:#0d47a1">Global Indices</div>
-        <div class="tscr"><table>${idxTH}<tbody>${glbIdx.map(idxRow).join('')}</tbody></table></div>
-      </div>
+    <div class="tcw">
+      <div class="tch" style="color:#0d47a1">Indian Indices</div>
+      <div class="tscr"><table>${idxTH}<tbody>${indIdx.map(idxRow).join('')}</tbody></table></div>
     </div>
 
     ${fiiDii.length?`<div class="tcw">
@@ -425,7 +428,7 @@ function renderDashboard(rows, newsRows){
 function buildDashFuturesGlobal(){
   const fRows = DATA.futures || [];
   const gRows = DATA.global  || [];
-  const F_WANT = ['GIFT NIFTY FUTURES','NASDAQ FUTURES','DOW FUTURES'];
+  const F_WANT = ['GIFT NIFTY FUTURES','NASDAQ FUTURES','DOW FUTURES','EURO STOXX FUTURES','NIKKEI FUTURES','BITCOIN FUTURES'];
   const G_WANT = ['NIKKEI','HANG SENG','KOSPI','FTSE 100','DAX','CAC 40'];
 
   const fItems = F_WANT.map(want=>{
