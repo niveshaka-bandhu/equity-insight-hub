@@ -133,6 +133,32 @@ footer a{color:var(--mc)}
 
 .news-loading{color:#a8825f;padding:20px;text-align:center;font-size:12px}
 
+/* FII/DII SENTIMENT GAUGE */
+.fii-wrap{background:var(--panel);backdrop-filter:var(--panel-blur);border:1px solid var(--bdr);
+  border-radius:14px;padding:18px 20px;margin-bottom:12px}
+.fii-hdr3{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+.fii-title3{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#8a6a4d}
+.fii-date3{font-size:10px;color:#bfa07a}
+.fii-meter-labels{display:flex;justify-content:space-between;font-size:10px;font-weight:700;margin-bottom:5px}
+.fii-track{height:12px;border-radius:12px;position:relative;overflow:hidden;display:flex;
+  background:rgba(120,75,30,.10)}
+.fii-fill-sell{height:100%;border-radius:12px 0 0 12px;transition:.5s}
+.fii-fill-buy{height:100%;border-radius:0 12px 12px 0;transition:.5s}
+.fii-needle{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  width:2px;height:16px;background:#fff;border-radius:2px;z-index:2}
+.fii-sentiment{text-align:center;margin:8px 0 14px}
+.fii-sent-lbl{font-size:10px;color:#a8825f;margin-bottom:2px}
+.fii-sent-val{font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:700}
+.fii-cards3{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+.fii-card3{border-radius:10px;padding:12px 14px}
+.fii-c3-lbl{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
+.fii-c3-val{font-family:'Space Grotesk',sans-serif;font-size:20px;font-weight:700;line-height:1}
+.fii-c3-sub{font-size:9px;margin-top:3px}
+.fii-prev3{display:flex;gap:6px;align-items:center;font-size:11px;
+  background:rgba(237,125,43,.06);border-radius:8px;padding:8px 12px;flex-wrap:wrap}
+.fii-prev3-lbl{font-size:9px;color:#a8825f;font-weight:700;text-transform:uppercase;
+  letter-spacing:.4px;flex-shrink:0;margin-right:4px}
+
 /* LIVE PULSE DOT */
 .live-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--green);
   box-shadow:0 0 0 0 rgba(47,158,94,.6);animation:pulse 2s infinite;margin-right:6px;vertical-align:middle}
@@ -415,17 +441,67 @@ function renderDashboard(rows, newsRows){
       <div class="tscr"><table>${idxTH}<tbody>${indIdx.map(idxRow).join('')}</tbody></table></div>
     </div>
 
-    ${fiiDii.length?`<div class="tcw">
-      <div class="tch" style="color:#6a1b9a">FII / DII Activity</div>
-      <div class="tscr"><table>
-        <thead><tr><th>Date</th><th>Net FII (₹ Cr)</th><th>Net DII (₹ Cr)</th></tr></thead>
-        <tbody>${fiiDii.map(r=>`<tr>
-          <td>${f(r[0])}</td>
-          <td class="${ic(r[1])}">${f(r[1])}</td>
-          <td class="${ic(r[2])}">${f(r[2])}</td>
-        </tr>`).join('')}</tbody>
-      </table></div>
-    </div>`:''}
+    ${(()=>{
+      if(!fiiDii.length) return '';
+      const today = fiiDii[0];
+      const prev  = fiiDii[1]||null;
+      const fii   = parseFloat(String(today[1]||'0').replace(/,/g,''))||0;
+      const dii   = parseFloat(String(today[2]||'0').replace(/,/g,''))||0;
+      const fiiPos = fii>=0, diiPos = dii>=0;
+      const total  = Math.abs(fii)+Math.abs(dii)||1;
+      const fiiPct = (Math.abs(fii)/total*100).toFixed(1);
+      const diiPct = (Math.abs(dii)/total*100).toFixed(1);
+      const crFmt  = v=>{const s=v<0?'-':'+';return s+'₹'+Math.abs(v).toLocaleString('en-IN',{maximumFractionDigits:2,minimumFractionDigits:2})+' Cr';};
+      const net    = fii+dii;
+      const domFII = Math.abs(fii)>Math.abs(dii);
+      const sentColor = net>=0?'var(--green)':'var(--red)';
+      const sentLabel = net>=0
+        ? (fiiPos&&diiPos?'Both Buying ↑':domFII?'FII Led Rally ↑':'DII Dominant ↑')
+        : ((!fiiPos)&&(!diiPos)?'Both Selling ↓':domFII?'FII Selloff ↓':'DII Dominant ↓');
+      let prevHtml='';
+      if(prev){
+        const pf=parseFloat(String(prev[1]||'0').replace(/,/g,''))||0;
+        const pd=parseFloat(String(prev[2]||'0').replace(/,/g,''))||0;
+        prevHtml=`<div class="fii-prev3">
+          <div class="fii-prev3-lbl">${f(prev[0])}</div>
+          FII <strong style="color:${pf>=0?'var(--green)':'var(--red)'};margin:0 4px">${crFmt(pf)}</strong>
+          <span style="color:#e0c9b0">·</span>
+          DII <strong style="color:${pd>=0?'var(--green)':'var(--red)'};margin-left:4px">${crFmt(pd)}</strong>
+        </div>`;
+      }
+      return `<div class="fii-wrap">
+        <div class="fii-hdr3">
+          <div class="fii-title3">FII / DII Activity</div>
+          <div class="fii-date3">${f(today[0])}</div>
+        </div>
+        <div class="fii-meter-labels">
+          <span style="color:var(--red)">← FII ${fiiPos?'Buying':'Selling'}</span>
+          <span style="color:var(--green)">DII ${diiPos?'Buying':'Selling'} →</span>
+        </div>
+        <div class="fii-track">
+          <div class="fii-fill-sell" style="width:${fiiPct}%;background:${fiiPos?'var(--green)':'var(--red)'}"></div>
+          <div class="fii-fill-buy"  style="width:${diiPct}%;background:${diiPos?'var(--green)':'var(--red)'}"></div>
+          <div class="fii-needle"></div>
+        </div>
+        <div class="fii-sentiment">
+          <div class="fii-sent-lbl">Market Sentiment</div>
+          <div class="fii-sent-val" style="color:${sentColor}">${sentLabel}</div>
+        </div>
+        <div class="fii-cards3">
+          <div class="fii-card3" style="background:${fiiPos?'rgba(47,158,94,.09)':'rgba(224,86,47,.09)'};border:1px solid ${fiiPos?'rgba(47,158,94,.2)':'rgba(224,86,47,.2)'}">
+            <div class="fii-c3-lbl" style="color:${fiiPos?'var(--green)':'var(--red)'}">FII / FPI</div>
+            <div class="fii-c3-val" style="color:${fiiPos?'var(--green)':'var(--red)'}">${crFmt(fii)}</div>
+            <div class="fii-c3-sub" style="color:${fiiPos?'var(--green)':'var(--red)'}">${fiiPos?'Net Buyer':'Net Seller'}</div>
+          </div>
+          <div class="fii-card3" style="background:${diiPos?'rgba(47,158,94,.09)':'rgba(224,86,47,.09)'};border:1px solid ${diiPos?'rgba(47,158,94,.2)':'rgba(224,86,47,.2)'}">
+            <div class="fii-c3-lbl" style="color:${diiPos?'var(--green)':'var(--red)'}">DII</div>
+            <div class="fii-c3-val" style="color:${diiPos?'var(--green)':'var(--red)'}">${crFmt(dii)}</div>
+            <div class="fii-c3-sub" style="color:${diiPos?'var(--green)':'var(--red)'}">${diiPos?'Net Buyer':'Net Seller'}</div>
+          </div>
+        </div>
+        ${prevHtml}
+      </div>`;
+    })()}
 
     <!-- FUTURES + GLOBAL WATCHLIST WIDGET -->
     ${buildDashFuturesGlobal()}
