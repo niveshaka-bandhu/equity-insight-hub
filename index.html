@@ -451,7 +451,7 @@ function renderDashboard(rows, newsRows){
       const total  = Math.abs(fii)+Math.abs(dii)||1;
       const fiiPct = (Math.abs(fii)/total*100).toFixed(1);
       const diiPct = (Math.abs(dii)/total*100).toFixed(1);
-      const crFmt  = v=>{const s=v<0?'-':'+';return s+'₹'+Math.abs(v).toLocaleString('en-IN',{maximumFractionDigits:2,minimumFractionDigits:2})+' Cr';};
+      const fmtFiiDate = s=>{try{const d=new Date(s);if(isNaN(d))return s;return d.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}).replace(/ /g,'-');}catch(e){return s;}};
       const net    = fii+dii;
       const domFII = Math.abs(fii)>Math.abs(dii);
       const sentColor = net>=0?'var(--green)':'var(--red)';
@@ -463,7 +463,7 @@ function renderDashboard(rows, newsRows){
         const pf=parseFloat(String(prev[1]||'0').replace(/,/g,''))||0;
         const pd=parseFloat(String(prev[2]||'0').replace(/,/g,''))||0;
         prevHtml=`<div class="fii-prev3">
-          <div class="fii-prev3-lbl">${f(prev[0])}</div>
+          <div class="fii-prev3-lbl">${fmtFiiDate(prev[0])}</div>
           FII <strong style="color:${pf>=0?'var(--green)':'var(--red)'};margin:0 4px">${crFmt(pf)}</strong>
           <span style="color:#e0c9b0">·</span>
           DII <strong style="color:${pd>=0?'var(--green)':'var(--red)'};margin-left:4px">${crFmt(pd)}</strong>
@@ -472,7 +472,7 @@ function renderDashboard(rows, newsRows){
       return `<div class="fii-wrap">
         <div class="fii-hdr3">
           <div class="fii-title3">FII / DII Activity</div>
-          <div class="fii-date3">${f(today[0])}</div>
+          <div class="fii-date3">${fmtFiiDate(today[0])}</div>
         </div>
         <div class="fii-meter-labels">
           <span style="color:var(--red)">← FII ${fiiPos?'Buying':'Selling'}</span>
