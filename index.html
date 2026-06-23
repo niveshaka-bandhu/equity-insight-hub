@@ -451,6 +451,7 @@ function renderDashboard(rows, newsRows){
       const total  = Math.abs(fii)+Math.abs(dii)||1;
       const fiiPct = (Math.abs(fii)/total*100).toFixed(1);
       const diiPct = (Math.abs(dii)/total*100).toFixed(1);
+      const crFmt  = v=>{const s=v<0?'-':'+';return s+'₹'+Math.abs(v).toLocaleString('en-IN',{maximumFractionDigits:2,minimumFractionDigits:2})+' Cr';};
       const fmtFiiDate = s=>{try{const d=new Date(s);if(isNaN(d))return s;return d.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}).replace(/ /g,'-');}catch(e){return s;}};
       const net    = fii+dii;
       const domFII = Math.abs(fii)>Math.abs(dii);
