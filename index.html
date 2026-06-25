@@ -732,12 +732,51 @@ function renderGlobal(rows){
   const mkCard = r => icard(r[NC], r[PC], r[CC], r[FC], r[HC], r[LC], r[TC]);
 
   $('s-global').innerHTML=`
-    <div class="stitle">Global Indices</div>
-    <div class="stitle-sm">India</div>
-    <div class="igrid">${indiaWithNifty.map(mkCard).join('')}</div>
-    <div class="stitle-sm">🌐 World Markets</div>
-    <div class="igrid">${world.map(mkCard).join('')}</div>
-    <p style="font-size:10px;color:#bbb;margin-top:6px">⚠️ Quotes delayed up to 20 min. Source: Google Finance. Not investment advice.</p>`;
+    <div style="position:relative;min-height:400px">
+      <!-- Light world map watermark -->
+      <div style="position:absolute;inset:0;opacity:0.055;pointer-events:none;overflow:hidden;border-radius:12px">
+        <svg viewBox="0 0 1000 500" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%">
+          <!-- North America -->
+          <path d="M80,60 L160,55 L200,80 L210,120 L190,160 L170,200 L140,230 L110,220 L90,190 L70,160 L60,120 L70,90 Z" fill="#ed7d2b"/>
+          <path d="M140,230 L170,240 L180,270 L160,300 L130,290 L110,260 L120,240 Z" fill="#ed7d2b"/>
+          <!-- Greenland -->
+          <path d="M200,30 L240,25 L250,50 L230,70 L205,65 Z" fill="#ed7d2b"/>
+          <!-- South America -->
+          <path d="M170,280 L210,270 L230,300 L225,350 L210,390 L190,420 L165,410 L150,370 L148,330 L155,300 Z" fill="#ed7d2b"/>
+          <!-- Europe -->
+          <path d="M420,60 L470,55 L490,75 L480,100 L460,110 L440,105 L420,90 Z" fill="#ed7d2b"/>
+          <path d="M430,110 L465,108 L470,130 L450,140 L425,135 Z" fill="#ed7d2b"/>
+          <!-- Scandinavia -->
+          <path d="M455,30 L475,25 L480,50 L465,60 L450,55 Z" fill="#ed7d2b"/>
+          <path d="M475,28 L490,25 L495,45 L480,52 Z" fill="#ed7d2b"/>
+          <!-- UK -->
+          <path d="M400,65 L415,62 L418,80 L405,82 Z" fill="#ed7d2b"/>
+          <!-- Africa -->
+          <path d="M430,150 L490,145 L510,175 L515,220 L510,270 L495,310 L475,340 L450,345 L425,320 L415,280 L412,230 L418,185 Z" fill="#ed7d2b"/>
+          <!-- Russia/Asia North -->
+          <path d="M490,40 L650,30 L720,55 L730,90 L700,100 L650,95 L580,90 L510,85 L490,70 Z" fill="#ed7d2b"/>
+          <!-- Middle East -->
+          <path d="M510,150 L560,145 L575,170 L565,195 L535,200 L510,185 Z" fill="#ed7d2b"/>
+          <!-- India -->
+          <path d="M590,160 L625,158 L635,185 L625,215 L605,230 L585,215 L578,190 Z" fill="#ed7d2b"/>
+          <!-- China/SE Asia -->
+          <path d="M640,100 L720,95 L740,120 L735,155 L710,170 L680,165 L655,150 L640,130 Z" fill="#ed7d2b"/>
+          <path d="M695,170 L730,168 L740,195 L720,210 L695,200 Z" fill="#ed7d2b"/>
+          <!-- Japan -->
+          <path d="M760,100 L775,95 L780,115 L765,120 Z" fill="#ed7d2b"/>
+          <!-- Australia -->
+          <path d="M720,280 L800,270 L830,295 L835,340 L815,370 L775,375 L740,355 L720,320 L715,295 Z" fill="#ed7d2b"/>
+          <!-- New Zealand -->
+          <path d="M845,330 L858,325 L862,350 L848,358 Z" fill="#ed7d2b"/>
+        </svg>
+      </div>
+      <div class="stitle">Global Indices</div>
+      <div class="stitle-sm">India</div>
+      <div class="igrid">${indiaWithNifty.map(mkCard).join('')}</div>
+      <div class="stitle-sm">World Markets</div>
+      <div class="igrid">${world.map(mkCard).join('')}</div>
+      <p style="font-size:10px;color:#bbb;margin-top:6px">Quotes delayed up to 20 min · Source: Google Finance · Not investment advice</p>
+    </div>`;
 }
 
 /* ══════════════════════════════════════════════
