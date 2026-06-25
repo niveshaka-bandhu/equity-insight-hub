@@ -1219,12 +1219,13 @@ function renderIPO(rows){
     {
       k:'subs', label:'Subscription', count:subs.length, color:'#6a1b9a',
       html:`<div class="tscr"><table>
-        <thead><tr><th>IPO</th><th>Type</th><th>Opening Date</th><th>Closing Date</th>
-          <th>QIB (X)</th><th>NII (X)</th><th>Retail (X)</th><th>Total (X)</th></tr></thead>
+        <thead><tr><th>IPO</th><th>Type</th><th>Closing Date</th>
+          <th>QIB (X)</th><th>NII (X)</th><th>Retail (X)</th><th>Total (X)</th><th>Updated</th></tr></thead>
         <tbody>${subs.map(r=>`<tr>
           <td><strong>${f(r[0])}</strong></td><td>${tbadge(r[1])}</td>
-          <td>${f(r[2])}</td><td>${f(r[3])}</td>
-          ${[4,5,6,7].map(i=>{const v=parseFloat(r[i]);return`<td class="${isNaN(v)?'':v>=10?'cp':v>=1?'':'cn'}">${f(r[i])}</td>`;}).join('')}
+          <td>${f(r[2])}</td>
+          ${[3,4,5,6].map(i=>{const v=parseFloat(r[i]);return`<td class="${isNaN(v)?'':v>=10?'cp':v>=1?'':'cn'}">${f(r[i])}</td>`;}).join('')}
+          <td style="color:#aaa;font-size:11px">${f(r[7])}</td>
         </tr>`).join('')}</tbody>
       </table></div>`
     },
