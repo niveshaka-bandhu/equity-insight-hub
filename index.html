@@ -1563,11 +1563,15 @@ async function loadAll(){
       }catch(e2){console.warn('ipo gviz fallback failed',e2.message);}
     }),
     fetchIPOTypes().then(d=>{DATA.ipoTypes=d;}).catch(e=>console.warn('ipoTypes',e.message)),
-    fetchSheet(GIDS.market).then(d=>{DATA.market=d;}).catch(e=>console.warn('market',e.message)),
     fetchSheet2(CORP_GIDS.today).then(d=>{DATA['corp_today']=d;}).catch(e=>console.warn('corp_today',e.message)),
+    // Fetch market data for Dashboard widget but don't mark as LOADED so Movers tab still loads+renders properly
+    fetchSheet(GIDS.market).then(d=>{
+      DATA.market=d;
+      // Re-render dashboard movers widget now that market data is available
+      if(DATA.dashboard?.length) try{renderDashboard(DATA.dashboard, DATA.news||[]);}catch(e){}
+    }).catch(e=>console.warn('market',e.message)),
     
   ]);
-  LOADED['market']=true;
   if(DATA.dashboard?.length) try{renderDashboard(DATA.dashboard, DATA.news||[]);}catch(e){console.error('Dashboard',e);}
   if(DATA.global?.length)    try{renderGlobal(DATA.global);}catch(e){console.error('Global',e);}
   if(DATA.futures?.length)   try{renderFutures(DATA.futures);}catch(e){console.error('Futures',e);}
