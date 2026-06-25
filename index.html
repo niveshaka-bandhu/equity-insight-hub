@@ -1189,7 +1189,7 @@ function renderIPO(rows){
           <td><strong>${st(r[0])}</strong></td>
           <td class="${ic(st(r[1]))}" style="font-weight:600">${st(r[1])}</td>
           <td>${st(r[3])}</td><td>${st(r[4])}</td>
-          <td>${tbadge(r[6])}</td>
+          <td>${tbadge(r[6]||'Mainboard')}</td>
           <td style="color:#aaa;font-size:11px">${st(r[8])}</td>
         </tr>`).join('')}</tbody>
       </table></div>
