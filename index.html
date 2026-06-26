@@ -433,8 +433,6 @@ function renderDashboard(rows, newsRows){
 
   $('s-dashboard').innerHTML=`
     <div class="stitle">Dashboard</div>
-    <!-- NEWS FIRST -->
-    ${newsBlock('Latest News','📰',allNews,'#c0392b')}
     <!-- INDICES -->
     <div class="tcw">
       <div class="tch" style="color:#0d47a1">Indian Indices</div>
@@ -515,6 +513,9 @@ function renderDashboard(rows, newsRows){
       ${buildDashGMP()}
       ${buildDashCorpToday()}
     </div>
+
+    <!-- NEWS LAST -->
+    ${newsBlock('Latest News','📰',allNews,'#c0392b')}
   `;
 }
 
@@ -1290,36 +1291,58 @@ function showIPOTab(key,btn,color){
    Col: [1]=Currency [2]=RateINR [3]=Code | [5]=Symbol [6]=Last [7]=Chg [8]=Chg% [9]=Close [10]=High [11]=Low
 ══════════════════════════════════════════════ */
 function renderCurrency(rows){
-  const curr=rows.slice(0).filter(r=>r[1]&&r[1].trim()&&r[2]&&r[2].trim()&&r[1]!=='Currency');
-  const comm=rows.slice(0).filter(r=>r[5]&&r[5].trim()&&r[5]!=='Symbol'&&r[5]!=='#N/A'&&r[6]&&r[6].trim());
+  const curr=rows.filter(r=>r[1]&&r[1].trim()&&r[2]&&r[2].trim()&&r[1]!=='Currency');
+  const comm=rows.filter(r=>r[5]&&r[5].trim()&&r[5]!=='Symbol'&&r[5]!=='#N/A'&&r[6]&&r[6].trim());
+
+  const FLAGS={'US Dollar':'🇺🇸','Euro':'🇪🇺','British Pound':'🇬🇧','Japanese Yen':'🇯🇵',
+    'UAE Dirham':'🇦🇪','Singapore Dollar':'🇸🇬','Chinese Yuan':'🇨🇳','Swiss Franc':'🇨🇭',
+    'Australian Dollar':'🇦🇺','Canadian Dollar':'🇨🇦','Hong Kong Dollar':'🇭🇰',
+    'Saudi Riyal':'🇸🇦','Kuwaiti Dinar':'🇰🇼','Malaysian Ringgit':'🇲🇾','Thai Baht':'🇹🇭'};
+  const flag = name => FLAGS[name]||'🏳';
+
+  const currCards = curr.map(r=>`
+    <div style="background:var(--panel);border:1px solid var(--bdr);border-radius:12px;
+      padding:14px 16px;position:relative;overflow:hidden;transition:.15s;cursor:default"
+      onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 6px 20px rgba(180,100,40,.12)'"
+      onmouseout="this.style.transform='';this.style.boxShadow=''">
+      <div style="position:absolute;top:0;left:0;right:0;height:3px;background:var(--mc);border-radius:12px 12px 0 0"></div>
+      <div style="font-size:22px;margin-bottom:6px;line-height:1">${flag(f(r[1]))}</div>
+      <div style="font-size:10px;font-weight:700;color:#a8825f;text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">${f(r[3])}</div>
+      <div style="font-family:'Space Grotesk',sans-serif;font-size:21px;font-weight:700;color:#5b4636;line-height:1;margin-bottom:4px">₹${f(r[2])}</div>
+      <div style="font-size:10px;color:#bfa07a">${f(r[1])}</div>
+    </div>`).join('');
+
+  const commCards = comm.map(r=>{
+    const pos=!String(r[7]||'').trim().startsWith('-');
+    const cc=pos?'var(--green)':'var(--red)';
+    const bg=pos?'rgba(47,158,94,.09)':'rgba(224,86,47,.09)';
+    const bc=pos?'rgba(47,158,94,.22)':'rgba(224,86,47,.22)';
+    return `<div style="background:var(--panel);border:1px solid var(--bdr);border-radius:10px;
+      padding:13px 15px;display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
+      <div>
+        <div style="font-size:12px;font-weight:700;color:#5b4636">${f(r[5])}</div>
+        <div style="font-size:9px;color:#a8825f;margin-top:1px;margin-bottom:8px">MCX</div>
+        <div style="font-size:10px;color:#bfa07a;display:flex;gap:10px">
+          <span>H: <strong style="color:#8a6a4d">${f(r[10])}</strong></span>
+          <span>L: <strong style="color:#8a6a4d">${f(r[11])}</strong></span>
+        </div>
+      </div>
+      <div style="text-align:right;flex-shrink:0">
+        <div style="font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:700;color:#5b4636;margin-bottom:5px">₹${f(r[6])}</div>
+        <span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:6px;
+          background:${bg};color:${cc};border:1px solid ${bc}">${f(r[7])} (${f(r[8])})</span>
+      </div>
+    </div>`;}).join('');
 
   $('s-currency').innerHTML=`
     <div class="stitle">Currencies &amp; Commodities</div>
-    <div class="g2">
-      <div class="tcw">
-        <div class="tch">Global Currencies vs INR</div>
-        <div class="tscr"><table>
-          <thead><tr><th>Currency</th><th>Code</th><th>Rate (₹)</th></tr></thead>
-          <tbody>${curr.map(r=>`<tr>
-            <td>${f(r[1])}</td>
-            <td style="color:#aaa;font-size:11px">${f(r[3])}</td>
-            <td><strong>${f(r[2])}</strong></td></tr>`).join('')}
-          </tbody>
-        </table></div>
-      </div>
-      <div class="tcw">
-        <div class="tch">MCX Commodities</div>
-        <div class="tscr"><table>
-          <thead><tr><th>Commodity</th><th>Last</th><th>Chg</th><th>Chg%</th><th>High</th><th>Low</th></tr></thead>
-          <tbody>${comm.map(r=>`<tr>
-            <td><strong>${f(r[5])}</strong></td><td>${f(r[6])}</td>
-            <td class="${ic(r[7])}">${f(r[7])}</td>
-            <td class="${ic(r[8])}">${f(r[8])}</td>
-            <td style="color:#aaa">${f(r[10])}</td>
-            <td style="color:#aaa">${f(r[11])}</td></tr>`).join('')}
-          </tbody>
-        </table></div>
-      </div>
+    <div class="stitle-sm" style="margin-bottom:10px">Global Currencies vs ₹ INR</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-bottom:22px">
+      ${currCards}
+    </div>
+    <div class="stitle-sm" style="margin-bottom:10px">MCX Commodities</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px">
+      ${commCards}
     </div>`;
 }
 
