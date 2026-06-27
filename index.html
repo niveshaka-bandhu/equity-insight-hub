@@ -1294,56 +1294,47 @@ function renderCurrency(rows){
   const curr=rows.filter(r=>r[1]&&r[1].trim()&&r[2]&&r[2].trim()&&r[1]!=='Currency');
   const comm=rows.filter(r=>r[5]&&r[5].trim()&&r[5]!=='Symbol'&&r[5]!=='#N/A'&&r[6]&&r[6].trim());
 
-  const FLAGS={'US Dollar':'🇺🇸','Euro':'🇪🇺','British Pound':'🇬🇧','Japanese Yen':'🇯🇵',
-    'UAE Dirham':'🇦🇪','Singapore Dollar':'🇸🇬','Chinese Yuan':'🇨🇳','Swiss Franc':'🇨🇭',
-    'Australian Dollar':'🇦🇺','Canadian Dollar':'🇨🇦','Hong Kong Dollar':'🇭🇰',
-    'Saudi Riyal':'🇸🇦','Kuwaiti Dinar':'🇰🇼','Malaysian Ringgit':'🇲🇾','Thai Baht':'🇹🇭'};
-  const flag = name => FLAGS[name]||'🏳';
-
+  // Currency cards — use code (r[3]) as label, no flag emoji (not supported in all browsers)
   const currCards = curr.map(r=>`
     <div style="background:var(--panel);border:1px solid var(--bdr);border-radius:12px;
       padding:14px 16px;position:relative;overflow:hidden;transition:.15s;cursor:default"
       onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 6px 20px rgba(180,100,40,.12)'"
       onmouseout="this.style.transform='';this.style.boxShadow=''">
       <div style="position:absolute;top:0;left:0;right:0;height:3px;background:var(--mc);border-radius:12px 12px 0 0"></div>
-      <div style="font-size:22px;margin-bottom:6px;line-height:1">${flag(f(r[1]))}</div>
-      <div style="font-size:10px;font-weight:700;color:#a8825f;text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">${f(r[3])}</div>
-      <div style="font-family:'Space Grotesk',sans-serif;font-size:21px;font-weight:700;color:#5b4636;line-height:1;margin-bottom:4px">₹${f(r[2])}</div>
-      <div style="font-size:10px;color:#bfa07a">${f(r[1])}</div>
+      <div style="font-size:11px;font-weight:700;color:#a8825f;text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px">${f(r[3])}</div>
+      <div style="font-family:'Space Grotesk',sans-serif;font-size:21px;font-weight:700;color:#5b4636;line-height:1;margin-bottom:5px">
+        <span style="font-size:13px;font-weight:600;color:#a8825f;vertical-align:middle;margin-right:1px">₹</span>${f(r[2])}
+      </div>
+      <div style="font-size:10px;color:#bfa07a;text-transform:uppercase;letter-spacing:.3px">${f(r[1])}</div>
     </div>`).join('');
 
-  const commCards = comm.map(r=>{
-    const pos=!String(r[7]||'').trim().startsWith('-');
-    const cc=pos?'var(--green)':'var(--red)';
-    const bg=pos?'rgba(47,158,94,.09)':'rgba(224,86,47,.09)';
-    const bc=pos?'rgba(47,158,94,.22)':'rgba(224,86,47,.22)';
-    return `<div style="background:var(--panel);border:1px solid var(--bdr);border-radius:10px;
-      padding:13px 15px;display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
-      <div>
-        <div style="font-size:12px;font-weight:700;color:#5b4636">${f(r[5])}</div>
-        <div style="font-size:9px;color:#a8825f;margin-top:1px;margin-bottom:8px">MCX</div>
-        <div style="font-size:10px;color:#bfa07a;display:flex;gap:10px">
-          <span>H: <strong style="color:#8a6a4d">${f(r[10])}</strong></span>
-          <span>L: <strong style="color:#8a6a4d">${f(r[11])}</strong></span>
-        </div>
+  // Commodities heatmap — same bucket system as Indian Indices
+  const commHeatmap = comm.map(r=>{
+    const pct = parseFloat(String(r[8]||'0').replace(/[^0-9.-]/g,'')) * (String(r[8]||'').includes('-')?-1:1);
+    const bg  = hmColorFor(pct);
+    const dark= hmTextDark(pct);
+    const ts  = dark?'color:#5b4636':'color:#fff';
+    const sign= pct>0?'+':'';
+    const name= f(r[5]);
+    const price= f(r[6]);
+    const chg  = f(r[7]);
+    return `<div class="hm-tile" style="background:${bg}" title="${name}: ₹${price} (${sign}${pct.toFixed(2)}%)">
+      <div class="hm-name" style="${ts}">${name}</div>
+      <div class="hm-row">
+        <div class="hm-price" style="${ts}">₹${price}</div>
+        <div class="hm-pct"   style="${ts}">${sign}${pct.toFixed(2)}%</div>
       </div>
-      <div style="text-align:right;flex-shrink:0">
-        <div style="font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:700;color:#5b4636;margin-bottom:5px">₹${f(r[6])}</div>
-        <span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:6px;
-          background:${bg};color:${cc};border:1px solid ${bc}">${f(r[7])} (${f(r[8])})</span>
-      </div>
-    </div>`;}).join('');
+    </div>`;
+  }).join('');
 
   $('s-currency').innerHTML=`
     <div class="stitle">Currencies &amp; Commodities</div>
     <div class="stitle-sm" style="margin-bottom:10px">Global Currencies vs ₹ INR</div>
-    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-bottom:22px">
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-bottom:24px">
       ${currCards}
     </div>
     <div class="stitle-sm" style="margin-bottom:10px">MCX Commodities</div>
-    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px">
-      ${commCards}
-    </div>`;
+    <div class="hm-grid">${commHeatmap}</div>`;
 }
 
 /* ══════════════════════════════════════════════
