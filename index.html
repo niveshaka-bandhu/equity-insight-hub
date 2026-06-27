@@ -344,7 +344,7 @@ function renderDashboard(rows, newsRows){
   Rows 1-5  (idx 1-5):   col[0]=Title  col[1]=URL  col[2]=Date
   Row 6  (idx 6):  "Economic times Recent Stories" header
   Rows 7-11 (idx 7-11):  col[0]=Title  col[1]=URL  col[2]=Date
-  Row 12 (idx 12): "Livemint Company News" header
+  Row 12 (idx 12): "The Hindu Market News" header
   Rows 13-17(idx 13-17): col[0]=Title  col[1]=URL  col[2]=Date
   Row 18 (idx 18): "Livemint Market News" header
   Rows 19-23(idx 19-23): col[0]=Title  col[1]=URL  col[2]=Date
@@ -389,8 +389,8 @@ function renderDashboard(rows, newsRows){
   // Merge all news sources and sort by date, most recent first
   const allNews = [
     ...etTop.map(r=>[...r,'ET Top']),
-    ...etRecent.map(r=>[...r,'ET Recent']),
-    ...lmCompany.map(r=>[...r,'Livemint Co.']),
+    ...etRecent.map(r=>[...r,'Business Std']),
+    ...lmCompany.map(r=>[...r,'The Hindu']),
     ...lmMarket.map(r=>[...r,'Livemint Mkt'])
   ].filter(r=>r[0]&&r[1]);
   allNews.sort((a,b)=>{
