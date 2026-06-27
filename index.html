@@ -439,6 +439,19 @@ function renderDashboard(rows, newsRows){
       <div class="tscr"><table>${idxTH}<tbody>${indIdx.map(idxRow).join('')}</tbody></table></div>
     </div>
 
+    <!-- FUTURES + GLOBAL WATCHLIST WIDGET -->
+    ${buildDashFuturesGlobal()}
+
+    <!-- MOVERS WIDGET -->
+    ${buildDashMovers()}
+
+    <!-- IPO + CORPORATE ACTIONS WIDGETS -->
+    <div class="g2">
+      ${buildDashGMP()}
+      ${buildDashCorpToday()}
+    </div>
+
+    <!-- FII/DII ABOVE NEWS -->
     ${(()=>{
       if(!fiiDii.length) return '';
       const today = fiiDii[0];
@@ -501,18 +514,6 @@ function renderDashboard(rows, newsRows){
         ${prevHtml}
       </div>`;
     })()}
-
-    <!-- FUTURES + GLOBAL WATCHLIST WIDGET -->
-    ${buildDashFuturesGlobal()}
-
-    <!-- MOVERS WIDGET -->
-    ${buildDashMovers()}
-
-    <!-- IPO + CORPORATE ACTIONS WIDGETS -->
-    <div class="g2">
-      ${buildDashGMP()}
-      ${buildDashCorpToday()}
-    </div>
 
     <!-- NEWS LAST -->
     ${newsBlock('Latest News','📰',allNews,'#c0392b')}
