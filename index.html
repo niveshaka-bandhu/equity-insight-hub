@@ -982,15 +982,38 @@ function renderMarket(rows){
   const Lg = (s,e) => rows.slice(s,e)
     .filter(r => r[1]&&r[1].trim() && r[2]&&!isNaN(parseFloat(String(r[2]).replace(/,/g,''))))
     .map(r => [r[1],r[2],r[3],r[4]]);
+  // Right NSE block: detected cols — calculate % if not present
   const RgNSE = (s,e) => rows.slice(s,e)
     .filter(r => r[6]&&r[6].trim() && r[PC]&&!isNaN(parseFloat(String(r[PC]).replace(/,/g,''))))
-    .map(r => [r[6], r[PC], r[CC], r[FC]]);
+    .map(r => {
+      const price = parseFloat(String(r[PC]||'0').replace(/,/g,''));
+      const chg   = parseFloat(String(r[CC]||'0').replace(/,/g,''));
+      let pct = r[FC];
+      if(!pct || !String(pct).trim() || String(pct).trim()==='—') {
+        const prev = price - chg;
+        pct = prev!==0 ? (chg/prev*100).toFixed(2)+'%' : '—';
+      }
+      return [r[6], r[PC], r[CC], pct];
+    });
+
+  // Right BSE block: calculate % from price and change
   const RgBSE = (s,e) => rows.slice(s,e)
     .filter(r => r[6]&&r[6].trim() && r[BPC]&&!isNaN(parseFloat(String(r[BPC]).replace(/,/g,''))))
     .map(r => {
       let pct = r[BFC];
       if((!pct || !String(pct).trim()) && r[BPC+2] && String(r[BPC+2]).trim()) pct = r[BPC+2];
       if(pct) pct = String(pct).replace(/^--/,'-');
+      // If still no %, try to calculate from price and any change col
+      if(!pct || !String(pct).trim() || String(pct).trim()==='—') {
+        for(let ci=BPC+1; ci<=BPC+3; ci++){
+          const chgVal = parseFloat(String(r[ci]||'').replace(/,/g,''));
+          if(!isNaN(chgVal) && chgVal!==0){
+            const price = parseFloat(String(r[BPC]||'0').replace(/,/g,''));
+            const prev  = price - chgVal;
+            if(prev!==0) { pct = (chgVal/prev*100).toFixed(2)+'%'; break; }
+          }
+        }
+      }
       return [r[6], r[BPC], pct];
     });
 
