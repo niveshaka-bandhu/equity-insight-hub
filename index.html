@@ -1034,12 +1034,17 @@ function renderMarket(rows){
 
   // Variation 2 card builder
   const v2Card = (r, pos, i) => {
-    const color = pos?'var(--green)':'var(--red)';
-    const bg    = pos?'rgba(47,158,94,.06)':'rgba(224,86,47,.06)';
-    const bc    = pos?'rgba(47,158,94,.18)':'rgba(224,86,47,.18)';
-    const pct   = f(r[3]||r[2]); // 4-col uses r[3], 3-col uses r[2]
+    // r = [name, price, change, pct]
     const price = f(r[1]);
-    const chg   = r[3] ? f(r[2]) : ''; // chg only for 4-col
+    const chg   = r[3] ? f(r[2]) : ''; // only show change if pct is separate col
+    let   pct   = f(r[3]||r[2]);
+    // Ensure % sign present
+    if(pct && pct!=='—' && !String(pct).includes('%')) pct = pct+'%';
+    // Derive actual direction from pct value (not caller's pos assumption)
+    const actualPos = !String(pct).trim().startsWith('-');
+    const color = actualPos?'var(--green)':'var(--red)';
+    const bg    = actualPos?'rgba(47,158,94,.06)':'rgba(224,86,47,.06)';
+    const bc    = actualPos?'rgba(47,158,94,.18)':'rgba(224,86,47,.18)';
     return `<div style="background:${bg};border:1px solid ${bc};border-radius:10px;
       padding:11px 14px;display:flex;align-items:center;gap:12px;transition:.15s"
       onmouseover="this.style.transform='translateX(2px)'"
