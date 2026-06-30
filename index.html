@@ -1148,45 +1148,32 @@ function patchIPOTypes(rows, typeRows, dateRows){
 }
 
 function renderIPO(rows){
-  /* CONFIRMED from CSV:
-     Recently Listed: idx 2-21  col[0-10]
-     GMP data:        idx 25-35 col[0-8]
-     Issue Dates:     idx 39-47 col[0]
-     Experts:         idx 50-69 col[0-5]
-     Subscription:    idx 72-164 col[0-7]
-  */
   const st = v => String(v||'').replace(/\*/g,'').trim() || '—';
-
- // Use dynamic section detection instead of hardcoded indices
-  // because gviz skips blank/merged rows causing index drift
   const findIdx = (keyword, col=1) => rows.findIndex(r => String(r[col]||'').toLowerCase().includes(keyword.toLowerCase()));
   const clean = v => String(v||'').replace(/\*/g,'').trim().toLowerCase();
 
   const gmpStart     = findIdx('Grey Market Premium');
-  const datesStart   = findIdx('Issue Date', 0) > -1 ? rows.findIndex(r=>String(r[1]||'').trim()==='' && String(r[0]||'').includes('Comp')) : findIdx('Issue Date');
   const expertsStart = rows.findIndex(r =>
     String(r[1]||'').toLowerCase().includes('expert') ||
     String(r[0]||'').toLowerCase().includes('expert'));
   const subsStart    = findIdx('IPO Subscription Status');
 
-  const listed  = rows.slice(1, gmpStart > 0 ? gmpStart : 22)
-                      .filter(r => r[0]&&r[0].trim()&&r[0]!=='Company Name');
-  const gmpEnd  = rows.findIndex((r,i) => i > gmpStart && clean(r[0])==='company' && String(r[1]||'').toLowerCase().includes('issue date'));
-  const gmp     = gmpStart > 0
-                ? rows.slice(gmpStart+2, gmpEnd > 0 ? gmpEnd : gmpStart+15)
-                      .filter(r => r[0]&&r[0].trim()&&clean(r[0])!=='ipo name'&&r[1]&&String(r[1]).trim()!=='—'&&/\d/.test(String(r[1])))
-                : [];
+  const listed = rows.slice(1, gmpStart > 0 ? gmpStart : 22)
+                     .filter(r => r[0]&&r[0].trim()&&r[0]!=='Company Name');
+  const gmpEnd = rows.findIndex((r,i) => i > gmpStart && clean(r[0])==='company' && String(r[1]||'').toLowerCase().includes('issue date'));
+  const gmp    = gmpStart > 0
+               ? rows.slice(gmpStart+2, gmpEnd > 0 ? gmpEnd : gmpStart+15)
+                     .filter(r => r[0]&&r[0].trim()&&clean(r[0])!=='ipo name'&&r[1]&&String(r[1]).trim()!=='—'&&/\d/.test(String(r[1])))
+               : [];
   const expertsEnd = subsStart > 0 ? subsStart : expertsStart + 25;
   const experts = expertsStart > 0
-                ? rows.slice(expertsStart+2, expertsEnd)
-                      .filter(r => r[0]&&r[0].trim()&&clean(r[0])!=='company')
-                : [];
-  const subs    = subsStart > 0
-                ? rows.slice(subsStart+2)
-                      .filter(r => r[0]&&r[0].trim()&&clean(r[0])!=='ipo')
-                : [];
-
-  // Issue Dates: rows between GMP end and Experts start
+               ? rows.slice(expertsStart+2, expertsEnd)
+                     .filter(r => r[0]&&r[0].trim()&&clean(r[0])!=='company')
+               : [];
+  const subs = subsStart > 0
+             ? rows.slice(subsStart+2)
+                   .filter(r => r[0]&&r[0].trim()&&clean(r[0])!=='ipo')
+             : [];
   const datesHeaderIdx = rows.findIndex(r =>
     clean(r[0])==='company' && String(r[1]||'').toLowerCase().includes('issue date'));
   const dates = datesHeaderIdx > 0
@@ -1203,110 +1190,119 @@ function renderIPO(rows){
   };
   const tbadge = t => `<span class="bd ${/main/i.test(st(t))?'bd-a':'bd-g'}">${st(t)||'—'}</span>`;
 
-  const TABS = [
-    {
-      k:'listed', label:'Listed', count:listed.length, color:'#1a7a4a',
-      html:`<div class="tscr"><table>
-        <thead><tr><th>Company</th><th>Type</th><th>Listed</th><th>Issue ₹</th>
-          <th>Subs</th><th>List Open</th><th>List Close</th><th>List Gain</th>
-          <th>LTP ₹</th><th>Today's Gain</th><th>Size</th></tr></thead>
-        <tbody>${listed.map(r=>`<tr>
-          <td><strong>${f(r[0])}</strong></td><td>${tbadge(r[1])}</td>
-          <td>${f(r[2])}</td><td>${f(r[3])}</td><td>${f(r[4])}</td>
-          <td>${f(r[5])}</td><td>${f(r[6])}</td>
-          <td class="${ic(r[7])}">${f(r[7])}</td>
-          <td>${f(r[8])}</td>
-          <td class="${ic(r[9])}">${f(r[9])}</td>
-          <td>${f(r[10])}</td>
-        </tr>`).join('')}</tbody>
-      </table></div>`
-    },
-    {
-      k:'gmp', label:'GMP', count:gmp.length, color:'#0d47a1',
-      html:`<div class="tscr"><table>
-        <thead><tr><th>IPO Name</th><th>GMP</th><th>Price Band</th>
-          <th>Est. Listing</th><th>Type</th><th>Updated</th></tr></thead>
-        <tbody>${gmp.map(r=>`<tr>
-          <td><strong>${st(r[0])}</strong></td>
-          <td class="${ic(st(r[1]))}" style="font-weight:600">${st(r[1])}</td>
-          <td>${st(r[3])}</td><td>${st(r[4])}</td>
-          <td>${tbadge(r[6]||'Mainboard')}</td>
-          <td style="color:#aaa;font-size:11px">${st(r[8])}</td>
-        </tr>`).join('')}</tbody>
-      </table></div>
-      <p style="margin:8px 16px 4px;font-size:12px;color:#888">
-        📅 For open/close dates see
-        <a href="javascript:void(0)" onclick="document.getElementById('ipotab-dates')?.click()"
-           style="color:#0d47a1;font-weight:600;text-decoration:underline">Issue Dates</a> tab ↑
-      </p>`
-    },
-    {
-      k:'experts', label:"Expert's Advice", count:experts.length, color:'#e07b00',
-      html:`<div class="tscr"><table>
-        <thead><tr><th>Company</th>
-          <th style="color:var(--green)">Apply</th>
-          <th style="color:var(--orange)">Neutral</th>
-          <th style="color:var(--red)">Avoid</th>
-          <th style="color:#aaa">Not Rated</th></tr></thead>
-        <tbody>${experts.map(r=>`<tr>
-          <td><strong>${f(r[0])}</strong></td>
-          <td style="color:var(--green);font-weight:600;text-align:center">${f(r[1])}</td>
-          <td style="color:var(--orange);text-align:center">${f(r[3])}</td>
-          <td style="color:var(--red);font-weight:600;text-align:center">${f(r[4])}</td>
-          <td style="color:#aaa;text-align:center">${f(r[5])}</td>
-        </tr>`).join('')}</tbody>
-      </table></div>`
-    },
-    {
-      k:'subs', label:'Subscription', count:subs.length, color:'#6a1b9a',
-      html:`<div class="tscr"><table>
-        <thead><tr><th>IPO</th><th>Type</th><th>Closing Date</th>
-          <th>QIB (X)</th><th>NII (X)</th><th>Retail (X)</th><th>Total (X)</th><th>Updated</th></tr></thead>
-        <tbody>${subs.map(r=>`<tr>
-          <td><strong>${f(r[0])}</strong></td><td>${tbadge(r[1])}</td>
-          <td>${f(r[2])}</td>
-          ${[3,4,5,6].map(i=>{const v=parseFloat(r[i]);return`<td class="${isNaN(v)?'':v>=10?'cp':v>=1?'':'cn'}">${f(r[i])}</td>`;}).join('')}
-          <td style="color:#aaa;font-size:11px">${f(r[7])}</td>
-        </tr>`).join('')}</tbody>
-      </table></div>`
-    },
-    {
-      k:'dates', label:'Issue Dates', count:dates.length, color:'#555555',
-      html:`<div style="padding:10px 14px;columns:2;column-gap:20px">
-        ${dates.map(d=>`<div style="padding:5px 0;border-bottom:1px solid #f5f5f5;font-size:12px;break-inside:avoid">
-          📌 ${d}
-        </div>`).join('')}
-      </div>`
-    },
-  ];
+  // Section panel builder
+  const panel = (icon, title, subtitle, count, color, body) => `
+    <div style="background:var(--panel);border:1px solid var(--bdr);border-radius:14px;
+      margin-bottom:12px;overflow:hidden">
+      <div style="padding:14px 18px;display:flex;align-items:center;gap:12px;
+        border-bottom:1px solid var(--bdr)">
+        <div style="width:36px;height:36px;border-radius:9px;display:flex;align-items:center;
+          justify-content:center;font-size:18px;flex-shrink:0;background:${color}18">${icon}</div>
+        <div style="flex:1">
+          <div style="font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:700;color:#5b4636">${title}</div>
+          <div style="font-size:10px;color:#a8825f;margin-top:1px">${subtitle}</div>
+        </div>
+        <span style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:10px;
+          background:${color}18;color:${color};flex-shrink:0">${count} entries</span>
+      </div>
+      <div style="padding:14px 18px">${body}</div>
+    </div>`;
+
+  // Listed — compact table
+  const listedBody = `<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse">
+    <thead><tr>${['Company','Type','Listed','Issue ₹','Subs','List Open','List Close','List Gain','LTP ₹','Today','Size']
+      .map(h=>`<th style="font-size:10px;font-weight:700;color:#a8825f;padding:7px 10px;border-bottom:1px solid var(--bdr);text-align:left;white-space:nowrap">${h}</th>`).join('')}</tr></thead>
+    <tbody>${listed.map(r=>`<tr style="border-bottom:1px solid rgba(120,75,30,.06)">
+      <td style="padding:8px 10px;font-size:12px"><strong>${f(r[0])}</strong></td>
+      <td style="padding:8px 10px">${tbadge(r[1])}</td>
+      <td style="padding:8px 10px;font-size:12px;color:#a8825f">${f(r[2])}</td>
+      <td style="padding:8px 10px;font-size:12px;font-family:'Space Grotesk',sans-serif">${f(r[3])}</td>
+      <td style="padding:8px 10px;font-size:12px">${f(r[4])}</td>
+      <td style="padding:8px 10px;font-size:12px">${f(r[5])}</td>
+      <td style="padding:8px 10px;font-size:12px">${f(r[6])}</td>
+      <td style="padding:8px 10px;font-size:12px;font-weight:700" class="${ic(r[7])}">${f(r[7])}</td>
+      <td style="padding:8px 10px;font-size:12px;font-family:'Space Grotesk',sans-serif">${f(r[8])}</td>
+      <td style="padding:8px 10px;font-size:12px;font-weight:700" class="${ic(r[9])}">${f(r[9])}</td>
+      <td style="padding:8px 10px;font-size:12px;color:#a8825f">${f(r[10])}</td>
+    </tr>`).join('')}</tbody>
+  </table></div>`;
+
+  // GMP — tinted cards grid
+  const gmpBody = `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:8px">
+    ${gmp.map(r=>{
+      const pos=!String(r[1]||'').trim().startsWith('-')&&parseFloat(String(r[1]).replace(/[^\d.-]/g,''))>0;
+      const color=pos?'var(--green)':'var(--red)';
+      const bg=pos?'rgba(47,158,94,.07)':'rgba(224,86,47,.07)';
+      const bc=pos?'rgba(47,158,94,.2)':'rgba(224,86,47,.2)';
+      return `<div style="border:1px solid ${bc};background:${bg};border-radius:10px;padding:12px 14px">
+        <div style="font-size:12px;font-weight:700;color:#5b4636;margin-bottom:4px;
+          white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${st(r[0])}</div>
+        <div style="margin-bottom:8px">${tbadge(r[6]||'Mainboard')}</div>
+        <div style="display:flex;justify-content:space-between;align-items:baseline">
+          <div>
+            <div style="font-size:9px;color:#a8825f;text-transform:uppercase;letter-spacing:.4px">GMP</div>
+            <div style="font-family:'Space Grotesk',sans-serif;font-size:22px;font-weight:700;color:${color}">${st(r[1])}</div>
+          </div>
+          <div style="text-align:right">
+            <div style="font-size:9px;color:#a8825f;text-transform:uppercase;letter-spacing:.4px">Price Band</div>
+            <div style="font-size:12px;font-weight:600;color:#5b4636">${st(r[3])}</div>
+          </div>
+        </div>
+        <div style="font-size:11px;font-weight:700;color:${color};margin-top:6px">${st(r[4])}</div>
+        <div style="font-size:10px;color:#bfa07a;margin-top:3px">Updated: ${st(r[8])}</div>
+      </div>`;
+    }).join('')}
+  </div>
+  <p style="margin-top:10px;font-size:11px;color:#a8825f">
+    📅 For open/close dates see the <strong>Issue Dates</strong> section below.
+  </p>`;
+
+  // Expert's Advice — badge cards
+  const expertsBody = `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px">
+    ${experts.map(r=>`
+      <div style="border:1px solid var(--bdr);border-radius:10px;padding:12px 14px;background:rgba(255,255,255,.55)">
+        <div style="font-size:12px;font-weight:700;color:#5b4636;margin-bottom:8px">${f(r[0])}</div>
+        <div style="display:flex;gap:5px;flex-wrap:wrap">
+          ${f(r[1])!=='—'?`<span style="font-size:10px;font-weight:700;padding:3px 8px;border-radius:6px;background:rgba(47,158,94,.12);color:var(--green)">Apply ${f(r[1])}</span>`:''}
+          ${f(r[3])!=='—'?`<span style="font-size:10px;font-weight:700;padding:3px 8px;border-radius:6px;background:rgba(237,125,43,.12);color:var(--mc)">Neutral ${f(r[3])}</span>`:''}
+          ${f(r[4])!=='—'?`<span style="font-size:10px;font-weight:700;padding:3px 8px;border-radius:6px;background:rgba(224,86,47,.12);color:var(--red)">Avoid ${f(r[4])}</span>`:''}
+          ${f(r[5])!=='—'?`<span style="font-size:10px;font-weight:700;padding:3px 8px;border-radius:6px;background:rgba(85,85,85,.09);color:#555">Not Rated ${f(r[5])}</span>`:''}
+        </div>
+      </div>`).join('')}
+  </div>`;
+
+  // Subscription — table
+  const subsBody = `<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse">
+    <thead><tr>${['IPO','Type','Closing Date','QIB (×)','NII (×)','Retail (×)','Total (×)','Updated']
+      .map(h=>`<th style="font-size:10px;font-weight:700;color:#a8825f;padding:7px 10px;border-bottom:1px solid var(--bdr);text-align:left;white-space:nowrap">${h}</th>`).join('')}</tr></thead>
+    <tbody>${subs.map(r=>{
+      return `<tr style="border-bottom:1px solid rgba(120,75,30,.06)">
+        <td style="padding:8px 10px;font-size:12px"><strong>${f(r[0])}</strong></td>
+        <td style="padding:8px 10px">${tbadge(r[1])}</td>
+        <td style="padding:8px 10px;font-size:12px;color:#a8825f">${f(r[2])}</td>
+        ${[3,4,5,6].map(i=>{const v=parseFloat(r[i]);const cl=isNaN(v)?'':v>=10?'color:var(--green);font-weight:700':v>=1?'':'color:var(--red)';return`<td style="padding:8px 10px;font-size:12px;font-family:'Space Grotesk',sans-serif;text-align:right;${cl}">${f(r[i])}</td>`;}).join('')}
+        <td style="padding:8px 10px;font-size:11px;color:#bfa07a">${f(r[7])}</td>
+      </tr>`;
+    }).join('')}</tbody>
+  </table></div>`;
+
+  // Issue Dates — card grid
+  const datesBody = `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px">
+    ${dates.map(d=>`
+      <div style="background:rgba(255,255,255,.55);border:1px solid var(--bdr);border-radius:10px;
+        padding:11px 14px;font-size:12px;font-weight:600;color:#5b4636">
+        📌 ${d}
+      </div>`).join('')}
+  </div>`;
 
   $('s-ipo').innerHTML=`
     <div class="stitle">IPO Corner</div>
-
-    <div class="corp-tabs">
-      ${TABS.map((t,i)=>`
-        <button class="corp-tab${i===0?' on':''}"
-          id="ipotab-${t.k}"
-          style="border-color:${t.color};${i===0?`background:${t.color};color:#fff`:''}"
-          onclick="showIPOTab('${t.k}',this,'${t.color}')">
-          ${t.label}
-          <span style="margin-left:6px;font-size:10px;padding:1px 6px;border-radius:10px;
-            background:${i===0?'rgba(255,255,255,0.3)':t.color+'22'};
-            color:${i===0?'#fff':t.color}">
-            ${t.count}
-          </span>
-        </button>`).join('')}
-    </div>
-
-    ${TABS.map((t,i)=>`
-      <div class="corp-panel${i===0?' on':''}" id="ipopanel-${t.k}">
-        <div class="tcw">
-          <div class="tch" style="color:${t.color}">${t.label}
-            <span style="font-size:11px;color:#888;font-weight:400;margin-left:4px">${t.count} entries</span>
-          </div>
-          ${t.html}
-        </div>
-      </div>`).join('')}`;
+    ${panel('📈','Recently Listed IPOs','Performance since listing date',listed.length,'#1a7a4a',listedBody)}
+    ${panel('📊','Grey Market Premium','Unofficial pre-listing market prices',gmp.length,'#0d47a1',gmpBody)}
+    ${panel('🎓','Expert\'s Advice','Analyst recommendations',experts.length,'#e07b00',expertsBody)}
+    ${panel('📋','Subscription Status','Live subscription data',subs.length,'#6a1b9a',subsBody)}
+    ${panel('📅','Issue Dates','Upcoming & open IPO dates',dates.length,'#555555',datesBody)}
+  `;
 }
 
 function showIPOTab(key,btn,color){
@@ -1318,7 +1314,7 @@ function showIPOTab(key,btn,color){
     const sp=b.querySelector('span');
     if(sp){sp.style.background=b.style.borderColor+'22';sp.style.color=b.style.borderColor;}
   });
-  document.getElementById('ipopanel-'+key).classList.add('on');
+  document.getElementById('ipopanel-'+key)?.classList.add('on');
   btn.classList.add('on');
   btn.style.background=color;
   btn.style.color='#fff';
@@ -1326,6 +1322,9 @@ function showIPOTab(key,btn,color){
   if(sp){sp.style.background='rgba(255,255,255,0.3)';sp.style.color='#fff';}
 }
 
+ // Use dynamic section detection instead of hardcoded indices
+  // because gviz skips blank/merged rows causing index drift
+  const findIdx = (keyword, col=1) => rows.findIndex(r => String(r[col]||'').toLowerCase().includes(keyword.toLowerCase()));
 /* ══════════════════════════════════════════════
    CURRENCY — same as before, working correctly
    Col: [1]=Currency [2]=RateINR [3]=Code | [5]=Symbol [6]=Last [7]=Chg [8]=Chg% [9]=Close [10]=High [11]=Low
