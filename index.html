@@ -133,6 +133,32 @@ footer a{color:var(--mc)}
 
 .news-loading{color:#a8825f;padding:20px;text-align:center;font-size:12px}
 
+/* FII/DII SENTIMENT GAUGE */
+.fii-wrap{background:var(--panel);backdrop-filter:var(--panel-blur);border:1px solid var(--bdr);
+  border-radius:14px;padding:18px 20px;margin-bottom:12px}
+.fii-hdr3{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+.fii-title3{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#8a6a4d}
+.fii-date3{font-size:10px;color:#bfa07a}
+.fii-meter-labels{display:flex;justify-content:space-between;font-size:10px;font-weight:700;margin-bottom:5px}
+.fii-track{height:12px;border-radius:12px;position:relative;overflow:hidden;display:flex;
+  background:rgba(120,75,30,.10)}
+.fii-fill-sell{height:100%;border-radius:12px 0 0 12px;transition:.5s}
+.fii-fill-buy{height:100%;border-radius:0 12px 12px 0;transition:.5s}
+.fii-needle{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  width:2px;height:16px;background:#fff;border-radius:2px;z-index:2}
+.fii-sentiment{text-align:center;margin:8px 0 14px}
+.fii-sent-lbl{font-size:10px;color:#a8825f;margin-bottom:2px}
+.fii-sent-val{font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:700}
+.fii-cards3{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+.fii-card3{border-radius:10px;padding:12px 14px}
+.fii-c3-lbl{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
+.fii-c3-val{font-family:'Space Grotesk',sans-serif;font-size:20px;font-weight:700;line-height:1}
+.fii-c3-sub{font-size:9px;margin-top:3px}
+.fii-prev3{display:flex;gap:6px;align-items:center;font-size:11px;
+  background:rgba(237,125,43,.06);border-radius:8px;padding:8px 12px;flex-wrap:wrap}
+.fii-prev3-lbl{font-size:9px;color:#a8825f;font-weight:700;text-transform:uppercase;
+  letter-spacing:.4px;flex-shrink:0;margin-right:4px}
+
 /* LIVE PULSE DOT */
 .live-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--green);
   box-shadow:0 0 0 0 rgba(47,158,94,.6);animation:pulse 2s infinite;margin-right:6px;vertical-align:middle}
@@ -318,7 +344,7 @@ function renderDashboard(rows, newsRows){
   Rows 1-5  (idx 1-5):   col[0]=Title  col[1]=URL  col[2]=Date
   Row 6  (idx 6):  "Economic times Recent Stories" header
   Rows 7-11 (idx 7-11):  col[0]=Title  col[1]=URL  col[2]=Date
-  Row 12 (idx 12): "Livemint Company News" header
+  Row 12 (idx 12): "The Hindu Market News" header
   Rows 13-17(idx 13-17): col[0]=Title  col[1]=URL  col[2]=Date
   Row 18 (idx 18): "Livemint Market News" header
   Rows 19-23(idx 19-23): col[0]=Title  col[1]=URL  col[2]=Date
@@ -363,8 +389,8 @@ function renderDashboard(rows, newsRows){
   // Merge all news sources and sort by date, most recent first
   const allNews = [
     ...etTop.map(r=>[...r,'ET Top']),
-    ...etRecent.map(r=>[...r,'ET Recent']),
-    ...lmCompany.map(r=>[...r,'Livemint Co.']),
+    ...etRecent.map(r=>[...r,'Business Std']),
+    ...lmCompany.map(r=>[...r,'The Hindu']),
     ...lmMarket.map(r=>[...r,'Livemint Mkt'])
   ].filter(r=>r[0]&&r[1]);
   allNews.sort((a,b)=>{
@@ -407,25 +433,11 @@ function renderDashboard(rows, newsRows){
 
   $('s-dashboard').innerHTML=`
     <div class="stitle">Dashboard</div>
-    <!-- NEWS FIRST -->
-    ${newsBlock('Latest News','📰',allNews,'#c0392b')}
     <!-- INDICES -->
     <div class="tcw">
       <div class="tch" style="color:#0d47a1">Indian Indices</div>
       <div class="tscr"><table>${idxTH}<tbody>${indIdx.map(idxRow).join('')}</tbody></table></div>
     </div>
-
-    ${fiiDii.length?`<div class="tcw">
-      <div class="tch" style="color:#6a1b9a">FII / DII Activity</div>
-      <div class="tscr"><table>
-        <thead><tr><th>Date</th><th>Net FII (₹ Cr)</th><th>Net DII (₹ Cr)</th></tr></thead>
-        <tbody>${fiiDii.map(r=>`<tr>
-          <td>${f(r[0])}</td>
-          <td class="${ic(r[1])}">${f(r[1])}</td>
-          <td class="${ic(r[2])}">${f(r[2])}</td>
-        </tr>`).join('')}</tbody>
-      </table></div>
-    </div>`:''}
 
     <!-- FUTURES + GLOBAL WATCHLIST WIDGET -->
     ${buildDashFuturesGlobal()}
@@ -438,6 +450,73 @@ function renderDashboard(rows, newsRows){
       ${buildDashGMP()}
       ${buildDashCorpToday()}
     </div>
+
+    <!-- FII/DII ABOVE NEWS -->
+    ${(()=>{
+      if(!fiiDii.length) return '';
+      const today = fiiDii[0];
+      const prev  = fiiDii[1]||null;
+      const fii   = parseFloat(String(today[1]||'0').replace(/,/g,''))||0;
+      const dii   = parseFloat(String(today[2]||'0').replace(/,/g,''))||0;
+      const fiiPos = fii>=0, diiPos = dii>=0;
+      const total  = Math.abs(fii)+Math.abs(dii)||1;
+      const fiiPct = (Math.abs(fii)/total*100).toFixed(1);
+      const diiPct = (Math.abs(dii)/total*100).toFixed(1);
+      const crFmt  = v=>{const s=v<0?'-':'+';return s+'₹'+Math.abs(v).toLocaleString('en-IN',{maximumFractionDigits:2,minimumFractionDigits:2})+' Cr';};
+      const fmtFiiDate = s=>{try{const d=new Date(s);if(isNaN(d))return s;return d.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}).replace(/ /g,'-');}catch(e){return s;}};
+      const net    = fii+dii;
+      const domFII = Math.abs(fii)>Math.abs(dii);
+      const sentColor = net>=0?'var(--green)':'var(--red)';
+      const sentLabel = net>=0
+        ? (fiiPos&&diiPos?'Both Buying ↑':domFII?'FII Led Rally ↑':'DII Dominant ↑')
+        : ((!fiiPos)&&(!diiPos)?'Both Selling ↓':domFII?'FII Selloff ↓':'DII Dominant ↓');
+      let prevHtml='';
+      if(prev){
+        const pf=parseFloat(String(prev[1]||'0').replace(/,/g,''))||0;
+        const pd=parseFloat(String(prev[2]||'0').replace(/,/g,''))||0;
+        prevHtml=`<div class="fii-prev3">
+          <div class="fii-prev3-lbl">${fmtFiiDate(prev[0])}</div>
+          FII <strong style="color:${pf>=0?'var(--green)':'var(--red)'};margin:0 4px">${crFmt(pf)}</strong>
+          <span style="color:#e0c9b0">·</span>
+          DII <strong style="color:${pd>=0?'var(--green)':'var(--red)'};margin-left:4px">${crFmt(pd)}</strong>
+        </div>`;
+      }
+      return `<div class="fii-wrap">
+        <div class="fii-hdr3">
+          <div class="fii-title3">FII / DII Activity</div>
+          <div class="fii-date3">${fmtFiiDate(today[0])}</div>
+        </div>
+        <div class="fii-meter-labels">
+          <span style="color:var(--red)">← FII ${fiiPos?'Buying':'Selling'}</span>
+          <span style="color:var(--green)">DII ${diiPos?'Buying':'Selling'} →</span>
+        </div>
+        <div class="fii-track">
+          <div class="fii-fill-sell" style="width:${fiiPct}%;background:${fiiPos?'var(--green)':'var(--red)'}"></div>
+          <div class="fii-fill-buy"  style="width:${diiPct}%;background:${diiPos?'var(--green)':'var(--red)'}"></div>
+          <div class="fii-needle"></div>
+        </div>
+        <div class="fii-sentiment">
+          <div class="fii-sent-lbl">Market Sentiment</div>
+          <div class="fii-sent-val" style="color:${sentColor}">${sentLabel}</div>
+        </div>
+        <div class="fii-cards3">
+          <div class="fii-card3" style="background:${fiiPos?'rgba(47,158,94,.09)':'rgba(224,86,47,.09)'};border:1px solid ${fiiPos?'rgba(47,158,94,.2)':'rgba(224,86,47,.2)'}">
+            <div class="fii-c3-lbl" style="color:${fiiPos?'var(--green)':'var(--red)'}">FII / FPI</div>
+            <div class="fii-c3-val" style="color:${fiiPos?'var(--green)':'var(--red)'}">${crFmt(fii)}</div>
+            <div class="fii-c3-sub" style="color:${fiiPos?'var(--green)':'var(--red)'}">${fiiPos?'Net Buyer':'Net Seller'}</div>
+          </div>
+          <div class="fii-card3" style="background:${diiPos?'rgba(47,158,94,.09)':'rgba(224,86,47,.09)'};border:1px solid ${diiPos?'rgba(47,158,94,.2)':'rgba(224,86,47,.2)'}">
+            <div class="fii-c3-lbl" style="color:${diiPos?'var(--green)':'var(--red)'}">DII</div>
+            <div class="fii-c3-val" style="color:${diiPos?'var(--green)':'var(--red)'}">${crFmt(dii)}</div>
+            <div class="fii-c3-sub" style="color:${diiPos?'var(--green)':'var(--red)'}">${diiPos?'Net Buyer':'Net Seller'}</div>
+          </div>
+        </div>
+        ${prevHtml}
+      </div>`;
+    })()}
+
+    <!-- NEWS LAST -->
+    ${newsBlock('Latest News','📰',allNews,'#c0392b')}
   `;
 }
 
@@ -655,12 +734,51 @@ function renderGlobal(rows){
   const mkCard = r => icard(r[NC], r[PC], r[CC], r[FC], r[HC], r[LC], r[TC]);
 
   $('s-global').innerHTML=`
-    <div class="stitle">Global Indices</div>
-    <div class="stitle-sm">India</div>
-    <div class="igrid">${indiaWithNifty.map(mkCard).join('')}</div>
-    <div class="stitle-sm">🌐 World Markets</div>
-    <div class="igrid">${world.map(mkCard).join('')}</div>
-    <p style="font-size:10px;color:#bbb;margin-top:6px">⚠️ Quotes delayed up to 20 min. Source: Google Finance. Not investment advice.</p>`;
+    <div style="position:relative;min-height:400px">
+      <!-- Light world map watermark -->
+      <div style="position:absolute;inset:0;opacity:0.055;pointer-events:none;overflow:hidden;border-radius:12px">
+        <svg viewBox="0 0 1000 500" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%">
+          <!-- North America -->
+          <path d="M80,60 L160,55 L200,80 L210,120 L190,160 L170,200 L140,230 L110,220 L90,190 L70,160 L60,120 L70,90 Z" fill="#ed7d2b"/>
+          <path d="M140,230 L170,240 L180,270 L160,300 L130,290 L110,260 L120,240 Z" fill="#ed7d2b"/>
+          <!-- Greenland -->
+          <path d="M200,30 L240,25 L250,50 L230,70 L205,65 Z" fill="#ed7d2b"/>
+          <!-- South America -->
+          <path d="M170,280 L210,270 L230,300 L225,350 L210,390 L190,420 L165,410 L150,370 L148,330 L155,300 Z" fill="#ed7d2b"/>
+          <!-- Europe -->
+          <path d="M420,60 L470,55 L490,75 L480,100 L460,110 L440,105 L420,90 Z" fill="#ed7d2b"/>
+          <path d="M430,110 L465,108 L470,130 L450,140 L425,135 Z" fill="#ed7d2b"/>
+          <!-- Scandinavia -->
+          <path d="M455,30 L475,25 L480,50 L465,60 L450,55 Z" fill="#ed7d2b"/>
+          <path d="M475,28 L490,25 L495,45 L480,52 Z" fill="#ed7d2b"/>
+          <!-- UK -->
+          <path d="M400,65 L415,62 L418,80 L405,82 Z" fill="#ed7d2b"/>
+          <!-- Africa -->
+          <path d="M430,150 L490,145 L510,175 L515,220 L510,270 L495,310 L475,340 L450,345 L425,320 L415,280 L412,230 L418,185 Z" fill="#ed7d2b"/>
+          <!-- Russia/Asia North -->
+          <path d="M490,40 L650,30 L720,55 L730,90 L700,100 L650,95 L580,90 L510,85 L490,70 Z" fill="#ed7d2b"/>
+          <!-- Middle East -->
+          <path d="M510,150 L560,145 L575,170 L565,195 L535,200 L510,185 Z" fill="#ed7d2b"/>
+          <!-- India -->
+          <path d="M590,160 L625,158 L635,185 L625,215 L605,230 L585,215 L578,190 Z" fill="#ed7d2b"/>
+          <!-- China/SE Asia -->
+          <path d="M640,100 L720,95 L740,120 L735,155 L710,170 L680,165 L655,150 L640,130 Z" fill="#ed7d2b"/>
+          <path d="M695,170 L730,168 L740,195 L720,210 L695,200 Z" fill="#ed7d2b"/>
+          <!-- Japan -->
+          <path d="M760,100 L775,95 L780,115 L765,120 Z" fill="#ed7d2b"/>
+          <!-- Australia -->
+          <path d="M720,280 L800,270 L830,295 L835,340 L815,370 L775,375 L740,355 L720,320 L715,295 Z" fill="#ed7d2b"/>
+          <!-- New Zealand -->
+          <path d="M845,330 L858,325 L862,350 L848,358 Z" fill="#ed7d2b"/>
+        </svg>
+      </div>
+      <div class="stitle">Global Indices</div>
+      <div class="stitle-sm">India</div>
+      <div class="igrid">${indiaWithNifty.map(mkCard).join('')}</div>
+      <div class="stitle-sm">World Markets</div>
+      <div class="igrid">${world.map(mkCard).join('')}</div>
+      <p style="font-size:10px;color:#bbb;margin-top:6px">Quotes delayed up to 20 min · Source: Google Finance · Not investment advice</p>
+    </div>`;
 }
 
 /* ══════════════════════════════════════════════
@@ -848,94 +966,133 @@ function renderMarket(rows){
       Adv/Dec:          idx 38-41
   */
 
-  // ── DETECT NSE right-block price column ─────────────────────────
-  // In CSV: col[9]=price. gviz may skip blank cols 7,8 → price at col[7]
-  // Probe first NSE data row (idx 4) to find first numeric col after col[6]
   const probe = rows[4] || [];
-  let PC=9, CC=10, FC=11; // defaults from CSV
+  let PC=9, CC=10, FC=11;
   for(let ci=7; ci<=11; ci++){
     const v=String(probe[ci]||'').replace(/,/g,'');
-    if(v && !isNaN(parseFloat(v)) && parseFloat(v)>0){
-      PC=ci; CC=ci+1; FC=ci+2; break;
-    }
+    if(v && !isNaN(parseFloat(v)) && parseFloat(v)>0){ PC=ci; CC=ci+1; FC=ci+2; break; }
   }
-
-  // ── DETECT BSE right-block (% only, no change col) ──────────────
-  // Same logic — probe SENSEX30 Gainers row (idx 21)
   const probe2 = rows[15] || [];
-  let BPC=7, BFC=9; // BSE price, pct
+  let BPC=7, BFC=9;
   for(let ci=7; ci<=11; ci++){
     const v=String(probe2[ci]||'').replace(/,/g,'');
-    if(v && !isNaN(parseFloat(v)) && parseFloat(v)>0){
-      BPC=ci; BFC=ci+1; break;
-    }
+    if(v && !isNaN(parseFloat(v)) && parseFloat(v)>0){ BPC=ci; BFC=ci+1; break; }
   }
 
-  // ── DATA EXTRACTORS ─────────────────────────────────────────────
-  // Left block: [1]=name [2]=price [3]=chg [4]=pct
   const Lg = (s,e) => rows.slice(s,e)
     .filter(r => r[1]&&r[1].trim() && r[2]&&!isNaN(parseFloat(String(r[2]).replace(/,/g,''))))
     .map(r => [r[1],r[2],r[3],r[4]]);
-
-  // Right NSE block: detected cols
+  // Right NSE block: detected cols — calculate % if not present
   const RgNSE = (s,e) => rows.slice(s,e)
     .filter(r => r[6]&&r[6].trim() && r[PC]&&!isNaN(parseFloat(String(r[PC]).replace(/,/g,''))))
-    .map(r => [r[6], r[PC], r[CC], r[FC]]);
+    .map(r => {
+      const price = parseFloat(String(r[PC]||'0').replace(/,/g,''));
+      const chg   = parseFloat(String(r[CC]||'0').replace(/,/g,''));
+      let pct = r[FC];
+      if(!pct || !String(pct).trim() || String(pct).trim()==='—') {
+        const prev = price - chg;
+        pct = prev!==0 ? (chg/prev*100).toFixed(2)+'%' : '—';
+      }
+      return [r[6], r[PC], r[CC], pct];
+    });
 
-  // Right BSE block: % only (try BPC+1, fallback to BPC+2 if blank — gviz may insert a gap col)
+  // Right BSE block: calculate % from price and change
   const RgBSE = (s,e) => rows.slice(s,e)
     .filter(r => r[6]&&r[6].trim() && r[BPC]&&!isNaN(parseFloat(String(r[BPC]).replace(/,/g,''))))
     .map(r => {
       let pct = r[BFC];
       if((!pct || !String(pct).trim()) && r[BPC+2] && String(r[BPC+2]).trim()) pct = r[BPC+2];
       if(pct) pct = String(pct).replace(/^--/,'-');
+      // If still no %, try to calculate from price and any change col
+      if(!pct || !String(pct).trim() || String(pct).trim()==='—') {
+        for(let ci=BPC+1; ci<=BPC+3; ci++){
+          const chgVal = parseFloat(String(r[ci]||'').replace(/,/g,''));
+          if(!isNaN(chgVal) && chgVal!==0){
+            const price = parseFloat(String(r[BPC]||'0').replace(/,/g,''));
+            const prev  = price - chgVal;
+            if(prev!==0) { pct = (chgVal/prev*100).toFixed(2)+'%'; break; }
+          }
+        }
+      }
       return [r[6], r[BPC], pct];
     });
 
+  const n50g = Lg(0, 5);
+  const n50l = Lg(6, 12);
+  const nseG = RgNSE(0, 5);
+  const nseL = RgNSE(6, 12);
+  const s30g = Lg(13, 20);
+  const s30l = Lg(21, 27);
+  const bseG = RgBSE(13, 20);
+  const bseL = RgBSE(21, 27);
+  const bank = Lg(29, 42);
 
-  // ── SLICES ──────────────────────────────────────────────────────
-  const n50g    = Lg(0, 5);     // Nifty50 Gainers
-  const n50l    = Lg(6, 12);    // Nifty50 Losers
-  const nseG    = RgNSE(0,  5);  // ALL NSE Gainers
-  const nseL    = RgNSE(6, 12); // ALL NSE Losers
-  const s30g    = Lg(13, 20);    // SENSEX30 Gainers
-  const s30l    = Lg(21, 27);    // SENSEX30 Losers
-  const bseG    = RgBSE(13, 20); // ALL BSE Gainers
-  const bseL    = RgBSE(21, 27); // ALL BSE Losers
-  const bank    = Lg(29, 42);    // Nifty Bank stocks
+  const bseAdv = (rows[28]||[])[8] || '—';
+  const bseDec = (rows[29]||[])[8] || '—';
+  const nseAdv = (rows[30]||[])[8] || '—';
+  const nseDec = (rows[31]||[])[8] || '—';
 
-  // ── ADVANCE / DECLINE ────────────────────────────────────────────
-  // Scan each row for 'Adv:' or 'Dec:' label, take next non-empty cell
-// Adv/Dec: col I (gviz[8]), rows 38-41 (gviz idx 37-40)
-const bseAdv = (rows[28]||[])[8] || '—';
-const bseDec = (rows[29]||[])[8] || '—';
-const nseAdv = (rows[30]||[])[8] || '—';
-const nseDec = (rows[31]||[])[8] || '—';
+  // Variation 2 card builder
+  const v2Card = (r, pos, i) => {
+    // r = [name, price, change, pct]
+    const price = f(r[1]);
+    const chg   = r[3] ? f(r[2]) : ''; // only show change if pct is separate col
+    let   pct   = f(r[3]||r[2]);
+    // Ensure % sign present
+    if(pct && pct!=='—' && !String(pct).includes('%')) pct = pct+'%';
+    // Derive actual direction from pct value (not caller's pos assumption)
+    const actualPos = !String(pct).trim().startsWith('-');
+    const color = actualPos?'var(--green)':'var(--red)';
+    const bg    = actualPos?'rgba(47,158,94,.06)':'rgba(224,86,47,.06)';
+    const bc    = actualPos?'rgba(47,158,94,.18)':'rgba(224,86,47,.18)';
+    return `<div style="background:${bg};border:1px solid ${bc};border-radius:10px;
+      padding:11px 14px;display:flex;align-items:center;gap:12px;transition:.15s"
+      onmouseover="this.style.transform='translateX(2px)'"
+      onmouseout="this.style.transform=''">
+      <div style="font-family:'Space Grotesk',sans-serif;font-size:18px;font-weight:700;
+        color:rgba(120,75,30,.15);flex-shrink:0;width:24px">${i+1}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:12px;font-weight:700;color:#5b4636;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${f(r[0])}</div>
+        <div style="font-size:11px;color:#a8825f;margin-top:2px;font-family:'Space Grotesk',sans-serif">₹${price}</div>
+      </div>
+      <div style="text-align:right;flex-shrink:0">
+        <div style="font-family:'Space Grotesk',sans-serif;font-size:20px;font-weight:700;color:${color}">${pct}</div>
+        ${chg?`<div style="font-size:10px;color:${color};margin-top:1px">${chg}</div>`:''}
+      </div>
+    </div>`;
+  };
 
-  // ── TABLE BUILDERS ───────────────────────────────────────────────
-  const TH4=`<thead><tr><th>Company</th><th>Price ₹</th><th>Change</th><th>% Chg</th></tr></thead>`;
-  const TH3=`<thead><tr><th>Company</th><th>Price ₹</th><th>% Chg</th></tr></thead>`;
+  const section = (title, gainers, losers, is3col) => {
+    const gCards = gainers.map((r,i) => v2Card(is3col?[r[0],r[1],r[2],null]:r, true, i)).join('');
+    const lCards = losers.map((r,i)  => v2Card(is3col?[r[0],r[1],r[2],null]:r, false, i)).join('');
+    return `<div style="margin-bottom:20px">
+      <div style="font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:600;
+        color:#5b4636;margin-bottom:10px;display:flex;align-items:center;gap:10px">
+        ${title}
+        <div style="flex:1;height:1px;background:var(--bdr)"></div>
+      </div>
+      <div class="g2">
+        <div>
+          <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;
+            color:var(--green);margin-bottom:7px;display:flex;align-items:center;gap:5px">
+            ▲ Gainers
+          </div>
+          <div style="display:flex;flex-direction:column;gap:6px">${gCards||'<div style="color:#aaa;padding:10px;text-align:center;font-size:12px">No data</div>'}</div>
+        </div>
+        <div>
+          <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;
+            color:var(--red);margin-bottom:7px;display:flex;align-items:center;gap:5px">
+            ▼ Losers
+          </div>
+          <div style="display:flex;flex-direction:column;gap:6px">${lCards||'<div style="color:#aaa;padding:10px;text-align:center;font-size:12px">No data</div>'}</div>
+        </div>
+      </div>
+    </div>`;
+  };
 
-  const tbl4=(title,data)=>`<div class="tcw">
-    <div class="tch">${title}</div>
-    <div class="tscr"><table>${TH4}<tbody>
-      ${data.map(r=>`<tr>
-        <td><strong>${f(r[0])}</strong></td>
-        <td>${f(r[1])}</td>
-        <td class="${ic(r[2])}">${f(r[2])}</td>
-        <td class="${ic(r[3])}">${f(r[3])}</td>
-      </tr>`).join('')||'<tr><td colspan="4" style="color:#aaa;padding:10px;text-align:center">No data</td></tr>'}
-    </tbody></table></div></div>`;
-
-  const tbl3=(title,data)=>`<div class="tcw">
-    <div class="tch">${title}</div>
-    <div class="tscr"><table>${TH3}<tbody>
-      ${data.map(r=>`<tr>
-        <td><strong>${f(r[0])}</strong></td>
-        <td>${f(r[1])}</td>
-        <td class="${ic(r[2])}">${f(r[2])}</td>
-      </tr>`).join('')||'<tr><td colspan="3" style="color:#aaa;padding:10px;text-align:center">No data</td></tr>'}
-    </tbody></table></div></div>`;
+  // Bank stocks split into gainers/losers
+  const bankG = bank.filter(r=>parseFloat(String(r[3]||'0').replace(/[^0-9.-]/g,''))>0);
+  const bankL = bank.filter(r=>parseFloat(String(r[3]||'0').replace(/[^0-9.-]/g,''))<0);
 
   $('s-market').innerHTML=`
     <div class="stitle">Movers — NSE &amp; BSE</div>
@@ -947,11 +1104,11 @@ const nseDec = (rows[31]||[])[8] || '—';
       <div class="adbox"><div class="adlbl">NSE Declines</div><div class="adnum dn">${nseDec}</div></div>
     </div>
 
-    <div class="g2">${tbl4('🟢 NIFTY 50 Top Gainers',n50g)}${tbl4('🔴 NIFTY 50 Top Losers',n50l)}</div>
-    <div class="g2">${tbl4('🟢 All NSE Top Gainers',nseG)}${tbl4('🔴 All NSE Top Losers',nseL)}</div>
-    <div class="g2">${tbl4('🟢 SENSEX 30 Gainers',s30g)}${tbl4('🔴 SENSEX 30 Losers',s30l)}</div>
-    <div class="g2">${tbl3('🟢 All BSE Gainers',bseG)}${tbl3('🔴 All BSE Losers',bseL)}</div>
-    ${tbl4('🏦 Nifty Bank Stocks',bank)}`;
+    ${section('Nifty 50', n50g, n50l, false)}
+    ${section('All NSE', nseG, nseL, false)}
+    ${section('Sensex 30', s30g, s30l, false)}
+    ${section('All BSE', bseG, bseL, true)}
+    ${section('Nifty Bank', bankG, bankL, false)}`;
 }
 
 /* ══════════════════════════════════════════════
@@ -991,45 +1148,32 @@ function patchIPOTypes(rows, typeRows, dateRows){
 }
 
 function renderIPO(rows){
-  /* CONFIRMED from CSV:
-     Recently Listed: idx 2-21  col[0-10]
-     GMP data:        idx 25-35 col[0-8]
-     Issue Dates:     idx 39-47 col[0]
-     Experts:         idx 50-69 col[0-5]
-     Subscription:    idx 72-164 col[0-7]
-  */
   const st = v => String(v||'').replace(/\*/g,'').trim() || '—';
-
- // Use dynamic section detection instead of hardcoded indices
-  // because gviz skips blank/merged rows causing index drift
   const findIdx = (keyword, col=1) => rows.findIndex(r => String(r[col]||'').toLowerCase().includes(keyword.toLowerCase()));
   const clean = v => String(v||'').replace(/\*/g,'').trim().toLowerCase();
 
   const gmpStart     = findIdx('Grey Market Premium');
-  const datesStart   = findIdx('Issue Date', 0) > -1 ? rows.findIndex(r=>String(r[1]||'').trim()==='' && String(r[0]||'').includes('Comp')) : findIdx('Issue Date');
   const expertsStart = rows.findIndex(r =>
     String(r[1]||'').toLowerCase().includes('expert') ||
     String(r[0]||'').toLowerCase().includes('expert'));
   const subsStart    = findIdx('IPO Subscription Status');
 
-  const listed  = rows.slice(1, gmpStart > 0 ? gmpStart : 22)
-                      .filter(r => r[0]&&r[0].trim()&&r[0]!=='Company Name');
-  const gmpEnd  = rows.findIndex((r,i) => i > gmpStart && clean(r[0])==='company' && String(r[1]||'').toLowerCase().includes('issue date'));
-  const gmp     = gmpStart > 0
-                ? rows.slice(gmpStart+2, gmpEnd > 0 ? gmpEnd : gmpStart+15)
-                      .filter(r => r[0]&&r[0].trim()&&clean(r[0])!=='ipo name'&&r[1]&&String(r[1]).trim()!=='—'&&/\d/.test(String(r[1])))
-                : [];
+  const listed = rows.slice(1, gmpStart > 0 ? gmpStart : 22)
+                     .filter(r => r[0]&&r[0].trim()&&r[0]!=='Company Name');
+  const gmpEnd = rows.findIndex((r,i) => i > gmpStart && clean(r[0])==='company' && String(r[1]||'').toLowerCase().includes('issue date'));
+  const gmp    = gmpStart > 0
+               ? rows.slice(gmpStart+2, gmpEnd > 0 ? gmpEnd : gmpStart+15)
+                     .filter(r => r[0]&&r[0].trim()&&clean(r[0])!=='ipo name'&&r[1]&&String(r[1]).trim()!=='—'&&/\d/.test(String(r[1])))
+               : [];
   const expertsEnd = subsStart > 0 ? subsStart : expertsStart + 25;
   const experts = expertsStart > 0
-                ? rows.slice(expertsStart+2, expertsEnd)
-                      .filter(r => r[0]&&r[0].trim()&&clean(r[0])!=='company')
-                : [];
-  const subs    = subsStart > 0
-                ? rows.slice(subsStart+2)
-                      .filter(r => r[0]&&r[0].trim()&&clean(r[0])!=='ipo')
-                : [];
-
-  // Issue Dates: rows between GMP end and Experts start
+               ? rows.slice(expertsStart+2, expertsEnd)
+                     .filter(r => r[0]&&r[0].trim()&&clean(r[0])!=='company')
+               : [];
+  const subs = subsStart > 0
+             ? rows.slice(subsStart+2)
+                   .filter(r => r[0]&&r[0].trim()&&clean(r[0])!=='ipo')
+             : [];
   const datesHeaderIdx = rows.findIndex(r =>
     clean(r[0])==='company' && String(r[1]||'').toLowerCase().includes('issue date'));
   const dates = datesHeaderIdx > 0
@@ -1046,109 +1190,119 @@ function renderIPO(rows){
   };
   const tbadge = t => `<span class="bd ${/main/i.test(st(t))?'bd-a':'bd-g'}">${st(t)||'—'}</span>`;
 
-  const TABS = [
-    {
-      k:'listed', label:'Listed', count:listed.length, color:'#1a7a4a',
-      html:`<div class="tscr"><table>
-        <thead><tr><th>Company</th><th>Type</th><th>Listed</th><th>Issue ₹</th>
-          <th>Subs</th><th>List Open</th><th>List Close</th><th>List Gain</th>
-          <th>LTP ₹</th><th>Today's Gain</th><th>Size</th></tr></thead>
-        <tbody>${listed.map(r=>`<tr>
-          <td><strong>${f(r[0])}</strong></td><td>${tbadge(r[1])}</td>
-          <td>${f(r[2])}</td><td>${f(r[3])}</td><td>${f(r[4])}</td>
-          <td>${f(r[5])}</td><td>${f(r[6])}</td>
-          <td class="${ic(r[7])}">${f(r[7])}</td>
-          <td>${f(r[8])}</td>
-          <td class="${ic(r[9])}">${f(r[9])}</td>
-          <td>${f(r[10])}</td>
-        </tr>`).join('')}</tbody>
-      </table></div>`
-    },
-    {
-      k:'gmp', label:'GMP', count:gmp.length, color:'#0d47a1',
-      html:`<div class="tscr"><table>
-        <thead><tr><th>IPO Name</th><th>GMP</th><th>Price Band</th>
-          <th>Est. Listing</th><th>Type</th><th>Updated</th></tr></thead>
-        <tbody>${gmp.map(r=>`<tr>
-          <td><strong>${st(r[0])}</strong></td>
-          <td class="${ic(st(r[1]))}" style="font-weight:600">${st(r[1])}</td>
-          <td>${st(r[3])}</td><td>${st(r[4])}</td>
-          <td>${tbadge(r[6])}</td>
-          <td style="color:#aaa;font-size:11px">${st(r[8])}</td>
-        </tr>`).join('')}</tbody>
-      </table></div>
-      <p style="margin:8px 16px 4px;font-size:12px;color:#888">
-        📅 For open/close dates see
-        <a href="javascript:void(0)" onclick="document.getElementById('ipotab-dates')?.click()"
-           style="color:#0d47a1;font-weight:600;text-decoration:underline">Issue Dates</a> tab ↑
-      </p>`
-    },
-    {
-      k:'experts', label:"Expert's Advice", count:experts.length, color:'#e07b00',
-      html:`<div class="tscr"><table>
-        <thead><tr><th>Company</th>
-          <th style="color:var(--green)">Apply</th>
-          <th style="color:var(--orange)">Neutral</th>
-          <th style="color:var(--red)">Avoid</th>
-          <th style="color:#aaa">Not Rated</th></tr></thead>
-        <tbody>${experts.map(r=>`<tr>
-          <td><strong>${f(r[0])}</strong></td>
-          <td style="color:var(--green);font-weight:600;text-align:center">${f(r[1])}</td>
-          <td style="color:var(--orange);text-align:center">${f(r[3])}</td>
-          <td style="color:var(--red);font-weight:600;text-align:center">${f(r[4])}</td>
-          <td style="color:#aaa;text-align:center">${f(r[5])}</td>
-        </tr>`).join('')}</tbody>
-      </table></div>`
-    },
-    {
-      k:'subs', label:'Subscription', count:subs.length, color:'#6a1b9a',
-      html:`<div class="tscr"><table>
-        <thead><tr><th>IPO</th><th>Type</th><th>Opening Date</th><th>Closing Date</th>
-          <th>QIB (X)</th><th>NII (X)</th><th>Retail (X)</th><th>Total (X)</th></tr></thead>
-        <tbody>${subs.map(r=>`<tr>
-          <td><strong>${f(r[0])}</strong></td><td>${tbadge(r[1])}</td>
-          <td>${f(r[2])}</td><td>${f(r[3])}</td>
-          ${[4,5,6,7].map(i=>{const v=parseFloat(r[i]);return`<td class="${isNaN(v)?'':v>=10?'cp':v>=1?'':'cn'}">${f(r[i])}</td>`;}).join('')}
-        </tr>`).join('')}</tbody>
-      </table></div>`
-    },
-    {
-      k:'dates', label:'Issue Dates', count:dates.length, color:'#555555',
-      html:`<div style="padding:10px 14px;columns:2;column-gap:20px">
-        ${dates.map(d=>`<div style="padding:5px 0;border-bottom:1px solid #f5f5f5;font-size:12px;break-inside:avoid">
-          📌 ${d}
-        </div>`).join('')}
-      </div>`
-    },
-  ];
+  // Section panel builder
+  const panel = (icon, title, subtitle, count, color, body) => `
+    <div style="background:var(--panel);border:1px solid var(--bdr);border-radius:14px;
+      margin-bottom:12px;overflow:hidden">
+      <div style="padding:14px 18px;display:flex;align-items:center;gap:12px;
+        border-bottom:1px solid var(--bdr)">
+        <div style="width:36px;height:36px;border-radius:9px;display:flex;align-items:center;
+          justify-content:center;font-size:18px;flex-shrink:0;background:${color}18">${icon}</div>
+        <div style="flex:1">
+          <div style="font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:700;color:#5b4636">${title}</div>
+          <div style="font-size:10px;color:#a8825f;margin-top:1px">${subtitle}</div>
+        </div>
+        <span style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:10px;
+          background:${color}18;color:${color};flex-shrink:0">${count} entries</span>
+      </div>
+      <div style="padding:14px 18px">${body}</div>
+    </div>`;
+
+  // Listed — compact table
+  const listedBody = `<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse">
+    <thead><tr>${['Company','Type','Listed','Issue ₹','Subs','List Open','List Close','List Gain','LTP ₹','Today','Size']
+      .map(h=>`<th style="font-size:10px;font-weight:700;color:#a8825f;padding:7px 10px;border-bottom:1px solid var(--bdr);text-align:left;white-space:nowrap">${h}</th>`).join('')}</tr></thead>
+    <tbody>${listed.map(r=>`<tr style="border-bottom:1px solid rgba(120,75,30,.06)">
+      <td style="padding:8px 10px;font-size:12px"><strong>${f(r[0])}</strong></td>
+      <td style="padding:8px 10px">${tbadge(r[1])}</td>
+      <td style="padding:8px 10px;font-size:12px;color:#a8825f">${f(r[2])}</td>
+      <td style="padding:8px 10px;font-size:12px;font-family:'Space Grotesk',sans-serif">${f(r[3])}</td>
+      <td style="padding:8px 10px;font-size:12px">${f(r[4])}</td>
+      <td style="padding:8px 10px;font-size:12px">${f(r[5])}</td>
+      <td style="padding:8px 10px;font-size:12px">${f(r[6])}</td>
+      <td style="padding:8px 10px;font-size:12px;font-weight:700" class="${ic(r[7])}">${f(r[7])}</td>
+      <td style="padding:8px 10px;font-size:12px;font-family:'Space Grotesk',sans-serif">${f(r[8])}</td>
+      <td style="padding:8px 10px;font-size:12px;font-weight:700" class="${ic(r[9])}">${f(r[9])}</td>
+      <td style="padding:8px 10px;font-size:12px;color:#a8825f">${f(r[10])}</td>
+    </tr>`).join('')}</tbody>
+  </table></div>`;
+
+  // GMP — tinted cards grid
+  const gmpBody = `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:8px">
+    ${gmp.map(r=>{
+      const pos=!String(r[1]||'').trim().startsWith('-')&&parseFloat(String(r[1]).replace(/[^\d.-]/g,''))>0;
+      const color=pos?'var(--green)':'var(--red)';
+      const bg=pos?'rgba(47,158,94,.07)':'rgba(224,86,47,.07)';
+      const bc=pos?'rgba(47,158,94,.2)':'rgba(224,86,47,.2)';
+      return `<div style="border:1px solid ${bc};background:${bg};border-radius:10px;padding:12px 14px">
+        <div style="font-size:12px;font-weight:700;color:#5b4636;margin-bottom:4px;
+          white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${st(r[0])}</div>
+        <div style="margin-bottom:8px">${tbadge(r[6]||'Mainboard')}</div>
+        <div style="display:flex;justify-content:space-between;align-items:baseline">
+          <div>
+            <div style="font-size:9px;color:#a8825f;text-transform:uppercase;letter-spacing:.4px">GMP</div>
+            <div style="font-family:'Space Grotesk',sans-serif;font-size:22px;font-weight:700;color:${color}">${st(r[1])}</div>
+          </div>
+          <div style="text-align:right">
+            <div style="font-size:9px;color:#a8825f;text-transform:uppercase;letter-spacing:.4px">Price Band</div>
+            <div style="font-size:12px;font-weight:600;color:#5b4636">${st(r[3])}</div>
+          </div>
+        </div>
+        <div style="font-size:11px;font-weight:700;color:${color};margin-top:6px">${st(r[4])}</div>
+        <div style="font-size:10px;color:#bfa07a;margin-top:3px">Updated: ${st(r[8])}</div>
+      </div>`;
+    }).join('')}
+  </div>
+  <p style="margin-top:10px;font-size:11px;color:#a8825f">
+    📅 For open/close dates see the <strong>Issue Dates</strong> section below.
+  </p>`;
+
+  // Expert's Advice — badge cards
+  const expertsBody = `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px">
+    ${experts.map(r=>`
+      <div style="border:1px solid var(--bdr);border-radius:10px;padding:12px 14px;background:rgba(255,255,255,.55)">
+        <div style="font-size:12px;font-weight:700;color:#5b4636;margin-bottom:8px">${f(r[0])}</div>
+        <div style="display:flex;gap:5px;flex-wrap:wrap">
+          ${f(r[1])!=='—'?`<span style="font-size:10px;font-weight:700;padding:3px 8px;border-radius:6px;background:rgba(47,158,94,.12);color:var(--green)">Apply ${f(r[1])}</span>`:''}
+          ${f(r[3])!=='—'?`<span style="font-size:10px;font-weight:700;padding:3px 8px;border-radius:6px;background:rgba(237,125,43,.12);color:var(--mc)">Neutral ${f(r[3])}</span>`:''}
+          ${f(r[4])!=='—'?`<span style="font-size:10px;font-weight:700;padding:3px 8px;border-radius:6px;background:rgba(224,86,47,.12);color:var(--red)">Avoid ${f(r[4])}</span>`:''}
+          ${f(r[5])!=='—'?`<span style="font-size:10px;font-weight:700;padding:3px 8px;border-radius:6px;background:rgba(85,85,85,.09);color:#555">Not Rated ${f(r[5])}</span>`:''}
+        </div>
+      </div>`).join('')}
+  </div>`;
+
+  // Subscription — table
+  const subsBody = `<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse">
+    <thead><tr>${['IPO','Type','Closing Date','QIB (×)','NII (×)','Retail (×)','Total (×)','Updated']
+      .map(h=>`<th style="font-size:10px;font-weight:700;color:#a8825f;padding:7px 10px;border-bottom:1px solid var(--bdr);text-align:left;white-space:nowrap">${h}</th>`).join('')}</tr></thead>
+    <tbody>${subs.map(r=>{
+      return `<tr style="border-bottom:1px solid rgba(120,75,30,.06)">
+        <td style="padding:8px 10px;font-size:12px"><strong>${f(r[0])}</strong></td>
+        <td style="padding:8px 10px">${tbadge(r[1])}</td>
+        <td style="padding:8px 10px;font-size:12px;color:#a8825f">${f(r[2])}</td>
+        ${[3,4,5,6].map(i=>{const v=parseFloat(r[i]);const cl=isNaN(v)?'':v>=10?'color:var(--green);font-weight:700':v>=1?'':'color:var(--red)';return`<td style="padding:8px 10px;font-size:12px;font-family:'Space Grotesk',sans-serif;text-align:right;${cl}">${f(r[i])}</td>`;}).join('')}
+        <td style="padding:8px 10px;font-size:11px;color:#bfa07a">${f(r[7])}</td>
+      </tr>`;
+    }).join('')}</tbody>
+  </table></div>`;
+
+  // Issue Dates — card grid
+  const datesBody = `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px">
+    ${dates.map(d=>`
+      <div style="background:rgba(255,255,255,.55);border:1px solid var(--bdr);border-radius:10px;
+        padding:11px 14px;font-size:12px;font-weight:600;color:#5b4636">
+        📌 ${d}
+      </div>`).join('')}
+  </div>`;
 
   $('s-ipo').innerHTML=`
     <div class="stitle">IPO Corner</div>
-
-    <div class="corp-tabs">
-      ${TABS.map((t,i)=>`
-        <button class="corp-tab${i===0?' on':''}"
-          id="ipotab-${t.k}"
-          style="border-color:${t.color};${i===0?`background:${t.color};color:#fff`:''}"
-          onclick="showIPOTab('${t.k}',this,'${t.color}')">
-          ${t.label}
-          <span style="margin-left:6px;font-size:10px;padding:1px 6px;border-radius:10px;
-            background:${i===0?'rgba(255,255,255,0.3)':t.color+'22'};
-            color:${i===0?'#fff':t.color}">
-            ${t.count}
-          </span>
-        </button>`).join('')}
-    </div>
-
-    ${TABS.map((t,i)=>`
-      <div class="corp-panel${i===0?' on':''}" id="ipopanel-${t.k}">
-        <div class="tcw">
-          <div class="tch" style="color:${t.color}">${t.label}
-            <span style="font-size:11px;color:#888;font-weight:400;margin-left:4px">${t.count} entries</span>
-          </div>
-          ${t.html}
-        </div>
-      </div>`).join('')}`;
+    ${panel('📈','Recently Listed IPOs','Performance since listing date',listed.length,'#1a7a4a',listedBody)}
+    ${panel('📊','Grey Market Premium','Unofficial pre-listing market prices',gmp.length,'#0d47a1',gmpBody)}
+    ${panel('🎓','Expert\'s Advice','Analyst recommendations',experts.length,'#e07b00',expertsBody)}
+    ${panel('📋','Subscription Status','Live subscription data',subs.length,'#6a1b9a',subsBody)}
+    ${panel('📅','Issue Dates','Upcoming & open IPO dates',dates.length,'#555555',datesBody)}
+  `;
 }
 
 function showIPOTab(key,btn,color){
@@ -1160,7 +1314,7 @@ function showIPOTab(key,btn,color){
     const sp=b.querySelector('span');
     if(sp){sp.style.background=b.style.borderColor+'22';sp.style.color=b.style.borderColor;}
   });
-  document.getElementById('ipopanel-'+key).classList.add('on');
+  document.getElementById('ipopanel-'+key)?.classList.add('on');
   btn.classList.add('on');
   btn.style.background=color;
   btn.style.color='#fff';
@@ -1168,42 +1322,58 @@ function showIPOTab(key,btn,color){
   if(sp){sp.style.background='rgba(255,255,255,0.3)';sp.style.color='#fff';}
 }
 
+ // Use dynamic section detection instead of hardcoded indices
+  // because gviz skips blank/merged rows causing index drift
+  const findIdx = (keyword, col=1) => rows.findIndex(r => String(r[col]||'').toLowerCase().includes(keyword.toLowerCase()));
 /* ══════════════════════════════════════════════
    CURRENCY — same as before, working correctly
    Col: [1]=Currency [2]=RateINR [3]=Code | [5]=Symbol [6]=Last [7]=Chg [8]=Chg% [9]=Close [10]=High [11]=Low
 ══════════════════════════════════════════════ */
 function renderCurrency(rows){
-  const curr=rows.slice(0).filter(r=>r[1]&&r[1].trim()&&r[2]&&r[2].trim()&&r[1]!=='Currency');
-  const comm=rows.slice(0).filter(r=>r[5]&&r[5].trim()&&r[5]!=='Symbol'&&r[5]!=='#N/A'&&r[6]&&r[6].trim());
+  const curr=rows.filter(r=>r[1]&&r[1].trim()&&r[2]&&r[2].trim()&&r[1]!=='Currency');
+  const comm=rows.filter(r=>r[5]&&r[5].trim()&&r[5]!=='Symbol'&&r[5]!=='#N/A'&&r[6]&&r[6].trim());
+
+  // Currency cards — use code (r[3]) as label, no flag emoji (not supported in all browsers)
+  const currCards = curr.map(r=>`
+    <div style="background:var(--panel);border:1px solid var(--bdr);border-radius:12px;
+      padding:14px 16px;position:relative;overflow:hidden;transition:.15s;cursor:default"
+      onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 6px 20px rgba(180,100,40,.12)'"
+      onmouseout="this.style.transform='';this.style.boxShadow=''">
+      <div style="position:absolute;top:0;left:0;right:0;height:3px;background:var(--mc);border-radius:12px 12px 0 0"></div>
+      <div style="font-size:11px;font-weight:700;color:#a8825f;text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px">${f(r[3])}</div>
+      <div style="font-family:'Space Grotesk',sans-serif;font-size:21px;font-weight:700;color:#5b4636;line-height:1;margin-bottom:5px">
+        <span style="font-size:13px;font-weight:600;color:#a8825f;vertical-align:middle;margin-right:1px">₹</span>${String(f(r[2])).replace(/^₹/,'')}
+      </div>
+      <div style="font-size:10px;color:#bfa07a;text-transform:uppercase;letter-spacing:.3px">${f(r[1])}</div>
+    </div>`).join('');
+
+  // Commodities heatmap — same bucket system as Indian Indices
+  const commHeatmap = comm.map(r=>{
+    const pct = parseFloat(String(r[8]||'0').replace(/[^0-9.-]/g,'')) * (String(r[8]||'').includes('-')?-1:1);
+    const bg  = hmColorFor(pct);
+    const dark= hmTextDark(pct);
+    const ts  = dark?'color:#5b4636':'color:#fff';
+    const sign= pct>0?'+':'';
+    const name= f(r[5]);
+    const price= f(r[6]);
+    const chg  = f(r[7]);
+    return `<div class="hm-tile" style="background:${bg}" title="${name}: ₹${price} (${sign}${pct.toFixed(2)}%)">
+      <div class="hm-name" style="${ts}">${name}</div>
+      <div class="hm-row">
+        <div class="hm-price" style="${ts}">₹${price}</div>
+        <div class="hm-pct"   style="${ts}">${sign}${pct.toFixed(2)}%</div>
+      </div>
+    </div>`;
+  }).join('');
 
   $('s-currency').innerHTML=`
     <div class="stitle">Currencies &amp; Commodities</div>
-    <div class="g2">
-      <div class="tcw">
-        <div class="tch">Global Currencies vs INR</div>
-        <div class="tscr"><table>
-          <thead><tr><th>Currency</th><th>Code</th><th>Rate (₹)</th></tr></thead>
-          <tbody>${curr.map(r=>`<tr>
-            <td>${f(r[1])}</td>
-            <td style="color:#aaa;font-size:11px">${f(r[3])}</td>
-            <td><strong>${f(r[2])}</strong></td></tr>`).join('')}
-          </tbody>
-        </table></div>
-      </div>
-      <div class="tcw">
-        <div class="tch">MCX Commodities</div>
-        <div class="tscr"><table>
-          <thead><tr><th>Commodity</th><th>Last</th><th>Chg</th><th>Chg%</th><th>High</th><th>Low</th></tr></thead>
-          <tbody>${comm.map(r=>`<tr>
-            <td><strong>${f(r[5])}</strong></td><td>${f(r[6])}</td>
-            <td class="${ic(r[7])}">${f(r[7])}</td>
-            <td class="${ic(r[8])}">${f(r[8])}</td>
-            <td style="color:#aaa">${f(r[10])}</td>
-            <td style="color:#aaa">${f(r[11])}</td></tr>`).join('')}
-          </tbody>
-        </table></div>
-      </div>
-    </div>`;
+    <div class="stitle-sm" style="margin-bottom:10px">Global Currencies vs ₹ INR</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-bottom:24px">
+      ${currCards}
+    </div>
+    <div class="stitle-sm" style="margin-bottom:10px">MCX Commodities</div>
+    <div class="hm-grid">${commHeatmap}</div>`;
 }
 
 /* ══════════════════════════════════════════════
@@ -1216,107 +1386,171 @@ function renderCurrency(rows){
    FIX: Collect ALL rows until next investor header or end — don't stop at blank rows
 ══════════════════════════════════════════════ */
 function renderCorporate(){
+  /*
+  4 sub-sheets from SID2 — card format (5 rows per stock entry):
+    Row 0: col[1] = Company Name
+    Row 1: col[1]='LTP'  col[3]=price  col[4]=% change
+    Row 2: col[1]=label  col[3]=value  (Dividend/Ratio/Premium)
+    Row 3: col[1]='Announcement Date'  col[3]=date
+    Row 4: col[1]='Ex-Date'  col[3]=date
+
+  GIDs: dividends=1718274952, bonus=1235071159, splits=1616300885, rights=1541450036
+  */
+
+  /* CONFIRMED CSV structure (from direct CSV analysis):
+     Company row: col[1]=Name, col[2]=EMPTY, col[3]=EMPTY
+     LTP row:     col[1]='LTP', col[3]=Price, col[4]=%Change
+     Value row:   col[1]='Dividend/Ratio', col[3]=Value
+     Ann row:     col[1]='Announcement Date', col[3]=Date
+     ExDate row:  col[1]='Ex-Date', col[3]=Date
+     Rights extra:col[1]='Premium', col[3]=Value (between Ratio and AnnDate)
+
+     KEY DETECTION: company row has col[2] EMPTY (no label in col C)
+                    all label rows have col[2] filled with the label text
+     rowSize: 5 for Div/Bonus/Splits, 6 for Rights
+  */
   function parseCards(rows, rowSize){
-    const cards=[];let i=0;
-    while(i<rows.length){
-      const r0=rows[i]||[];
-      const company=(r0[1]||'').trim();
-      if(!company||(r0[3]||'').trim()){i++;continue;}
-      const r1=rows[i+1]||[],r2=rows[i+2]||[],r3=rows[i+3]||[],r4=rows[i+4]||[],r5=rows[i+5]||[];
-      const ltp=(r1[3]||'').trim()||'--';
-      const pct=(r1[4]||'').trim()||'--';
-      if(rowSize===6) cards.push({company,ltp,pct,value:(r2[3]||'').trim()||'--',annDate:(r4[3]||'').trim()||'--',exDate:(r5[3]||'').trim()||'--'});
-      else cards.push({company,ltp,pct,value:(r2[3]||'').trim()||'--',annDate:(r3[3]||'').trim()||'--',exDate:(r4[3]||'').trim()||'--'});
-      i+=rowSize;
+    /* CSV structure (company name row IS present in CSV fetch):
+       Row 0: col[1]=CompanyName  (col[3] empty)
+       Row 1: col[1]='LTP'        col[3]=price  col[4]=%
+       Row 2: col[1]='Dividend/Ratio' col[3]=value
+       Row 3: col[1]='Ann. Date'  col[3]=date
+       Row 4: col[1]='Ex-Date'    col[3]=date
+       Rights (rowSize=6):
+       Row 0: company, Row1: LTP, Row2: Ratio, Row3: Premium, Row4: AnnDate, Row5: ExDate
+    */
+    const cards = [];
+    let i = 0;
+    while(i < rows.length){
+      const r0 = rows[i]||[];
+      const company = (r0[1]||'').trim();
+      // Company row: col[1]=name, col[3]=empty
+      if(!company||(r0[3]||'').trim()){ i++; continue; }
+
+      const r1=rows[i+1]||[];  // LTP
+      const r2=rows[i+2]||[];  // Dividend/Ratio
+      const r3=rows[i+3]||[];  // AnnDate (non-rights) / Premium (rights)
+      const r4=rows[i+4]||[];  // ExDate (non-rights) / AnnDate (rights)
+      const r5=rows[i+5]||[];  // ExDate (rights only)
+
+      const ltp=(r1[3]||'').trim()||'—';
+      const pct=(r1[4]||'').trim()||'—';
+      const pos=pct.includes('+');
+
+      if(rowSize===6){
+        cards.push({company,ltp,pct,pos,
+          value:  (r2[3]||'').trim()||'—',
+          extra:  (r3[3]||'').trim()||'—',
+          annDate:(r4[3]||'').trim()||'—',
+          exDate: (r5[3]||'').trim()||'—',
+        });
+      } else {
+        cards.push({company,ltp,pct,pos,
+          value:  (r2[3]||'').trim()||'—',
+          extra:  '',
+          annDate:(r3[3]||'').trim()||'—',
+          exDate: (r4[3]||'').trim()||'—',
+        });
+      }
+      i += rowSize;
     }
     return cards;
   }
+
+  // Today's corporate actions (GID 203302293) — flat table
+  // col[0]=Company col[1]=EventType col[2]=AnnouncedDate col[3]=ExDate col[4]=Dividend col[5]=Ratio
   function parseTodayActions(rows){
-    const hw=['company','event','type','announced'];
-    const ih=rows[0]&&hw.some(w=>(rows[0][0]||'').toLowerCase().includes(w));
-    return rows.slice(ih?1:0).filter(r=>r[0]&&r[0].trim()&&r[0].toLowerCase().trim()!=='no data found');
+    // col[0]=Company col[1]=EventType col[2]=AnnouncedDate col[3]=ExDate col[4]=Dividend col[5]=Ratio
+    // Skip header row only if first row's col[0] looks like a header label
+    const headerWords = ['company','event','type','announced'];
+    const isHeader = rows[0] && headerWords.some(w=>(rows[0][0]||'').toLowerCase().includes(w));
+    return rows.slice(isHeader?1:0).filter(r => r[0]&&r[0].trim()&&r[0].toLowerCase().trim()!=='no data found');
   }
-  const todayData=parseTodayActions(DATA['corp_today']||[]);
-  const divData=parseCards(DATA['corp_dividends']||[],5);
-  const bonusData=parseCards(DATA['corp_bonus']||[],5);
-  const splitData=parseCards(DATA['corp_splits']||[],5);
 
-  const panel=(icon,title,subtitle,count,color,body)=>
-    `<div style="background:var(--panel);border:1px solid var(--bdr);border-radius:14px;margin-bottom:12px;overflow:hidden">
-      <div style="padding:14px 18px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--bdr)">
-        <div style="width:36px;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;background:${color}18">${icon}</div>
-        <div style="flex:1">
-          <div style="font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:700;color:#5b4636">${title}</div>
-          <div style="font-size:10px;color:#a8825f;margin-top:1px">${subtitle}</div>
+  const todayData  = parseTodayActions(DATA['corp_today']  || []);
+  const divData    = parseCards(DATA['corp_dividends'] || [], 5);
+  const bonusData  = parseCards(DATA['corp_bonus']     || [], 5);
+  const splitData  = parseCards(DATA['corp_splits']    || [], 5);
+
+  function makeTable(cards, valHeader, showExtra=false, extraHeader='Details'){
+    if(!cards.length) return '<p style="padding:20px;color:#aaa;text-align:center">No data available</p>';
+    return `<div class="tscr"><table>
+      <thead><tr>
+        <th>Company</th>
+        <th>LTP (₹)</th>
+        <th>Change</th>
+        <th>${valHeader}</th>
+        <th>Announced</th>
+        <th>Ex-Date</th>
+        ${showExtra?`<th>${extraHeader}</th>`:''}
+      </tr></thead>
+      <tbody>${cards.map(c=>`<tr>
+        <td><strong>${c.company}</strong></td>
+        <td>${c.ltp}</td>
+        <td class="${c.pct.includes('-')?'cn':'cp'}">${c.pct}</td>
+        <td style="font-weight:600;color:var(--blue)">${c.value}</td>
+        <td style="color:#888;font-size:11px">${c.annDate}</td>
+        <td style="font-weight:600">${c.exDate}</td>
+        ${showExtra?`<td style="color:#888">${c.extra}</td>`:''}
+      </tr>`).join('')}
+      </tbody>
+    </table></div>`;
+  }
+
+  // Today's actions table
+  function makeTodayTable(rows){
+    if(!rows.length) return '<p style="padding:20px;color:#aaa;text-align:center">No corporate actions today 🎉</p>';
+    return `<div class="tscr"><table>
+      <thead><tr><th>Company</th><th>Action</th><th>Announced Date</th><th>Ex-Date</th><th>Dividend (₹)</th><th>Ratio</th></tr></thead>
+      <tbody>${rows.map(r=>`<tr>
+        <td><strong>${f(r[0])}</strong></td>
+        <td><span class="bd bd-g" style="background:#e8f0ff;color:#0d47a1">${f(r[1])}</span></td>
+        <td style="color:#888;font-size:11px">${f(r[2])}</td>
+        <td style="font-weight:600">${f(r[3])}</td>
+        <td class="${f(r[4])!=='—'&&f(r[4])!=='-'?'cp':''}">${f(r[4])}</td>
+        <td>${f(r[5])}</td>
+      </tr>`).join('')}
+      </tbody>
+    </table></div>`;
+  }
+
+  const TABS = [
+    {k:'today',  label:"Today's Events", count:todayData.length,  color:'#555555', html:makeTodayTable(todayData)},
+    {k:'div',    label:'Dividends', count:divData.length,    color:'#1a7a4a', html:makeTable(divData,   'Dividend (₹)')},
+    {k:'bonus',  label:'Bonus',     count:bonusData.length,  color:'#0d47a1', html:makeTable(bonusData, 'Ratio')},
+    {k:'splits', label:'Splits',    count:splitData.length,  color:'#e07b00', html:makeTable(splitData, 'Split Ratio')},
+  ];
+
+  $('s-corporate').innerHTML = `
+    <div class="stitle">Corporate Actions</div>
+
+    <div class="corp-tabs">
+      ${TABS.map((t,i) => `
+        <button class="corp-tab${i===0?' on':''}"
+          id="ctab-${t.k}"
+          style="border-color:${t.color};${i===0?`background:${t.color};color:#fff`:''}"
+          onclick="showCorpTab('${t.k}',this,'${t.color}')">
+          ${t.label}
+          <span style="margin-left:6px;font-size:10px;padding:1px 6px;border-radius:10px;
+            background:${i===0?'rgba(255,255,255,0.3)':''+t.color+'22'};
+            color:${i===0?'#fff':t.color}">
+            ${t.count}
+          </span>
+        </button>`).join('')}
+    </div>
+
+    ${TABS.map((t,i) => `
+      <div class="corp-panel${i===0?' on':''}" id="cp-${t.k}">
+        <div class="tcw">
+          <div class="tch" style="color:${t.color}">${t.label} <span style="font-size:11px;color:#888;font-weight:400">${t.count} companies</span></div>
+          ${t.html}
         </div>
-        <span style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:10px;background:${color}18;color:${color};flex-shrink:0">${count} companies</span>
-      </div>
-      <div style="padding:14px 18px">${body}</div>
-    </div>`;
+      </div>`).join('')}
 
-  const todayBody=todayData.length
-    ? `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:8px">${
-        todayData.map(r=>{
-          const action=f(r[1]);
-          const isDv=action.toLowerCase().includes('div');
-          const color=isDv?'var(--green)':'#0d47a1';
-          const bg=isDv?'rgba(47,158,94,.07)':'rgba(13,71,161,.07)';
-          const bc=isDv?'rgba(47,158,94,.2)':'rgba(13,71,161,.2)';
-          return `<div style="border:1px solid ${bc};background:${bg};border-radius:10px;padding:12px 14px">
-            <div style="font-size:12px;font-weight:700;color:#5b4636;margin-bottom:6px">${f(r[0])}</div>
-            <div style="margin-bottom:8px"><span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:6px;background:${bg};color:${color};border:1px solid ${bc}">${action}</span></div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;font-size:10px">
-              <div style="color:#a8825f">Announced</div><div style="color:#5b4636;font-weight:600;text-align:right">${f(r[2])}</div>
-              <div style="color:#a8825f">Ex-Date</div><div style="color:#5b4636;font-weight:600;text-align:right">${f(r[3])}</div>
-              ${f(r[4])!=='--'?`<div style="color:#a8825f">Dividend</div><div style="color:var(--green);font-weight:700;text-align:right">${f(r[4])}</div>`:''}
-              ${f(r[5])!=='--'?`<div style="color:#a8825f">Ratio</div><div style="color:#5b4636;font-weight:600;text-align:right">${f(r[5])}</div>`:''}
-            </div>
-          </div>`;
-        }).join('')}
-      </div>`
-    : '<div style="text-align:center;padding:24px;color:#a8825f;font-size:13px">No corporate actions today</div>';
-
-  const makeCards=(cards,valueLabel,valueColor)=>{
-    if(!cards.length) return '<div style="text-align:center;padding:24px;color:#a8825f;font-size:13px">No data available</div>';
-    return `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:8px">${
-      cards.map(c=>{
-        const pp=c.pct.includes('+');
-        const pc=pp?'var(--green)':'var(--red)';
-        const pb=pp?'rgba(47,158,94,.1)':'rgba(224,86,47,.1)';
-        return `<div style="background:var(--panel);border:1px solid var(--bdr);border-radius:10px;padding:13px 15px;position:relative;overflow:hidden">
-          <div style="position:absolute;top:0;left:0;bottom:0;width:4px;background:${valueColor};border-radius:10px 0 0 10px"></div>
-          <div style="padding-left:8px">
-            <div style="font-size:12px;font-weight:700;color:#5b4636;margin-bottom:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${c.company}</div>
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-              <div>
-                <div style="font-size:9px;color:#a8825f;text-transform:uppercase;letter-spacing:.4px;margin-bottom:2px">${valueLabel}</div>
-                <div style="font-family:'Space Grotesk',sans-serif;font-size:18px;font-weight:700;color:${valueColor}">${c.value}</div>
-              </div>
-              <div style="text-align:right">
-                <div style="font-size:9px;color:#a8825f;margin-bottom:2px">LTP</div>
-                <div style="font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:600;color:#5b4636">₹${c.ltp}</div>
-                <span style="font-size:10px;font-weight:700;padding:1px 6px;border-radius:5px;background:${pb};color:${pc}">${c.pct}</span>
-              </div>
-            </div>
-            <div style="display:flex;justify-content:space-between;font-size:10px;border-top:1px solid rgba(120,75,30,.08);padding-top:7px">
-              <div><div style="color:#bfa07a">Announced</div><div style="color:#5b4636;font-weight:600;margin-top:1px">${c.annDate}</div></div>
-              <div style="text-align:right"><div style="color:#bfa07a">Ex-Date</div><div style="color:#5b4636;font-weight:600;margin-top:1px">${c.exDate}</div></div>
-            </div>
-          </div>
-        </div>`;
-      }).join('')}
-    </div>`;
-  };
-
-  $('s-corporate').innerHTML=
-    '<div class="stitle">Corporate Actions</div>'+
-    '<div style="font-size:10px;color:#a8825f;margin-bottom:14px">Source: Niveshaka-bandhu Corporate Actions Sheet &middot; Auto-refreshes every 5 min</div>'+
-    panel('&#128197;',"Today's Events",'Corporate actions effective today',todayData.length,'#555555',todayBody)+
-    panel('&#128176;','Dividends','Upcoming dividend declarations',divData.length,'#1a7a4a',makeCards(divData,'Dividend ₹','var(--green)'))+
-    panel('&#127873;','Bonus Issues','Bonus share allotments',bonusData.length,'#0d47a1',makeCards(bonusData,'Bonus Ratio','#0d47a1'))+
-    panel('&#9986;&#65039;','Stock Splits','Share split announcements',splitData.length,'#e07b00',makeCards(splitData,'Split Ratio','var(--mc)'));
+    <p style="font-size:10px;color:#bbb;margin-top:8px">
+      Source: Niveshaka-bandhu Corporate Actions Sheet &nbsp;|&nbsp; Auto-refreshes every 5 min
+    </p>`;
 }
-
 
 function showCorpTab(key, btn, color){
   document.querySelectorAll('.corp-panel').forEach(p=>p.classList.remove('on'));
@@ -1382,11 +1616,15 @@ async function loadAll(){
       }catch(e2){console.warn('ipo gviz fallback failed',e2.message);}
     }),
     fetchIPOTypes().then(d=>{DATA.ipoTypes=d;}).catch(e=>console.warn('ipoTypes',e.message)),
-    fetchSheet(GIDS.market).then(d=>{DATA.market=d;}).catch(e=>console.warn('market',e.message)),
     fetchSheet2(CORP_GIDS.today).then(d=>{DATA['corp_today']=d;}).catch(e=>console.warn('corp_today',e.message)),
+    // Fetch market data for Dashboard widget but don't mark as LOADED so Movers tab still loads+renders properly
+    fetchSheet(GIDS.market).then(d=>{
+      DATA.market=d;
+      // Re-render dashboard movers widget now that market data is available
+      if(DATA.dashboard?.length) try{renderDashboard(DATA.dashboard, DATA.news||[]);}catch(e){}
+    }).catch(e=>console.warn('market',e.message)),
     
   ]);
-  LOADED['market']=true;
   if(DATA.dashboard?.length) try{renderDashboard(DATA.dashboard, DATA.news||[]);}catch(e){console.error('Dashboard',e);}
   if(DATA.global?.length)    try{renderGlobal(DATA.global);}catch(e){console.error('Global',e);}
   if(DATA.futures?.length)   try{renderFutures(DATA.futures);}catch(e){console.error('Futures',e);}
