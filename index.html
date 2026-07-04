@@ -186,7 +186,18 @@ footer a{color:var(--mc)}
 
 <div class="topbar">
   <span>🇮🇳 Niveshaka-bandhu — Investor's Friend &nbsp;|&nbsp; For Study Only</span>
-  <span><span class="live-dot"></span><span id="ts" style="font-size:10px;color:#8a6a4d">Fetching live data…</span></span>
+  <span style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+    <!-- Market Status + Countdown -->
+    <span id="mkt-status-pill" style="display:flex;align-items:center;gap:5px;font-size:11px;font-weight:700;padding:3px 10px;border-radius:10px;background:rgba(47,158,94,.12);color:var(--green)">
+      <span id="mkt-dot" style="width:7px;height:7px;border-radius:50%;background:var(--green);display:inline-block;animation:pulse 2s infinite"></span>
+      <span id="mkt-status-txt">NSE LIVE</span>
+    </span>
+    <span id="mkt-cd-wrap" style="display:flex;align-items:center;gap:5px;font-size:11px;color:#8a6a4d">
+      <span id="mkt-cd-label" style="font-weight:600">Closes in</span>
+      <span style="font-family:'Space Grotesk',sans-serif;font-weight:700;color:#5b4636;font-size:12px" id="mkt-cd-time">--:--:--</span>
+    </span>
+    <span><span class="live-dot"></span><span id="ts" style="font-size:10px;color:#8a6a4d">Fetching live data…</span></span>
+  </span>
 </div>
 <header>
   <div class="hdr">
@@ -1031,6 +1042,8 @@ function renderMarket(rows){
   const bseDec = (rows[29]||[])[8] || '—';
   const nseAdv = (rows[30]||[])[8] || '—';
   const nseDec = (rows[31]||[])[8] || '—';
+  DATA._nseAdv=nseAdv; DATA._nseDec=nseDec; DATA._bseAdv=bseAdv; DATA._bseDec=bseDec;
+  try{ if(typeof updateMoodBadge==='function') updateMoodBadge(); }catch(e){}
 
   // Variation 2 card builder
   const v2Card = (r, pos, i) => {
@@ -1386,93 +1399,171 @@ function renderCurrency(rows){
    FIX: Collect ALL rows until next investor header or end — don't stop at blank rows
 ══════════════════════════════════════════════ */
 function renderCorporate(){
-  function parseCards(rows,rowSize){
-    const cards=[];let i=0;
-    while(i<rows.length){
-      const r0=rows[i]||[];
-      const company=(r0[1]||'').trim();
-      if(!company||(r0[3]||'').trim()){i++;continue;}
-      const r1=rows[i+1]||[],r2=rows[i+2]||[],r3=rows[i+3]||[],r4=rows[i+4]||[],r5=rows[i+5]||[];
-      const ltp=(r1[3]||'').trim()||'--';
-      const pct=(r1[4]||'').trim()||'--';
-      if(rowSize===6)cards.push({company,ltp,pct,value:(r2[3]||'').trim()||'--',annDate:(r4[3]||'').trim()||'--',exDate:(r5[3]||'').trim()||'--'});
-      else cards.push({company,ltp,pct,value:(r2[3]||'').trim()||'--',annDate:(r3[3]||'').trim()||'--',exDate:(r4[3]||'').trim()||'--'});
-      i+=rowSize;
+  /*
+  4 sub-sheets from SID2 — card format (5 rows per stock entry):
+    Row 0: col[1] = Company Name
+    Row 1: col[1]='LTP'  col[3]=price  col[4]=% change
+    Row 2: col[1]=label  col[3]=value  (Dividend/Ratio/Premium)
+    Row 3: col[1]='Announcement Date'  col[3]=date
+    Row 4: col[1]='Ex-Date'  col[3]=date
+
+  GIDs: dividends=1718274952, bonus=1235071159, splits=1616300885, rights=1541450036
+  */
+
+  /* CONFIRMED CSV structure (from direct CSV analysis):
+     Company row: col[1]=Name, col[2]=EMPTY, col[3]=EMPTY
+     LTP row:     col[1]='LTP', col[3]=Price, col[4]=%Change
+     Value row:   col[1]='Dividend/Ratio', col[3]=Value
+     Ann row:     col[1]='Announcement Date', col[3]=Date
+     ExDate row:  col[1]='Ex-Date', col[3]=Date
+     Rights extra:col[1]='Premium', col[3]=Value (between Ratio and AnnDate)
+
+     KEY DETECTION: company row has col[2] EMPTY (no label in col C)
+                    all label rows have col[2] filled with the label text
+     rowSize: 5 for Div/Bonus/Splits, 6 for Rights
+  */
+  function parseCards(rows, rowSize){
+    /* CSV structure (company name row IS present in CSV fetch):
+       Row 0: col[1]=CompanyName  (col[3] empty)
+       Row 1: col[1]='LTP'        col[3]=price  col[4]=%
+       Row 2: col[1]='Dividend/Ratio' col[3]=value
+       Row 3: col[1]='Ann. Date'  col[3]=date
+       Row 4: col[1]='Ex-Date'    col[3]=date
+       Rights (rowSize=6):
+       Row 0: company, Row1: LTP, Row2: Ratio, Row3: Premium, Row4: AnnDate, Row5: ExDate
+    */
+    const cards = [];
+    let i = 0;
+    while(i < rows.length){
+      const r0 = rows[i]||[];
+      const company = (r0[1]||'').trim();
+      // Company row: col[1]=name, col[3]=empty
+      if(!company||(r0[3]||'').trim()){ i++; continue; }
+
+      const r1=rows[i+1]||[];  // LTP
+      const r2=rows[i+2]||[];  // Dividend/Ratio
+      const r3=rows[i+3]||[];  // AnnDate (non-rights) / Premium (rights)
+      const r4=rows[i+4]||[];  // ExDate (non-rights) / AnnDate (rights)
+      const r5=rows[i+5]||[];  // ExDate (rights only)
+
+      const ltp=(r1[3]||'').trim()||'—';
+      const pct=(r1[4]||'').trim()||'—';
+      const pos=pct.includes('+');
+
+      if(rowSize===6){
+        cards.push({company,ltp,pct,pos,
+          value:  (r2[3]||'').trim()||'—',
+          extra:  (r3[3]||'').trim()||'—',
+          annDate:(r4[3]||'').trim()||'—',
+          exDate: (r5[3]||'').trim()||'—',
+        });
+      } else {
+        cards.push({company,ltp,pct,pos,
+          value:  (r2[3]||'').trim()||'—',
+          extra:  '',
+          annDate:(r3[3]||'').trim()||'—',
+          exDate: (r4[3]||'').trim()||'—',
+        });
+      }
+      i += rowSize;
     }
     return cards;
   }
+
+  // Today's corporate actions (GID 203302293) — flat table
+  // col[0]=Company col[1]=EventType col[2]=AnnouncedDate col[3]=ExDate col[4]=Dividend col[5]=Ratio
   function parseTodayActions(rows){
-    const hw=['company','event','type','announced'];
-    const ih=rows[0]&&hw.some(w=>(rows[0][0]||'').toLowerCase().includes(w));
-    return rows.slice(ih?1:0).filter(r=>r[0]&&r[0].trim()&&r[0].toLowerCase().trim()!=='no data found');
+    // col[0]=Company col[1]=EventType col[2]=AnnouncedDate col[3]=ExDate col[4]=Dividend col[5]=Ratio
+    // Skip header row only if first row's col[0] looks like a header label
+    const headerWords = ['company','event','type','announced'];
+    const isHeader = rows[0] && headerWords.some(w=>(rows[0][0]||'').toLowerCase().includes(w));
+    return rows.slice(isHeader?1:0).filter(r => r[0]&&r[0].trim()&&r[0].toLowerCase().trim()!=='no data found');
   }
-  const todayData=parseTodayActions(DATA['corp_today']||[]);
-  const divData=parseCards(DATA['corp_dividends']||[],5);
-  const bonusData=parseCards(DATA['corp_bonus']||[],5);
-  const splitData=parseCards(DATA['corp_splits']||[],5);
 
-  const panel=(title,subtitle,count,color,body)=>
-    `<div style="background:var(--panel);border:1px solid var(--bdr);border-radius:14px;margin-bottom:12px;overflow:hidden">
-      <div style="padding:14px 18px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--bdr)">
-        <div style="flex:1">
-          <div style="font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:700;color:#5b4636">${title}</div>
-          <div style="font-size:10px;color:#a8825f;margin-top:1px">${subtitle}</div>
+  const todayData  = parseTodayActions(DATA['corp_today']  || []);
+  const divData    = parseCards(DATA['corp_dividends'] || [], 5);
+  const bonusData  = parseCards(DATA['corp_bonus']     || [], 5);
+  const splitData  = parseCards(DATA['corp_splits']    || [], 5);
+
+  function makeTable(cards, valHeader, showExtra=false, extraHeader='Details'){
+    if(!cards.length) return '<p style="padding:20px;color:#aaa;text-align:center">No data available</p>';
+    return `<div class="tscr"><table>
+      <thead><tr>
+        <th>Company</th>
+        <th>LTP (₹)</th>
+        <th>Change</th>
+        <th>${valHeader}</th>
+        <th>Announced</th>
+        <th>Ex-Date</th>
+        ${showExtra?`<th>${extraHeader}</th>`:''}
+      </tr></thead>
+      <tbody>${cards.map(c=>`<tr>
+        <td><strong>${c.company}</strong></td>
+        <td>${c.ltp}</td>
+        <td class="${c.pct.includes('-')?'cn':'cp'}">${c.pct}</td>
+        <td style="font-weight:600;color:var(--blue)">${c.value}</td>
+        <td style="color:#888;font-size:11px">${c.annDate}</td>
+        <td style="font-weight:600">${c.exDate}</td>
+        ${showExtra?`<td style="color:#888">${c.extra}</td>`:''}
+      </tr>`).join('')}
+      </tbody>
+    </table></div>`;
+  }
+
+  // Today's actions table
+  function makeTodayTable(rows){
+    if(!rows.length) return '<p style="padding:20px;color:#aaa;text-align:center">No corporate actions today 🎉</p>';
+    return `<div class="tscr"><table>
+      <thead><tr><th>Company</th><th>Action</th><th>Announced Date</th><th>Ex-Date</th><th>Dividend (₹)</th><th>Ratio</th></tr></thead>
+      <tbody>${rows.map(r=>`<tr>
+        <td><strong>${f(r[0])}</strong></td>
+        <td><span class="bd bd-g" style="background:#e8f0ff;color:#0d47a1">${f(r[1])}</span></td>
+        <td style="color:#888;font-size:11px">${f(r[2])}</td>
+        <td style="font-weight:600">${f(r[3])}</td>
+        <td class="${f(r[4])!=='—'&&f(r[4])!=='-'?'cp':''}">${f(r[4])}</td>
+        <td>${f(r[5])}</td>
+      </tr>`).join('')}
+      </tbody>
+    </table></div>`;
+  }
+
+  const TABS = [
+    {k:'today',  label:"Today's Events", count:todayData.length,  color:'#555555', html:makeTodayTable(todayData)},
+    {k:'div',    label:'Dividends', count:divData.length,    color:'#1a7a4a', html:makeTable(divData,   'Dividend (₹)')},
+    {k:'bonus',  label:'Bonus',     count:bonusData.length,  color:'#0d47a1', html:makeTable(bonusData, 'Ratio')},
+    {k:'splits', label:'Splits',    count:splitData.length,  color:'#e07b00', html:makeTable(splitData, 'Split Ratio')},
+  ];
+
+  $('s-corporate').innerHTML = `
+    <div class="stitle">Corporate Actions</div>
+
+    <div class="corp-tabs">
+      ${TABS.map((t,i) => `
+        <button class="corp-tab${i===0?' on':''}"
+          id="ctab-${t.k}"
+          style="border-color:${t.color};${i===0?`background:${t.color};color:#fff`:''}"
+          onclick="showCorpTab('${t.k}',this,'${t.color}')">
+          ${t.label}
+          <span style="margin-left:6px;font-size:10px;padding:1px 6px;border-radius:10px;
+            background:${i===0?'rgba(255,255,255,0.3)':''+t.color+'22'};
+            color:${i===0?'#fff':t.color}">
+            ${t.count}
+          </span>
+        </button>`).join('')}
+    </div>
+
+    ${TABS.map((t,i) => `
+      <div class="corp-panel${i===0?' on':''}" id="cp-${t.k}">
+        <div class="tcw">
+          <div class="tch" style="color:${t.color}">${t.label} <span style="font-size:11px;color:#888;font-weight:400">${t.count} companies</span></div>
+          ${t.html}
         </div>
-        <span style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:10px;background:${color}18;color:${color};flex-shrink:0">${count} companies</span>
-      </div>
-      <div style="padding:14px 18px">${body}</div>
-    </div>`;
+      </div>`).join('')}
 
-  const todayBody=todayData.length
-    ?`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:8px">${todayData.map(r=>{
-        const action=f(r[1]);const isDv=action.toLowerCase().includes('div');
-        const color=isDv?'var(--green)':'#0d47a1';
-        const bg=isDv?'rgba(47,158,94,.07)':'rgba(13,71,161,.07)';
-        const bc=isDv?'rgba(47,158,94,.2)':'rgba(13,71,161,.2)';
-        return `<div style="border:1px solid ${bc};background:${bg};border-radius:10px;padding:12px 14px">
-          <div style="font-size:12px;font-weight:700;color:#5b4636;margin-bottom:6px">${f(r[0])}</div>
-          <div style="margin-bottom:8px"><span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:6px;background:${bg};color:${color};border:1px solid ${bc}">${action}</span></div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;font-size:10px">
-            <div style="color:#a8825f">Announced</div><div style="color:#5b4636;font-weight:600;text-align:right">${f(r[2])}</div>
-            <div style="color:#a8825f">Ex-Date</div><div style="color:#5b4636;font-weight:600;text-align:right">${f(r[3])}</div>
-            ${f(r[4])!=='--'?`<div style="color:#a8825f">Dividend</div><div style="color:var(--green);font-weight:700;text-align:right">${f(r[4])}</div>`:''}
-            ${f(r[5])!=='--'?`<div style="color:#a8825f">Ratio</div><div style="color:#5b4636;font-weight:600;text-align:right">${f(r[5])}</div>`:''}
-          </div>
-        </div>`;}).join('')}</div>`
-    :'<div style="text-align:center;padding:24px;color:#a8825f;font-size:13px">No corporate actions today</div>';
-
-  const makeCards=(cards,valueLabel,valueColor)=>{
-    if(!cards.length)return'<div style="text-align:center;padding:24px;color:#a8825f;font-size:13px">No data available</div>';
-    return`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:8px">${cards.map(c=>{
-      const pp=c.pct.includes('+');const pc=pp?'var(--green)':'var(--red)';const pb=pp?'rgba(47,158,94,.1)':'rgba(224,86,47,.1)';
-      return`<div style="background:var(--panel);border:1px solid var(--bdr);border-radius:10px;padding:13px 15px;position:relative;overflow:hidden">
-        <div style="position:absolute;top:0;left:0;bottom:0;width:4px;background:${valueColor};border-radius:10px 0 0 10px"></div>
-        <div style="padding-left:8px">
-          <div style="font-size:12px;font-weight:700;color:#5b4636;margin-bottom:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${c.company}</div>
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-            <div><div style="font-size:9px;color:#a8825f;text-transform:uppercase;letter-spacing:.4px;margin-bottom:2px">${valueLabel}</div>
-            <div style="font-family:'Space Grotesk',sans-serif;font-size:18px;font-weight:700;color:${valueColor}">${c.value}</div></div>
-            <div style="text-align:right"><div style="font-size:9px;color:#a8825f;margin-bottom:2px">LTP</div>
-            <div style="font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:600;color:#5b4636">&#8377;${c.ltp}</div>
-            <span style="font-size:10px;font-weight:700;padding:1px 6px;border-radius:5px;background:${pb};color:${pc}">${c.pct}</span></div>
-          </div>
-          <div style="display:flex;justify-content:space-between;font-size:10px;border-top:1px solid rgba(120,75,30,.08);padding-top:7px">
-            <div><div style="color:#bfa07a">Announced</div><div style="color:#5b4636;font-weight:600;margin-top:1px">${c.annDate}</div></div>
-            <div style="text-align:right"><div style="color:#bfa07a">Ex-Date</div><div style="color:#5b4636;font-weight:600;margin-top:1px">${c.exDate}</div></div>
-          </div>
-        </div>
-      </div>`;}).join('')}</div>`;
-  };
-
-  $('s-corporate').innerHTML=
-    '<div class="stitle">Corporate Actions</div>'+
-    '<div style="font-size:10px;color:#a8825f;margin-bottom:14px">Source: Niveshaka-bandhu Corporate Actions Sheet &middot; Auto-refreshes every 5 min</div>'+
-    panel("Today's Events",'Corporate actions effective today',todayData.length,'#555555',todayBody)+
-    panel('Dividends','Upcoming dividend declarations',divData.length,'#1a7a4a',makeCards(divData,'Dividend &#8377;','var(--green)'))+
-    panel('Bonus Issues','Bonus share allotments',bonusData.length,'#0d47a1',makeCards(bonusData,'Bonus Ratio','#0d47a1'))+
-    panel('Stock Splits','Share split announcements',splitData.length,'#e07b00',makeCards(splitData,'Split Ratio','var(--mc)'));
+    <p style="font-size:10px;color:#bbb;margin-top:8px">
+      Source: Niveshaka-bandhu Corporate Actions Sheet &nbsp;|&nbsp; Auto-refreshes every 5 min
+    </p>`;
 }
-
 
 function showCorpTab(key, btn, color){
   document.querySelectorAll('.corp-panel').forEach(p=>p.classList.remove('on'));
@@ -1542,6 +1633,10 @@ async function loadAll(){
     // Fetch market data for Dashboard widget but don't mark as LOADED so Movers tab still loads+renders properly
     fetchSheet(GIDS.market).then(d=>{
       DATA.market=d;
+      // Extract Adv/Dec immediately for the floating mood badge (doesn't need full render)
+      DATA._bseAdv=(d[28]||[])[8]||'—'; DATA._bseDec=(d[29]||[])[8]||'—';
+      DATA._nseAdv=(d[30]||[])[8]||'—'; DATA._nseDec=(d[31]||[])[8]||'—';
+      try{ if(typeof updateMoodBadge==='function') updateMoodBadge(); }catch(e){}
       // Re-render dashboard movers widget now that market data is available
       if(DATA.dashboard?.length) try{renderDashboard(DATA.dashboard, DATA.news||[]);}catch(e){}
     }).catch(e=>console.warn('market',e.message)),
@@ -1685,6 +1780,143 @@ function showInv(id,btn){
 
 loadAll();
 setInterval(loadAll,5*60*1000);
+</script>
+
+<!-- ── FLOATING MARKET MOOD BADGE ── -->
+<div id="mood-badge" style="position:fixed;bottom:24px;right:24px;z-index:9999;cursor:pointer;user-select:none">
+  <!-- Expanded panel -->
+  <div id="mood-panel" style="position:absolute;bottom:calc(100% + 10px);right:0;
+    background:rgba(255,255,255,0.95);backdrop-filter:blur(16px);
+    border:1px solid var(--bdr);border-radius:14px;padding:14px;width:240px;
+    box-shadow:0 8px 32px rgba(120,75,30,.18);
+    opacity:0;pointer-events:none;transform:translateY(8px);
+    transition:all .2s ease">
+    <div style="font-size:10px;font-weight:700;color:#a8825f;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">Market Breadth</div>
+    <div style="margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;font-size:10px;font-weight:700;margin-bottom:5px">
+        <span style="color:var(--green)">▲ Advances</span><span style="color:var(--red)">Declines ▼</span>
+      </div>
+      <div style="height:8px;border-radius:8px;overflow:hidden;display:flex;background:rgba(120,75,30,.08)">
+        <div id="mood-bar-adv" style="background:var(--green);height:100%;transition:.5s"></div>
+        <div id="mood-bar-dec" style="background:var(--red);height:100%;transition:.5s"></div>
+      </div>
+      <div style="text-align:center;font-size:10px;color:#a8825f;margin-top:5px">A/D Ratio: <strong id="mood-ratio" style="color:#5b4636">—</strong></div>
+    </div>
+    ${[['NSE Advances','mood-p-nseadv','var(--green)'],['NSE Declines','mood-p-nsedec','var(--red)'],['BSE Advances','mood-p-bseadv','var(--green)'],['BSE Declines','mood-p-bsedec','var(--red)']].map(([l,id,c])=>`
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid rgba(120,75,30,.07)">
+      <span style="font-size:11px;color:#8a6a4d;font-weight:600">${l}</span>
+      <span id="${id}" style="font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:700;color:${c}">—</span>
+    </div>`).join('')}
+  </div>
+  <!-- Badge -->
+  <div id="mood-main" onclick="toggleMoodPanel()"
+    style="display:flex;align-items:center;gap:10px;
+      background:rgba(255,255,255,0.88);backdrop-filter:blur(16px);
+      border:1px solid var(--bdr);border-radius:20px;padding:10px 16px;
+      box-shadow:0 8px 32px rgba(120,75,30,.18);transition:all .25s ease">
+    <div id="mood-dot" style="width:10px;height:10px;border-radius:50%;background:var(--green);flex-shrink:0;animation:pulse 2s infinite"></div>
+    <div>
+      <div style="font-size:9px;color:#a8825f;font-weight:700;text-transform:uppercase;letter-spacing:.5px">Market Mood</div>
+      <div id="mood-val" style="font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:700;color:var(--green);line-height:1">—</div>
+    </div>
+    <div id="mood-chevron" style="font-size:14px;color:#a8825f;transition:transform .2s">⌃</div>
+  </div>
+</div>
+
+<script>
+/* ── MARKET COUNTDOWN + STATUS ── */
+function getIST(){return new Date(new Date().toLocaleString('en-US',{timeZone:'Asia/Kolkata'}));}
+function mktTick(){
+  const ist=getIST();
+  const day=ist.getDay(),h=ist.getHours(),m=ist.getMinutes(),s=ist.getSeconds();
+  const tot=h*60+m;
+  let status,label,color,bg,cdLabel,target;
+  if(day===0||day===6){status='Closed';label='Weekend';color='#a8825f';bg='rgba(120,75,30,.10)';cdLabel='Opens Monday';}
+  else if(tot<9*60+15){status='Pre-Open';label='Pre-Open';color='var(--mc)';bg='rgba(237,125,43,.12)';cdLabel='Opens in';target=9*3600+15*60;}
+  else if(tot<15*60+30){status='LIVE';label='NSE LIVE';color='var(--green)';bg='rgba(47,158,94,.12)';cdLabel='Closes in';target=15*3600+30*60;}
+  else{status='Closed';label='Market Closed';color='var(--red)';bg='rgba(224,86,47,.10)';cdLabel='Opens tomorrow';}
+
+  const pill=document.getElementById('mkt-status-pill');
+  const dot=document.getElementById('mkt-dot');
+  const txt=document.getElementById('mkt-status-txt');
+  const cdl=document.getElementById('mkt-cd-label');
+  const cdt=document.getElementById('mkt-cd-time');
+  if(pill){pill.style.background=bg;pill.style.color=color;}
+  if(dot){dot.style.background=color.replace('var(--green)','#2f9e5e').replace('var(--red)','#e0562f').replace('var(--mc)','#ed7d2b').replace('var(--orange)','#ed7d2b');}
+  if(txt) txt.textContent=label;
+  if(cdl) cdl.textContent=cdLabel;
+  if(cdt&&target){
+    const now=h*3600+m*60+s;
+    let diff=target-now;if(diff<0)diff+=86400;
+    const dh=Math.floor(diff/3600),dm=Math.floor((diff%3600)/60),ds=diff%60;
+    cdt.textContent=String(dh).padStart(2,'0')+':'+String(dm).padStart(2,'0')+':'+String(ds).padStart(2,'0');
+  } else if(cdt&&!target) cdt.textContent='';
+}
+mktTick();
+setInterval(mktTick,1000);
+
+/* ── FLOATING MOOD BADGE ── */
+function updateMoodBadge(){
+  const nseAdv=parseInt(String(DATA._nseAdv||'0').replace(/,/g,''))||0;
+  const nseDec=parseInt(String(DATA._nseDec||'0').replace(/,/g,''))||0;
+  const bseAdv=parseInt(String(DATA._bseAdv||'0').replace(/,/g,''))||0;
+  const bseDec=parseInt(String(DATA._bseDec||'0').replace(/,/g,''))||0;
+  if(!nseAdv&&!nseDec) return;
+  const ratio=nseDec>0?(nseAdv/nseDec):0;
+  let mood,color;
+  if(ratio>=1.5){mood='Bullish \u2191';color='var(--green)';}
+  else if(ratio>=1.1){mood='Mild Bullish \u2191';color='var(--green)';}
+  else if(ratio>=0.9){mood='Sideways \u2194';color='var(--mc)';}
+  else if(ratio>=0.7){mood='Mild Bearish \u2193';color='var(--red)';}
+  else{mood='Bearish \u2193';color='var(--red)';}
+  const mv=document.getElementById('mood-val');
+  const md=document.getElementById('mood-dot');
+  if(mv){mv.textContent=mood;mv.style.color=color;}
+  if(md) md.style.background=color.replace('var(--green)','#2f9e5e').replace('var(--red)','#e0562f').replace('var(--mc)','#ed7d2b');
+  const advPct=nseAdv+nseDec>0?(nseAdv/(nseAdv+nseDec)*100).toFixed(0):50;
+  const decPct=100-advPct;
+  const ba=document.getElementById('mood-bar-adv'),bd=document.getElementById('mood-bar-dec');
+  if(ba) ba.style.width=advPct+'%';
+  if(bd) bd.style.width=decPct+'%';
+  const r=document.getElementById('mood-ratio');
+  if(r) r.textContent=ratio.toFixed(2);
+  const ids=[['mood-p-nseadv',nseAdv],['mood-p-nsedec',nseDec],['mood-p-bseadv',bseAdv],['mood-p-bsedec',bseDec]];
+  ids.forEach(([id,val])=>{const el=document.getElementById(id);if(el)el.textContent=val?val.toLocaleString('en-IN'):'—';});
+}
+function toggleMoodPanel(){
+  const p=document.getElementById('mood-panel'),c=document.getElementById('mood-chevron');
+  const show=p.style.opacity==='0'||!p.style.opacity||p.style.pointerEvents==='none';
+  p.style.opacity=show?'1':'0';p.style.pointerEvents=show?'all':'none';
+  p.style.transform=show?'translateY(0)':'translateY(8px)';
+  if(c) c.style.transform=show?'rotate(180deg)':'';
+  if(show) updateMoodBadge();
+}
+document.addEventListener('click',function(e){
+  const badge=document.getElementById('mood-badge');
+  if(badge&&!badge.contains(e.target)){
+    const p=document.getElementById('mood-panel'),c=document.getElementById('mood-chevron');
+    if(p){p.style.opacity='0';p.style.pointerEvents='none';p.style.transform='translateY(8px)';}
+    if(c) c.style.transform='';
+  }
+});
+
+/* ── GLASSMORPHISM PARALLAX ── */
+(function(){
+  let mx=0,my=0,tx=0,ty=0;
+  document.addEventListener('mousemove',function(e){
+    mx=(e.clientX/window.innerWidth-.5)*18;
+    my=(e.clientY/window.innerHeight-.5)*12;
+  });
+  function animParallax(){
+    tx+=(mx-tx)*.06; ty+=(my-ty)*.06;
+    document.querySelectorAll('.icard,.tcw,.fii-wrap,.gift-card,.adbox,.hm-tile').forEach(function(el,i){
+      const depth=((i%3)+1)*.35;
+      el.style.transform='translate('+(tx*depth*.5)+'px,'+(ty*depth*.5)+'px)';
+    });
+    requestAnimationFrame(animParallax);
+  }
+  animParallax();
+})();
 </script>
 </body>
 </html>
