@@ -1802,11 +1802,22 @@ setInterval(loadAll,5*60*1000);
       </div>
       <div style="text-align:center;font-size:10px;color:#a8825f;margin-top:5px">A/D Ratio: <strong id="mood-ratio" style="color:#5b4636">—</strong></div>
     </div>
-    ${[['NSE Advances','mood-p-nseadv','var(--green)'],['NSE Declines','mood-p-nsedec','var(--red)'],['BSE Advances','mood-p-bseadv','var(--green)'],['BSE Declines','mood-p-bsedec','var(--red)']].map(([l,id,c])=>`
     <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid rgba(120,75,30,.07)">
-      <span style="font-size:11px;color:#8a6a4d;font-weight:600">${l}</span>
-      <span id="${id}" style="font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:700;color:${c}">—</span>
-    </div>`).join('')}
+      <span style="font-size:11px;color:#8a6a4d;font-weight:600">NSE Advances</span>
+      <span id="mood-p-nseadv" style="font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:700;color:var(--green)">—</span>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid rgba(120,75,30,.07)">
+      <span style="font-size:11px;color:#8a6a4d;font-weight:600">NSE Declines</span>
+      <span id="mood-p-nsedec" style="font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:700;color:var(--red)">—</span>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid rgba(120,75,30,.07)">
+      <span style="font-size:11px;color:#8a6a4d;font-weight:600">BSE Advances</span>
+      <span id="mood-p-bseadv" style="font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:700;color:var(--green)">—</span>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid rgba(120,75,30,.07)">
+      <span style="font-size:11px;color:#8a6a4d;font-weight:600">BSE Declines</span>
+      <span id="mood-p-bsedec" style="font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:700;color:var(--red)">—</span>
+    </div>
   </div>
   <!-- Badge -->
   <div id="mood-main" onclick="toggleMoodPanel()"
