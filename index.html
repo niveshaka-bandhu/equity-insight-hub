@@ -50,6 +50,43 @@ nav{display:flex;gap:2px;flex:1;flex-wrap:wrap}
 
 .loading{display:flex;align-items:center;justify-content:center;gap:10px;padding:50px;color:#a8825f;font-size:13px}
 .spin{width:20px;height:20px;border:2px solid rgba(120,75,30,.14);border-top-color:var(--mc);border-radius:50%;animation:sp .8s linear infinite;flex-shrink:0}
+
+/* SKELETON LOADERS */
+@keyframes shimmer{0%{background-position:-400px 0}100%{background-position:400px 0}}
+.skel{background:linear-gradient(90deg,rgba(120,75,30,.06) 0%,rgba(237,125,43,.14) 50%,rgba(120,75,30,.06) 100%);
+  background-size:800px 100%;animation:shimmer 1.6s infinite linear;border-radius:6px}
+.skel-tcw{background:var(--panel);border:1px solid var(--bdr);border-radius:14px;overflow:hidden;margin-bottom:16px}
+.skel-tch{padding:12px 16px;border-bottom:1px solid var(--bdr)}
+.skel-tch .skel{height:14px;width:140px}
+.skel-row{display:flex;align-items:center;gap:14px;padding:12px 16px;border-bottom:1px solid rgba(120,75,30,.06)}
+.skel-row:last-child{border-bottom:none}
+.skel-avatar{width:32px;height:32px;border-radius:8px;flex-shrink:0}
+.skel-lines{flex:1;display:flex;flex-direction:column;gap:6px}
+.skel-line-a{height:12px;width:60%}
+.skel-line-b{height:9px;width:35%}
+.skel-num{width:70px;height:16px;flex-shrink:0}
+.skel-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(185px,1fr));gap:10px}
+.skel-card{background:var(--panel);border:1px solid var(--bdr);border-radius:14px;padding:14px 16px}
+.skel-card .skel-line-a{height:11px;width:70%;margin-bottom:10px}
+.skel-card .skel-line-c{height:22px;width:85%;margin-bottom:8px}
+.skel-card .skel-line-b{height:9px;width:50%}
+
+/* ROW / CARD HOVER ACCENT */
+.hv-row{position:relative;transition:.18s}
+.hv-row::before{content:'';position:absolute;left:0;top:0;bottom:0;width:0;
+  transition:width .22s cubic-bezier(.4,0,.2,1);border-radius:0 3px 3px 0}
+.hv-row:hover{background:rgba(237,125,43,.045)}
+.hv-row:hover::before{width:4px}
+.hv-row.up::before{background:var(--green)}
+.hv-row.dn::before{background:var(--red)}
+.hv-row .hv-name{transition:.18s}
+.hv-row:hover .hv-name{color:var(--mc);transform:translateX(2px);display:inline-block}
+.hv-card{position:relative;overflow:hidden}
+.hv-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:0;
+  transition:width .22s cubic-bezier(.4,0,.2,1)}
+.hv-card:hover::before{width:4px}
+.hv-card.up::before{background:var(--green)}
+.hv-card.dn::before{background:var(--red)}
 @keyframes sp{to{transform:rotate(360deg)}}
 
 /* TABLE CARD */
@@ -229,14 +266,79 @@ footer a{color:var(--mc)}
 <div class="ticker" style="border-top:1px solid #f0f0f0"><div class="tscrl" id="tick2"><div class="ti"><span class="tn">Loading…</span></div></div></div>
 
 <div class="wrap">
-  <div class="sec on" id="s-dashboard"><div class="loading"><div class="spin"></div>Loading…</div></div>
-  <div class="sec"    id="s-global"><div class="loading"><div class="spin"></div>Loading…</div></div>
-  <div class="sec"    id="s-futures"><div class="loading"><div class="spin"></div>Loading…</div></div>
-  <div class="sec"    id="s-indian"><div class="loading"><div class="spin"></div>Loading…</div></div>
-  <div class="sec"    id="s-market"><div class="loading"><div class="spin"></div>Loading…</div></div>
-  <div class="sec"    id="s-ipo"><div class="loading"><div class="spin"></div>Loading…</div></div>
-  <div class="sec"    id="s-currency"><div class="loading"><div class="spin"></div>Loading…</div></div>
-  <div class="sec"    id="s-corporate"><div class="loading"><div class="spin"></div>Loading…</div></div>
+  <div class="sec on" id="s-dashboard">
+    <div class="skel-tcw"><div class="skel-tch"><div class="skel"></div></div>
+      <div class="skel-row"><div class="skel skel-avatar"></div><div class="skel-lines"><div class="skel skel-line-a"></div><div class="skel skel-line-b"></div></div><div class="skel skel-num"></div></div>
+      <div class="skel-row"><div class="skel skel-avatar"></div><div class="skel-lines"><div class="skel skel-line-a"></div><div class="skel skel-line-b"></div></div><div class="skel skel-num"></div></div>
+      <div class="skel-row"><div class="skel skel-avatar"></div><div class="skel-lines"><div class="skel skel-line-a"></div><div class="skel skel-line-b"></div></div><div class="skel skel-num"></div></div>
+    </div>
+    <div class="skel-cards">
+      <div class="skel-card"><div class="skel skel-line-a"></div><div class="skel skel-line-c"></div><div class="skel skel-line-b"></div></div>
+      <div class="skel-card"><div class="skel skel-line-a"></div><div class="skel skel-line-c"></div><div class="skel skel-line-b"></div></div>
+      <div class="skel-card"><div class="skel skel-line-a"></div><div class="skel skel-line-c"></div><div class="skel skel-line-b"></div></div>
+      <div class="skel-card"><div class="skel skel-line-a"></div><div class="skel skel-line-c"></div><div class="skel skel-line-b"></div></div>
+    </div>
+  </div>
+  <div class="sec"    id="s-global">
+    <div class="skel-cards">
+      <div class="skel-card"><div class="skel skel-line-a"></div><div class="skel skel-line-c"></div><div class="skel skel-line-b"></div></div>
+      <div class="skel-card"><div class="skel skel-line-a"></div><div class="skel skel-line-c"></div><div class="skel skel-line-b"></div></div>
+      <div class="skel-card"><div class="skel skel-line-a"></div><div class="skel skel-line-c"></div><div class="skel skel-line-b"></div></div>
+      <div class="skel-card"><div class="skel skel-line-a"></div><div class="skel skel-line-c"></div><div class="skel skel-line-b"></div></div>
+      <div class="skel-card"><div class="skel skel-line-a"></div><div class="skel skel-line-c"></div><div class="skel skel-line-b"></div></div>
+      <div class="skel-card"><div class="skel skel-line-a"></div><div class="skel skel-line-c"></div><div class="skel skel-line-b"></div></div>
+    </div>
+  </div>
+  <div class="sec"    id="s-futures">
+    <div class="skel-cards">
+      <div class="skel-card"><div class="skel skel-line-a"></div><div class="skel skel-line-c"></div><div class="skel skel-line-b"></div></div>
+      <div class="skel-card"><div class="skel skel-line-a"></div><div class="skel skel-line-c"></div><div class="skel skel-line-b"></div></div>
+      <div class="skel-card"><div class="skel skel-line-a"></div><div class="skel skel-line-c"></div><div class="skel skel-line-b"></div></div>
+      <div class="skel-card"><div class="skel skel-line-a"></div><div class="skel skel-line-c"></div><div class="skel skel-line-b"></div></div>
+    </div>
+  </div>
+  <div class="sec"    id="s-indian">
+    <div class="skel-cards">
+      <div class="skel-card"><div class="skel skel-line-a"></div><div class="skel skel-line-c"></div><div class="skel skel-line-b"></div></div>
+      <div class="skel-card"><div class="skel skel-line-a"></div><div class="skel skel-line-c"></div><div class="skel skel-line-b"></div></div>
+      <div class="skel-card"><div class="skel skel-line-a"></div><div class="skel skel-line-c"></div><div class="skel skel-line-b"></div></div>
+      <div class="skel-card"><div class="skel skel-line-a"></div><div class="skel skel-line-c"></div><div class="skel skel-line-b"></div></div>
+      <div class="skel-card"><div class="skel skel-line-a"></div><div class="skel skel-line-c"></div><div class="skel skel-line-b"></div></div>
+      <div class="skel-card"><div class="skel skel-line-a"></div><div class="skel skel-line-c"></div><div class="skel skel-line-b"></div></div>
+    </div>
+  </div>
+  <div class="sec"    id="s-market">
+    <div class="skel-tcw"><div class="skel-tch"><div class="skel"></div></div>
+      <div class="skel-row"><div class="skel skel-avatar"></div><div class="skel-lines"><div class="skel skel-line-a"></div><div class="skel skel-line-b"></div></div><div class="skel skel-num"></div></div>
+      <div class="skel-row"><div class="skel skel-avatar"></div><div class="skel-lines"><div class="skel skel-line-a"></div><div class="skel skel-line-b"></div></div><div class="skel skel-num"></div></div>
+      <div class="skel-row"><div class="skel skel-avatar"></div><div class="skel-lines"><div class="skel skel-line-a"></div><div class="skel skel-line-b"></div></div><div class="skel skel-num"></div></div>
+      <div class="skel-row"><div class="skel skel-avatar"></div><div class="skel-lines"><div class="skel skel-line-a"></div><div class="skel skel-line-b"></div></div><div class="skel skel-num"></div></div>
+    </div>
+  </div>
+  <div class="sec"    id="s-ipo">
+    <div class="skel-tcw"><div class="skel-tch"><div class="skel"></div></div>
+      <div class="skel-row"><div class="skel skel-avatar"></div><div class="skel-lines"><div class="skel skel-line-a"></div><div class="skel skel-line-b"></div></div><div class="skel skel-num"></div></div>
+      <div class="skel-row"><div class="skel skel-avatar"></div><div class="skel-lines"><div class="skel skel-line-a"></div><div class="skel skel-line-b"></div></div><div class="skel skel-num"></div></div>
+      <div class="skel-row"><div class="skel skel-avatar"></div><div class="skel-lines"><div class="skel skel-line-a"></div><div class="skel skel-line-b"></div></div><div class="skel skel-num"></div></div>
+    </div>
+  </div>
+  <div class="sec"    id="s-currency">
+    <div class="skel-cards">
+      <div class="skel-card"><div class="skel skel-line-a"></div><div class="skel skel-line-c"></div><div class="skel skel-line-b"></div></div>
+      <div class="skel-card"><div class="skel skel-line-a"></div><div class="skel skel-line-c"></div><div class="skel skel-line-b"></div></div>
+      <div class="skel-card"><div class="skel skel-line-a"></div><div class="skel skel-line-c"></div><div class="skel skel-line-b"></div></div>
+      <div class="skel-card"><div class="skel skel-line-a"></div><div class="skel skel-line-c"></div><div class="skel skel-line-b"></div></div>
+      <div class="skel-card"><div class="skel skel-line-a"></div><div class="skel skel-line-c"></div><div class="skel skel-line-b"></div></div>
+      <div class="skel-card"><div class="skel skel-line-a"></div><div class="skel skel-line-c"></div><div class="skel skel-line-b"></div></div>
+    </div>
+  </div>
+  <div class="sec"    id="s-corporate">
+    <div class="skel-tcw"><div class="skel-tch"><div class="skel"></div></div>
+      <div class="skel-row"><div class="skel skel-avatar"></div><div class="skel-lines"><div class="skel skel-line-a"></div><div class="skel skel-line-b"></div></div><div class="skel skel-num"></div></div>
+      <div class="skel-row"><div class="skel skel-avatar"></div><div class="skel-lines"><div class="skel skel-line-a"></div><div class="skel skel-line-b"></div></div><div class="skel skel-num"></div></div>
+      <div class="skel-row"><div class="skel skel-avatar"></div><div class="skel-lines"><div class="skel skel-line-a"></div><div class="skel skel-line-b"></div></div><div class="skel skel-num"></div></div>
+    </div>
+  </div>
   <div class="sec"    id="s-calculators"></div>
 </div>
 
@@ -331,8 +433,8 @@ function pctFmt(v){const s=String(v||"").trim();if(!s||s==="—")return "—";re
 function icard(name,price,chg,pct,hi,lo,tm,hl){
   const pos=!String(chg||"").trim().startsWith("-");
   const hls=hl?"background:#fffbf0;":"";
-  return `<div class="icard" style="${hls}">
-    <div class="iname" style="${hl?"font-weight:700;color:#b85c00;":""}">${f(name)}</div>
+  return `<div class="icard hv-card ${pos?'up':'dn'}" style="${hls}">
+    <div class="iname hv-name" style="${hl?"font-weight:700;color:#b85c00;":""}">${f(name)}</div>
     <div class="iprc">${f(price)}</div>
     <div class="ichs"><span class="${pos?"up":"dn"}">${f(chg)}</span><span class="${pos?"up":"dn"}">${pctFmt(pct)}</span></div>
     <div class="ihl">H:${f(hi)} &nbsp;L:${f(lo)}</div>
