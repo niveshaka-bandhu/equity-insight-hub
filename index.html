@@ -45,6 +45,40 @@ nav{display:flex;gap:2px;flex:1;flex-wrap:wrap}
 
 .wrap{max-width:1360px;margin:0 auto;padding:12px 14px}
 .sec{display:none}.sec.on{display:block}
+
+/* SECTION ENTRANCE ANIMATION */
+@keyframes secFadeUp{
+  from{opacity:0;transform:translateY(14px)}
+  to{opacity:1;transform:translateY(0)}
+}
+.sec.on > *{
+  animation:secFadeUp .45s cubic-bezier(.2,.8,.2,1) both;
+}
+.sec.on > *:nth-child(1){animation-delay:.00s}
+.sec.on > *:nth-child(2){animation-delay:.05s}
+.sec.on > *:nth-child(3){animation-delay:.10s}
+.sec.on > *:nth-child(4){animation-delay:.15s}
+.sec.on > *:nth-child(5){animation-delay:.20s}
+.sec.on > *:nth-child(6){animation-delay:.25s}
+.sec.on > *:nth-child(7){animation-delay:.30s}
+.sec.on > *:nth-child(8){animation-delay:.35s}
+.sec.on > *:nth-child(9){animation-delay:.40s}
+.sec.on > *:nth-child(10){animation-delay:.45s}
+.sec.on > *:nth-child(n+11){animation-delay:.48s}
+/* Cards within grids cascade a touch faster individually */
+.sec.on .icard,.sec.on .skel-card,.sec.on .hm-tile{
+  animation:secFadeUp .4s cubic-bezier(.2,.8,.2,1) both;
+}
+.sec.on .igrid > *:nth-child(1),.sec.on .skel-cards > *:nth-child(1),.sec.on .hm-grid > *:nth-child(1){animation-delay:.05s}
+.sec.on .igrid > *:nth-child(2),.sec.on .skel-cards > *:nth-child(2),.sec.on .hm-grid > *:nth-child(2){animation-delay:.08s}
+.sec.on .igrid > *:nth-child(3),.sec.on .skel-cards > *:nth-child(3),.sec.on .hm-grid > *:nth-child(3){animation-delay:.11s}
+.sec.on .igrid > *:nth-child(4),.sec.on .skel-cards > *:nth-child(4),.sec.on .hm-grid > *:nth-child(4){animation-delay:.14s}
+.sec.on .igrid > *:nth-child(5),.sec.on .skel-cards > *:nth-child(5),.sec.on .hm-grid > *:nth-child(5){animation-delay:.17s}
+.sec.on .igrid > *:nth-child(6),.sec.on .skel-cards > *:nth-child(6),.sec.on .hm-grid > *:nth-child(6){animation-delay:.20s}
+.sec.on .igrid > *:nth-child(n+7),.sec.on .skel-cards > *:nth-child(n+7),.sec.on .hm-grid > *:nth-child(n+7){animation-delay:.22s}
+@media (prefers-reduced-motion: reduce){
+  .sec.on > *,.sec.on .icard,.sec.on .skel-card,.sec.on .hm-tile{animation:none}
+}
 .stitle{font-family:'Space Grotesk',sans-serif;font-size:19px;font-weight:600;color:#5b4636;border-bottom:2px solid var(--mc);padding-bottom:6px;margin-bottom:14px;letter-spacing:.2px}
 .stitle-sm{font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:600;color:#5b4636;border-bottom:1px solid var(--bdr);padding-bottom:4px;margin:12px 0 8px}
 
@@ -1804,7 +1838,12 @@ function renderCalculators(){
 function showTab(key,btn){
   document.querySelectorAll('.sec').forEach(s=>s.classList.remove('on'));
   document.querySelectorAll('.nb').forEach(b=>b.classList.remove('on'));
-  $('s-'+key).classList.add('on'); btn.classList.add('on');
+  const target=$('s-'+key);
+  target.classList.add('on'); btn.classList.add('on');
+  // Force animation restart even if this section was already rendered before
+  target.style.animation='none';
+  void target.offsetHeight; // reflow
+  target.style.animation='';
   window.scrollTo({top:0,behavior:'smooth'});
   loadTab(key); // lazy load if not yet loaded
 }
