@@ -15,7 +15,7 @@ body{font-family:'Inter',sans-serif;font-size:13px;color:#5b4636;
 a{text-decoration:none;color:inherit}
 table{border-collapse:collapse;width:100%}
 th,td{text-align:left;padding:7px 10px}
-:root{--red:#e0562f;--green:#2f9e5e;--orange:#ed7d2b;--blue:#ed7d2b;--mc:#ed7d2b;--bdr:rgba(120,75,30,0.13);--bgh:rgba(255,158,61,0.06);
+:root{--red:#e0562f;--green:#2f9e5e;--orange:#ed7d2b;--blue:#ed7d2b;--mc:#ed7d2b;--bdr:rgba(120,75,30,0.32);--bgh:rgba(255,158,61,0.06);
   --panel:rgba(255,255,255,0.72);--panel-blur:blur(12px);}
 
 /* ── DARK MODE: follows OS/browser setting automatically ──
@@ -95,12 +95,12 @@ nav{display:flex;gap:2px;flex:1;flex-wrap:wrap}
 
 /* SKELETON LOADERS */
 @keyframes shimmer{0%{background-position:-400px 0}100%{background-position:400px 0}}
-.skel{background:linear-gradient(90deg,rgba(120,75,30,.06) 0%,rgba(237,125,43,.14) 50%,rgba(120,75,30,.06) 100%);
+.skel{background:linear-gradient(90deg,rgba(120,75,30,.20) 0%,rgba(237,125,43,.14) 50%,rgba(120,75,30,.20) 100%);
   background-size:800px 100%;animation:shimmer 1.6s infinite linear;border-radius:6px}
 .skel-tcw{background:var(--panel);border:1px solid var(--bdr);border-radius:14px;overflow:hidden;margin-bottom:16px}
 .skel-tch{padding:12px 16px;border-bottom:1px solid var(--bdr)}
 .skel-tch .skel{height:14px;width:140px}
-.skel-row{display:flex;align-items:center;gap:14px;padding:12px 16px;border-bottom:1px solid rgba(120,75,30,.06)}
+.skel-row{display:flex;align-items:center;gap:14px;padding:12px 16px;border-bottom:1px solid rgba(120,75,30,.20)}
 .skel-row:last-child{border-bottom:none}
 .skel-avatar{width:32px;height:32px;border-radius:8px;flex-shrink:0}
 .skel-lines{flex:1;display:flex;flex-direction:column;gap:6px}
@@ -138,7 +138,7 @@ nav{display:flex;gap:2px;flex:1;flex-wrap:wrap}
 .tscr{overflow-x:auto;-webkit-overflow-scrolling:touch}
 thead tr{background:rgba(255,158,61,0.05)}
 thead th{font-size:11px;font-weight:700;color:#8a6a4d;border-bottom:1px solid var(--bdr);padding:8px 10px;white-space:nowrap}
-tbody tr{border-bottom:1px solid rgba(120,75,30,.07)}
+tbody tr{border-bottom:1px solid rgba(120,75,30,.20)}
 tbody tr:hover{background:rgba(237,125,43,.06)}
 tbody td{font-size:12px;color:#6b5340;padding:8px 10px;white-space:nowrap}
 .cp{color:var(--green);font-weight:600}.cn{color:var(--red);font-weight:600}
@@ -1415,7 +1415,7 @@ function renderIPO(rows){
   const listedBody = `<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse">
     <thead><tr>${['Company','Type','Listed','Issue ₹','Subs','List Open','List Close','List Gain','LTP ₹','Today','Size']
       .map(h=>`<th style="font-size:10px;font-weight:700;color:#a8825f;padding:7px 10px;border-bottom:1px solid var(--bdr);text-align:left;white-space:nowrap">${h}</th>`).join('')}</tr></thead>
-    <tbody>${listed.map(r=>`<tr style="border-bottom:1px solid rgba(120,75,30,.06)">
+    <tbody>${listed.map(r=>`<tr style="border-bottom:1px solid rgba(120,75,30,.20)">
       <td style="padding:8px 10px;font-size:12px"><strong>${f(r[0])}</strong></td>
       <td style="padding:8px 10px">${tbadge(r[1])}</td>
       <td style="padding:8px 10px;font-size:12px;color:#a8825f">${f(r[2])}</td>
@@ -1479,7 +1479,7 @@ function renderIPO(rows){
     <thead><tr>${['IPO','Type','Closing Date','QIB (×)','NII (×)','Retail (×)','Total (×)','Updated']
       .map(h=>`<th style="font-size:10px;font-weight:700;color:#a8825f;padding:7px 10px;border-bottom:1px solid var(--bdr);text-align:left;white-space:nowrap">${h}</th>`).join('')}</tr></thead>
     <tbody>${subs.map(r=>{
-      return `<tr style="border-bottom:1px solid rgba(120,75,30,.06)">
+      return `<tr style="border-bottom:1px solid rgba(120,75,30,.20)">
         <td style="padding:8px 10px;font-size:12px"><strong>${f(r[0])}</strong></td>
         <td style="padding:8px 10px">${tbadge(r[1])}</td>
         <td style="padding:8px 10px;font-size:12px;color:#a8825f">${f(r[2])}</td>
@@ -1659,7 +1659,7 @@ function renderCorporate(){
             <div style="font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:600;color:#5b4636">&#8377;${c.ltp}</div>
             <span style="font-size:10px;font-weight:700;padding:1px 6px;border-radius:5px;background:${pb};color:${pc}">${c.pct}</span></div>
           </div>
-          <div style="display:flex;justify-content:space-between;font-size:10px;border-top:1px solid rgba(120,75,30,.08);padding-top:7px">
+          <div style="display:flex;justify-content:space-between;font-size:10px;border-top:1px solid rgba(120,75,30,.22);padding-top:7px">
             <div><div style="color:#bfa07a">Announced</div><div style="color:#5b4636;font-weight:600;margin-top:1px">${c.annDate}</div></div>
             <div style="text-align:right"><div style="color:#bfa07a">Ex-Date</div><div style="color:#5b4636;font-weight:600;margin-top:1px">${c.exDate}</div></div>
           </div>
@@ -1928,25 +1928,25 @@ setInterval(loadAll,5*60*1000);
       <div style="display:flex;justify-content:space-between;font-size:10px;font-weight:700;margin-bottom:5px">
         <span style="color:var(--green)">▲ Advances</span><span style="color:var(--red)">Declines ▼</span>
       </div>
-      <div style="height:8px;border-radius:8px;overflow:hidden;display:flex;background:rgba(120,75,30,.08)">
+      <div style="height:8px;border-radius:8px;overflow:hidden;display:flex;background:rgba(120,75,30,.22)">
         <div id="mood-bar-adv" style="background:var(--green);height:100%;transition:.5s"></div>
         <div id="mood-bar-dec" style="background:var(--red);height:100%;transition:.5s"></div>
       </div>
       <div style="text-align:center;font-size:10px;color:#a8825f;margin-top:5px">A/D Ratio: <strong id="mood-ratio" style="color:#5b4636">—</strong></div>
     </div>
-    <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid rgba(120,75,30,.07)">
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid rgba(120,75,30,.20)">
       <span style="font-size:11px;color:#8a6a4d;font-weight:600">NSE Advances</span>
       <span id="mood-p-nseadv" style="font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:700;color:var(--green)">—</span>
     </div>
-    <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid rgba(120,75,30,.07)">
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid rgba(120,75,30,.20)">
       <span style="font-size:11px;color:#8a6a4d;font-weight:600">NSE Declines</span>
       <span id="mood-p-nsedec" style="font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:700;color:var(--red)">—</span>
     </div>
-    <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid rgba(120,75,30,.07)">
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid rgba(120,75,30,.20)">
       <span style="font-size:11px;color:#8a6a4d;font-weight:600">BSE Advances</span>
       <span id="mood-p-bseadv" style="font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:700;color:var(--green)">—</span>
     </div>
-    <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid rgba(120,75,30,.07)">
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid rgba(120,75,30,.20)">
       <span style="font-size:11px;color:#8a6a4d;font-weight:600">BSE Declines</span>
       <span id="mood-p-bsedec" style="font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:700;color:var(--red)">—</span>
     </div>
