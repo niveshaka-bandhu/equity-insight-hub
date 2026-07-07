@@ -10,16 +10,24 @@
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth}
 body{font-family:'Inter',sans-serif;font-size:13px;color:#5b4636;
-  background:
-    radial-gradient(circle at 8% 0%, #ffd9a8 0%, transparent 42%),
-    radial-gradient(circle at 95% 92%, #ff9d3d 0%, transparent 48%),
-    #fff7ee;
+  background:#ffffff;
   min-height:100vh}
 a{text-decoration:none;color:inherit}
 table{border-collapse:collapse;width:100%}
 th,td{text-align:left;padding:7px 10px}
 :root{--red:#e0562f;--green:#2f9e5e;--orange:#ed7d2b;--blue:#ed7d2b;--mc:#ed7d2b;--bdr:rgba(120,75,30,0.13);--bgh:rgba(255,158,61,0.06);
   --panel:rgba(255,255,255,0.72);--panel-blur:blur(12px);}
+
+/* ── DARK MODE: follows OS/browser setting automatically ──
+   Uses a filter-invert technique so the whole existing color
+   system (backgrounds, borders, text, green/red indicators)
+   flips to a dark theme without needing every inline style
+   rewritten. The logo image is re-inverted so it stays normal. */
+@media (prefers-color-scheme: dark){
+  html{background:#111214}
+  body{background:#111214;filter:invert(0.93) hue-rotate(180deg)}
+  .logo img{filter:invert(0.93) hue-rotate(180deg)}
+}
 
 .topbar{background:rgba(255,255,255,0.55);backdrop-filter:blur(10px);color:#8a6a4d;font-size:11px;padding:5px 16px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:4px;border-bottom:1px solid var(--bdr)}
 header{background:rgba(255,247,238,0.85);backdrop-filter:blur(18px);border-bottom:1px solid var(--bdr);box-shadow:0 4px 24px rgba(180,100,40,.08);position:sticky;top:0;z-index:300}
@@ -2099,7 +2107,7 @@ function openSearch(){
     modal.id='smart-search-modal';
     modal.style.cssText='position:fixed;inset:0;z-index:10000;background:rgba(91,70,54,.35);'+
       'backdrop-filter:blur(4px);display:flex;align-items:flex-start;justify-content:center;padding-top:12vh';
-    modal.innerHTML='<div style="background:#fff7ee;border:1px solid var(--bdr);border-radius:16px;'+
+    modal.innerHTML='<div style="background:#ffffff;border:1px solid var(--bdr);border-radius:16px;'+
       'width:min(520px,90vw);box-shadow:0 20px 60px rgba(120,75,30,.3);overflow:hidden">'+
       '<div style="padding:14px 18px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;gap:10px">'+
       '<span style="color:#a8825f">Search</span>'+
