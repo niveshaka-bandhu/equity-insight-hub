@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <link rel="icon" type="image/logo.png" href="logo.png">
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Niveshaka-bandhu — Investor's Friend</title>
@@ -456,6 +455,40 @@ function toRows(data){
 
 /* ── Helpers ── */
 const $=id=>document.getElementById(id);
+
+/* Stamps a small "Updated HH:MM" badge next to a section's .stitle heading */
+function stampUpdated(key){
+  try{
+    const sec=$('s-'+key);
+    if(!sec) return;
+    const title=sec.querySelector('.stitle');
+    if(!title) return;
+    let badge=title.querySelector('.upd-badge');
+    if(!badge){
+      badge=document.createElement('span');
+      badge.className='upd-badge';
+      badge.style.cssText='float:right;font-size:10px;font-weight:600;color:#a8825f;'+
+        'background:rgba(237,125,43,.08);border:1px solid var(--bdr);border-radius:8px;'+
+        'padding:2px 9px;vertical-align:middle';
+      title.appendChild(badge);
+    }
+    const now=new Date();
+    badge.textContent='Updated '+now.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
+    badge.dataset.ts=now.getTime();
+  }catch(e){}
+}
+/* Refresh all visible "Updated Xm ago" badges' relative text every 30s */
+setInterval(()=>{
+  document.querySelectorAll('.upd-badge').forEach(b=>{
+    const ts=parseInt(b.dataset.ts||'0',10); if(!ts) return;
+    const mins=Math.floor((Date.now()-ts)/60000);
+    const now=new Date(ts);
+    if(mins<1) b.textContent='Updated just now';
+    else if(mins===1) b.textContent='Updated 1 min ago';
+    else if(mins<60) b.textContent='Updated '+mins+' min ago';
+    else b.textContent='Updated '+now.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
+  });
+},30000);
 const f=v=>String(v||'').trim()||'—';
 const clean=v=>String(v||'').replace(/\*/g,'').trim();
 function ic(v){
@@ -1709,13 +1742,13 @@ async function loadAll(){
       DATA._nseAdv=(d[30]||[])[8]||'—'; DATA._nseDec=(d[31]||[])[8]||'—';
       try{ if(typeof updateMoodBadge==='function') updateMoodBadge(); }catch(e){}
       // Re-render dashboard movers widget now that market data is available
-      if(DATA.dashboard?.length) try{renderDashboard(DATA.dashboard, DATA.news||[]);}catch(e){}
+      if(DATA.dashboard?.length) try{renderDashboard(DATA.dashboard, DATA.news||[]);stampUpdated('dashboard');}catch(e){}
     }).catch(e=>console.warn('market',e.message)),
     
   ]);
-  if(DATA.dashboard?.length) try{renderDashboard(DATA.dashboard, DATA.news||[]);}catch(e){console.error('Dashboard',e);}
-  if(DATA.global?.length)    try{renderGlobal(DATA.global);}catch(e){console.error('Global',e);}
-  if(DATA.futures?.length)   try{renderFutures(DATA.futures);}catch(e){console.error('Futures',e);}
+  if(DATA.dashboard?.length) try{renderDashboard(DATA.dashboard, DATA.news||[]);stampUpdated('dashboard');}catch(e){console.error('Dashboard',e);}
+  if(DATA.global?.length)    try{renderGlobal(DATA.global);stampUpdated('global');}catch(e){console.error('Global',e);}
+  if(DATA.futures?.length)   try{renderFutures(DATA.futures);stampUpdated('futures');}catch(e){console.error('Futures',e);}
   try{buildTicker(DATA.global||[], DATA.futures||[]);}catch(e){}
   const now=new Date();
   $('ts').textContent=`Live · Updated ${now.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'})} IST`;
@@ -1732,11 +1765,13 @@ async function loadTab(key){
   try{
     if(key==='calculators'){
       renderCalculators();
+      stampUpdated('calculators');
     } else if(key==='corporate'){
       await Promise.allSettled(Object.entries(CORP_GIDS).map(async([k,gid])=>{
         try{DATA['corp_'+k]=await fetchSheet2(gid);}catch(e){console.warn('corp_'+k,e.message);}
       }));
       renderCorporate();
+      stampUpdated('corporate');
     } else if(GIDS[key]){
       if(key==='ipo'){
         try{
@@ -1750,13 +1785,13 @@ async function loadTab(key){
       } else {
         DATA[key]=await fetchSheet(GIDS[key]);
       }
-     if(key==='dashboard') renderDashboard(DATA.dashboard||[], DATA.news||[]);
-      if(key==='futures')   renderFutures(DATA.futures||[]);
+     if(key==='dashboard'){ renderDashboard(DATA.dashboard||[], DATA.news||[]); stampUpdated('dashboard'); }
+      if(key==='futures'){  renderFutures(DATA.futures||[]); stampUpdated('futures'); }
       if(key==='futures')   buildTicker(DATA.global||[],DATA.futures||[]);
-      if(key==='indian')    renderIndian(DATA.indian||[]);
-      if(key==='market')    renderMarket(DATA.market||[]);
-      if(key==='ipo')       renderIPO(patchIPOTypes((DATA.ipo||[]).concat(DATA.ipo2||[]), DATA.ipoTypes||[]));
-      if(key==='currency')  renderCurrency(DATA.currency||[]);
+      if(key==='indian'){   renderIndian(DATA.indian||[]); stampUpdated('indian'); }
+      if(key==='market'){   renderMarket(DATA.market||[]); stampUpdated('market'); }
+      if(key==='ipo'){      renderIPO(patchIPOTypes((DATA.ipo||[]).concat(DATA.ipo2||[]), DATA.ipoTypes||[])); stampUpdated('ipo'); }
+      if(key==='currency'){ renderCurrency(DATA.currency||[]); stampUpdated('currency'); }
     }
   } catch(e){ console.error(key,e); }
 }
@@ -1772,6 +1807,7 @@ async function refreshAll(){
           try{DATA['corp_'+ck]=await fetchSheet2(gid);}catch(e){}
         }));
         renderCorporate();
+        stampUpdated('corporate');
       } else if(GIDS[k]){
         if(k==='ipo'){
           try{
@@ -1785,13 +1821,13 @@ async function refreshAll(){
         } else {
           DATA[k]=await fetchSheet(GIDS[k]);
         }
-        if(k==='dashboard') renderDashboard(DATA.dashboard||[], DATA.news||[]);
-        if(k==='global')   renderGlobal(DATA.global||[]);
-        if(k==='futures')  renderFutures(DATA.futures||[]);
-        if(k==='indian')   renderIndian(DATA.indian||[]);
-        if(k==='market')   renderMarket(DATA.market||[]);
-        if(k==='ipo')      renderIPO(patchIPOTypes((DATA.ipo||[]).concat(DATA.ipo2||[]), DATA.ipoTypes||[]));
-        if(k==='currency') renderCurrency(DATA.currency||[]);
+        if(k==='dashboard'){ renderDashboard(DATA.dashboard||[], DATA.news||[]); stampUpdated('dashboard'); }
+        if(k==='global'){   renderGlobal(DATA.global||[]); stampUpdated('global'); }
+        if(k==='futures'){  renderFutures(DATA.futures||[]); stampUpdated('futures'); }
+        if(k==='indian'){   renderIndian(DATA.indian||[]); stampUpdated('indian'); }
+        if(k==='market'){   renderMarket(DATA.market||[]); stampUpdated('market'); }
+        if(k==='ipo'){      renderIPO(patchIPOTypes((DATA.ipo||[]).concat(DATA.ipo2||[]), DATA.ipoTypes||[])); stampUpdated('ipo'); }
+        if(k==='currency'){ renderCurrency(DATA.currency||[]); stampUpdated('currency'); }
       }
     } catch(e){ console.error(k,e); }
   }));
@@ -1847,6 +1883,7 @@ function showTab(key,btn){
   target.style.animation='';
   window.scrollTo({top:0,behavior:'smooth'});
   loadTab(key); // lazy load if not yet loaded
+  try{ sessionStorage.setItem('nb_last_tab', key); }catch(e){}
 }
 function showInv(id,btn){
   document.querySelectorAll('.ipanel').forEach(p=>p.classList.remove('on'));
@@ -1856,6 +1893,17 @@ function showInv(id,btn){
 
 loadAll();
 setInterval(loadAll,5*60*1000);
+
+/* Restore last visited tab (session only, resets on new browser session) */
+(function(){
+  try{
+    const lastTab=sessionStorage.getItem('nb_last_tab');
+    if(lastTab && lastTab!=='dashboard'){
+      const btn=document.querySelector('[onclick*="showTab(\''+lastTab+'\'"]');
+      if(btn) setTimeout(()=>showTab(lastTab,btn), 50);
+    }
+  }catch(e){}
+})();
 </script>
 
 <!-- ── FLOATING MARKET MOOD BADGE ── -->
