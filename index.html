@@ -9,7 +9,7 @@
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth}
-body{font-family:'Inter',sans-serif;font-size:13px;color:#5b4636;
+body{font-family:'Inter',sans-serif;font-size:13px;color:#1a1a1a;
   background:#ffffff;
   min-height:100vh}
 a{text-decoration:none;color:inherit}
@@ -18,27 +18,16 @@ th,td{text-align:left;padding:7px 10px}
 :root{--red:#e0562f;--green:#2f9e5e;--orange:#ed7d2b;--blue:#ed7d2b;--mc:#ed7d2b;--bdr:rgba(120,75,30,0.32);--bgh:rgba(255,158,61,0.06);
   --panel:rgba(255,255,255,0.72);--panel-blur:blur(12px);}
 
-/* ── DARK MODE: follows OS/browser setting automatically ──
-   Uses a filter-invert technique so the whole existing color
-   system (backgrounds, borders, text, green/red indicators)
-   flips to a dark theme without needing every inline style
-   rewritten. The logo image is re-inverted so it stays normal. */
-@media (prefers-color-scheme: dark){
-  html{background:#111214}
-  body{background:#111214;filter:invert(0.93) hue-rotate(180deg)}
-  .logo img{filter:invert(0.93) hue-rotate(180deg)}
-}
-
-.topbar{background:rgba(255,255,255,0.55);backdrop-filter:blur(10px);color:#8a6a4d;font-size:11px;padding:5px 16px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:4px;border-bottom:1px solid var(--bdr)}
+.topbar{background:rgba(255,255,255,0.55);backdrop-filter:blur(10px);color:#444444;font-size:11px;padding:5px 16px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:4px;border-bottom:1px solid var(--bdr)}
 header{background:rgba(255,247,238,0.85);backdrop-filter:blur(18px);border-bottom:1px solid var(--bdr);box-shadow:0 4px 24px rgba(180,100,40,.08);position:sticky;top:0;z-index:300}
 .hdr{max-width:1360px;margin:0 auto;display:flex;align-items:center;gap:10px;padding:0 14px;height:54px}
 .logo{display:flex;align-items:center;gap:8px;flex-shrink:0}
 .lhn{font-family:'Space Grotesk',sans-serif;font-size:22px;color:var(--mc);line-height:1;letter-spacing:.2px;font-weight:700}
-.len{font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:600;color:#5b4636;line-height:1.1}
-.lsl{font-size:9px;color:#a8825f;letter-spacing:.5px;text-transform:uppercase}
+.len{font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:600;color:#1a1a1a;line-height:1.1}
+.lsl{font-size:9px;color:#6b6b6b;letter-spacing:.5px;text-transform:uppercase}
 nav{display:flex;gap:2px;flex:1;flex-wrap:wrap}
-.nb{padding:7px 12px;border-radius:9px;font-size:11px;font-weight:600;color:#8a6a4d;cursor:pointer;border:1px solid transparent;background:none;transition:.2s;white-space:nowrap;font-family:'Inter',sans-serif}
-.nb:hover{background:rgba(237,125,43,.10);border-color:rgba(237,125,43,.3);color:#5b4636}
+.nb{padding:7px 12px;border-radius:9px;font-size:11px;font-weight:600;color:#444444;cursor:pointer;border:1px solid transparent;background:none;transition:.2s;white-space:nowrap;font-family:'Inter',sans-serif}
+.nb:hover{background:rgba(237,125,43,.10);border-color:rgba(237,125,43,.3);color:#1a1a1a}
 .nb.on{background:var(--mc);color:#fff;box-shadow:0 0 16px rgba(237,125,43,.35)}
 .rbtn{padding:6px 12px;border-radius:9px;font-size:11px;font-weight:600;color:var(--mc);cursor:pointer;border:1px solid rgba(237,125,43,.4);background:rgba(237,125,43,.08);font-family:'Inter',sans-serif;flex-shrink:0;transition:.2s}
 .rbtn:hover{background:var(--mc);color:#fff}.rbtn:disabled{opacity:.4;cursor:not-allowed}
@@ -48,7 +37,7 @@ nav{display:flex;gap:2px;flex:1;flex-wrap:wrap}
 .tscrl:hover{animation-play-state:paused}
 @keyframes tsc{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
 .ti{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;padding:0 16px;border-right:1px solid rgba(120,75,30,.10)}
-.tn{color:#8a6a4d;font-weight:500}.tv{font-weight:700;color:#5b4636}.tc{font-size:10.5px}
+.tn{color:#444444;font-weight:500}.tv{font-weight:700;color:#1a1a1a}.tc{font-size:10.5px}
 .up{color:var(--green)}.dn{color:var(--red)}
 
 .wrap{max-width:1360px;margin:0 auto;padding:12px 14px}
@@ -87,10 +76,10 @@ nav{display:flex;gap:2px;flex:1;flex-wrap:wrap}
 @media (prefers-reduced-motion: reduce){
   .sec.on > *,.sec.on .icard,.sec.on .skel-card,.sec.on .hm-tile{animation:none}
 }
-.stitle{font-family:'Space Grotesk',sans-serif;font-size:19px;font-weight:600;color:#5b4636;border-bottom:2px solid var(--mc);padding-bottom:6px;margin-bottom:14px;letter-spacing:.2px}
-.stitle-sm{font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:600;color:#5b4636;border-bottom:1px solid var(--bdr);padding-bottom:4px;margin:12px 0 8px}
+.stitle{font-family:'Space Grotesk',sans-serif;font-size:19px;font-weight:600;color:#1a1a1a;border-bottom:2px solid var(--mc);padding-bottom:6px;margin-bottom:14px;letter-spacing:.2px}
+.stitle-sm{font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:600;color:#1a1a1a;border-bottom:1px solid var(--bdr);padding-bottom:4px;margin:12px 0 8px}
 
-.loading{display:flex;align-items:center;justify-content:center;gap:10px;padding:50px;color:#a8825f;font-size:13px}
+.loading{display:flex;align-items:center;justify-content:center;gap:10px;padding:50px;color:#6b6b6b;font-size:13px}
 .spin{width:20px;height:20px;border:2px solid rgba(120,75,30,.14);border-top-color:var(--mc);border-radius:50%;animation:sp .8s linear infinite;flex-shrink:0}
 
 /* SKELETON LOADERS */
@@ -133,11 +122,11 @@ nav{display:flex;gap:2px;flex:1;flex-wrap:wrap}
 
 /* TABLE CARD */
 .tcw{background:var(--panel);backdrop-filter:var(--panel-blur);border:1px solid var(--bdr);border-radius:14px;margin-bottom:12px;overflow:hidden;box-shadow:0 4px 20px rgba(180,100,40,.08)}
-.tch{background:rgba(255,158,61,0.06);padding:10px 14px;font-size:12px;font-weight:700;color:#5b4636;border-bottom:1px solid var(--bdr);display:flex;justify-content:space-between;align-items:center;gap:6px;flex-wrap:wrap}
+.tch{background:rgba(255,158,61,0.06);padding:10px 14px;font-size:12px;font-weight:700;color:#1a1a1a;border-bottom:1px solid var(--bdr);display:flex;justify-content:space-between;align-items:center;gap:6px;flex-wrap:wrap}
 .cnt{font-size:10px;background:var(--mc);color:#fff;padding:1px 8px;border-radius:10px;font-weight:700}
 .tscr{overflow-x:auto;-webkit-overflow-scrolling:touch}
 thead tr{background:rgba(255,158,61,0.05)}
-thead th{font-size:11px;font-weight:700;color:#8a6a4d;border-bottom:1px solid var(--bdr);padding:8px 10px;white-space:nowrap}
+thead th{font-size:11px;font-weight:700;color:#444444;border-bottom:1px solid var(--bdr);padding:8px 10px;white-space:nowrap}
 tbody tr{border-bottom:1px solid rgba(120,75,30,.20)}
 tbody tr:hover{background:rgba(237,125,43,.06)}
 tbody td{font-size:12px;color:#6b5340;padding:8px 10px;white-space:nowrap}
@@ -149,18 +138,18 @@ tbody td{font-size:12px;color:#6b5340;padding:8px 10px;white-space:nowrap}
 .igrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(185px,1fr));gap:10px;margin-bottom:12px}
 .icard{background:var(--panel);backdrop-filter:var(--panel-blur);border:1px solid var(--bdr);border-radius:14px;padding:12px 14px;transition:.2s}
 .icard:hover{border-color:rgba(237,125,43,.45);box-shadow:0 4px 22px rgba(237,125,43,.14);transform:translateY(-1px)}
-.iname{font-size:12px;font-weight:700;color:#5b4636;margin-bottom:3px;line-height:1.3;white-space:normal}
-.iprc{font-family:'Space Grotesk',sans-serif;font-size:20px;font-weight:600;color:#5b4636;line-height:1}
+.iname{font-size:12px;font-weight:700;color:#1a1a1a;margin-bottom:3px;line-height:1.3;white-space:normal}
+.iprc{font-family:'Space Grotesk',sans-serif;font-size:20px;font-weight:600;color:#1a1a1a;line-height:1}
 .ichs{display:flex;gap:6px;font-size:11px;margin-top:4px;flex-wrap:wrap}
-.ihl{font-size:10px;color:#a8825f;margin-top:4px}
-.itm{font-size:9px;color:#bfa07a;margin-top:1px}
+.ihl{font-size:10px;color:#6b6b6b;margin-top:4px}
+.itm{font-size:9px;color:#999999;margin-top:1px}
 
 /* GIFT NIFTY CARD */
 .gift-card{background:var(--panel);backdrop-filter:var(--panel-blur);border:1px solid var(--bdr);border-radius:14px;padding:14px 18px;display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:0;margin-bottom:12px}
 .gift-col{padding:10px 14px;border-right:1px solid rgba(120,75,30,.10)}
 .gift-col:last-child{border-right:none}
-.gift-lbl{font-size:10px;color:#a8825f;text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px}
-.gift-val{font-family:'Space Grotesk',sans-serif;font-size:21px;font-weight:600;line-height:1;color:#5b4636}
+.gift-lbl{font-size:10px;color:#6b6b6b;text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px}
+.gift-val{font-family:'Space Grotesk',sans-serif;font-size:21px;font-weight:600;line-height:1;color:#1a1a1a}
 .gift-val.up{color:var(--green)}.gift-val.dn{color:var(--red)}
 
 /* 2-COL */
@@ -171,8 +160,8 @@ tbody td{font-size:12px;color:#6b5340;padding:8px 10px;white-space:nowrap}
 .adrow{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px}
 @media(max-width:500px){.adrow{grid-template-columns:repeat(2,1fr)}}
 .adbox{background:var(--panel);backdrop-filter:var(--panel-blur);border:1px solid var(--bdr);border-radius:14px;padding:10px;text-align:center}
-.adlbl{font-size:10px;color:#a8825f;text-transform:uppercase;letter-spacing:.4px;margin-bottom:2px}
-.adnum{font-family:'Space Grotesk',sans-serif;font-size:25px;line-height:1;color:#5b4636}
+.adlbl{font-size:10px;color:#6b6b6b;text-transform:uppercase;letter-spacing:.4px;margin-bottom:2px}
+.adnum{font-family:'Space Grotesk',sans-serif;font-size:25px;line-height:1;color:#1a1a1a}
 
 /* IPO BADGES */
 .sop{background:rgba(47,158,94,.14);color:var(--green);padding:2px 7px;border-radius:5px;font-size:10px;font-weight:700}
@@ -181,14 +170,14 @@ tbody td{font-size:12px;color:#6b5340;padding:8px 10px;white-space:nowrap}
 
 /* INVESTOR TABS */
 .itabs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
-.itb{padding:6px 13px;border:1px solid var(--bdr);border-radius:9px;font-size:11px;font-weight:600;cursor:pointer;background:var(--panel);color:#8a6a4d;transition:.15s;font-family:'Inter',sans-serif}
-.itb:hover{border-color:rgba(237,125,43,.4);color:#5b4636}.itb.on{background:var(--mc);color:#fff;border-color:var(--mc)}
+.itb{padding:6px 13px;border:1px solid var(--bdr);border-radius:9px;font-size:11px;font-weight:600;cursor:pointer;background:var(--panel);color:#444444;transition:.15s;font-family:'Inter',sans-serif}
+.itb:hover{border-color:rgba(237,125,43,.4);color:#1a1a1a}.itb.on{background:var(--mc);color:#fff;border-color:var(--mc)}
 .ipanel{display:none}.ipanel.on{display:block}
-.pvlbl{font-size:11px;color:#8a6a4d;margin-bottom:8px}
-.pvlbl strong{color:#5b4636;font-size:13px}
+.pvlbl{font-size:11px;color:#444444;margin-bottom:8px}
+.pvlbl strong{color:#1a1a1a;font-size:13px}
 .disc{background:rgba(237,125,43,.08);border:1px solid rgba(237,125,43,.28);border-radius:10px;padding:10px 14px;font-size:11px;color:#a8612a;margin-bottom:12px}
 
-footer{background:transparent;border-top:1px solid var(--bdr);color:#a8825f;text-align:center;padding:18px;font-size:11px;margin-top:18px}
+footer{background:transparent;border-top:1px solid var(--bdr);color:#6b6b6b;text-align:center;padding:18px;font-size:11px;margin-top:18px}
 footer a{color:var(--mc)}
 
 @media(max-width:768px){
@@ -205,19 +194,19 @@ footer a{color:var(--mc)}
 /* CORPORATE SUB-TABS */
 .corp-tabs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
 .corp-tab{padding:8px 16px;border-radius:9px;font-size:12px;font-weight:600;
-  cursor:pointer;border:1px solid var(--bdr);background:var(--panel);transition:.2s;font-family:'Inter',sans-serif;color:#8a6a4d}
+  cursor:pointer;border:1px solid var(--bdr);background:var(--panel);transition:.2s;font-family:'Inter',sans-serif;color:#444444}
 .corp-tab:hover{border-color:rgba(237,125,43,.4)}
 .corp-tab.on{color:#fff !important}
 .corp-panel{display:none}.corp-panel.on{display:block}
 
-.news-loading{color:#a8825f;padding:20px;text-align:center;font-size:12px}
+.news-loading{color:#6b6b6b;padding:20px;text-align:center;font-size:12px}
 
 /* FII/DII SENTIMENT GAUGE */
 .fii-wrap{background:var(--panel);backdrop-filter:var(--panel-blur);border:1px solid var(--bdr);
   border-radius:14px;padding:18px 20px;margin-bottom:12px}
 .fii-hdr3{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
-.fii-title3{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#8a6a4d}
-.fii-date3{font-size:10px;color:#bfa07a}
+.fii-title3{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#444444}
+.fii-date3{font-size:10px;color:#999999}
 .fii-meter-labels{display:flex;justify-content:space-between;font-size:10px;font-weight:700;margin-bottom:5px}
 .fii-track{height:12px;border-radius:12px;position:relative;overflow:hidden;display:flex;
   background:rgba(120,75,30,.10)}
@@ -226,7 +215,7 @@ footer a{color:var(--mc)}
 .fii-needle{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
   width:2px;height:16px;background:#fff;border-radius:2px;z-index:2}
 .fii-sentiment{text-align:center;margin:8px 0 14px}
-.fii-sent-lbl{font-size:10px;color:#a8825f;margin-bottom:2px}
+.fii-sent-lbl{font-size:10px;color:#6b6b6b;margin-bottom:2px}
 .fii-sent-val{font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:700}
 .fii-cards3{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
 .fii-card3{border-radius:10px;padding:12px 14px}
@@ -235,7 +224,7 @@ footer a{color:var(--mc)}
 .fii-c3-sub{font-size:9px;margin-top:3px}
 .fii-prev3{display:flex;gap:6px;align-items:center;font-size:11px;
   background:rgba(237,125,43,.06);border-radius:8px;padding:8px 12px;flex-wrap:wrap}
-.fii-prev3-lbl{font-size:9px;color:#a8825f;font-weight:700;text-transform:uppercase;
+.fii-prev3-lbl{font-size:9px;color:#6b6b6b;font-weight:700;text-transform:uppercase;
   letter-spacing:.4px;flex-shrink:0;margin-right:4px}
 
 /* LIVE PULSE DOT */
@@ -246,9 +235,9 @@ footer a{color:var(--mc)}
 /* HEATMAP */
 .hm-section{margin-bottom:26px}
 .hm-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px;flex-wrap:wrap;gap:8px}
-.hm-title{font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:600;color:#5b4636}
-.hm-legend{display:flex;gap:4px;align-items:center;font-size:11px;color:#a8825f}
-.hm-asof{font-size:10px;color:#a8825f}
+.hm-title{font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:600;color:#1a1a1a}
+.hm-legend{display:flex;gap:4px;align-items:center;font-size:11px;color:#6b6b6b}
+.hm-asof{font-size:10px;color:#6b6b6b}
 .hm-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
 .hm-tile{border-radius:8px;padding:9px 12px;display:flex;flex-direction:column;gap:6px;
   transition:.15s;cursor:default}
@@ -271,15 +260,15 @@ footer a{color:var(--mc)}
       <span id="mkt-dot" style="width:7px;height:7px;border-radius:50%;background:var(--green);display:inline-block;animation:pulse 2s infinite"></span>
       <span id="mkt-status-txt">NSE LIVE</span>
     </span>
-    <span id="mkt-cd-wrap" style="display:flex;align-items:center;gap:5px;font-size:11px;color:#8a6a4d">
+    <span id="mkt-cd-wrap" style="display:flex;align-items:center;gap:5px;font-size:11px;color:#444444">
       <span id="mkt-cd-label" style="font-weight:600">Closes in</span>
-      <span style="font-family:'Space Grotesk',sans-serif;font-weight:700;color:#5b4636;font-size:12px" id="mkt-cd-time">--:--:--</span>
+      <span style="font-family:'Space Grotesk',sans-serif;font-weight:700;color:#1a1a1a;font-size:12px" id="mkt-cd-time">--:--:--</span>
     </span>
-    <span><span class="live-dot"></span><span id="ts" style="font-size:10px;color:#8a6a4d">Fetching live data…</span></span>
+    <span><span class="live-dot"></span><span id="ts" style="font-size:10px;color:#444444">Fetching live data…</span></span>
     <span onclick="openSearch()" style="cursor:pointer;display:flex;align-items:center;gap:5px;
-      font-size:11px;color:#8a6a4d;border:1px solid var(--bdr);border-radius:8px;padding:3px 9px;
+      font-size:11px;color:#444444;border:1px solid var(--bdr);border-radius:8px;padding:3px 9px;
       background:rgba(255,255,255,.4)">
-      🔍 <span style="font-size:10px;color:#bfa07a;border:1px solid var(--bdr);border-radius:4px;padding:0 4px">Ctrl K</span>
+      🔍 <span style="font-size:10px;color:#999999;border:1px solid var(--bdr);border-radius:4px;padding:0 4px">Ctrl K</span>
     </span>
   </span>
 </div>
@@ -475,7 +464,7 @@ function stampUpdated(key){
     if(!badge){
       badge=document.createElement('span');
       badge.className='upd-badge';
-      badge.style.cssText='float:right;font-size:10px;font-weight:600;color:#a8825f;'+
+      badge.style.cssText='float:right;font-size:10px;font-weight:600;color:#6b6b6b;'+
         'background:rgba(237,125,43,.08);border:1px solid var(--bdr);border-radius:8px;'+
         'padding:2px 9px;vertical-align:middle';
       title.appendChild(badge);
@@ -1077,11 +1066,11 @@ function renderHeatmapSection(title, items){
   const flat = items.length - up - down;
   return `<div class="hm-section">
     <div class="hm-head">
-      <div class="hm-title">${title} <span style="color:#a8825f;font-weight:500;font-size:12px">(${items.length})</span></div>
+      <div class="hm-title">${title} <span style="color:#6b6b6b;font-weight:500;font-size:12px">(${items.length})</span></div>
       <div class="hm-legend">
         <span style="color:var(--green);font-weight:700">▲ ${up}</span>
         <span style="margin:0 4px">·</span>
-        <span style="color:#a8825f;font-weight:700">● ${flat}</span>
+        <span style="color:#6b6b6b;font-weight:700">● ${flat}</span>
         <span style="margin:0 4px">·</span>
         <span style="color:var(--red);font-weight:700">▼ ${down}</span>
       </div>
@@ -1091,7 +1080,7 @@ function renderHeatmapSection(title, items){
         const bg = hmColorFor(pct);
         const dark = hmTextDark(pct);
         const sign = pct>0?'+':'';
-        const textStyle = dark?'color:#5b4636':'color:#fff';
+        const textStyle = dark?'color:#1a1a1a':'color:#fff';
         return `<div class="hm-tile" style="background:${bg}" title="${f(name)}: ${f(price)} (${sign}${pct.toFixed(2)}%)">
           <div class="hm-name" style="${textStyle}">${f(name)}</div>
           <div class="hm-row">
@@ -1255,8 +1244,8 @@ function renderMarket(rows){
       <div style="font-family:'Space Grotesk',sans-serif;font-size:18px;font-weight:700;
         color:rgba(120,75,30,.15);flex-shrink:0;width:24px">${i+1}</div>
       <div style="flex:1;min-width:0">
-        <div style="font-size:12px;font-weight:700;color:#5b4636;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${f(r[0])}</div>
-        <div style="font-size:11px;color:#a8825f;margin-top:2px;font-family:'Space Grotesk',sans-serif">₹${price}</div>
+        <div style="font-size:12px;font-weight:700;color:#1a1a1a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${f(r[0])}</div>
+        <div style="font-size:11px;color:#6b6b6b;margin-top:2px;font-family:'Space Grotesk',sans-serif">₹${price}</div>
       </div>
       <div style="text-align:right;flex-shrink:0">
         <div style="font-family:'Space Grotesk',sans-serif;font-size:20px;font-weight:700;color:${color}">${pct}</div>
@@ -1270,7 +1259,7 @@ function renderMarket(rows){
     const lCards = losers.map((r,i)  => v2Card(is3col?[r[0],r[1],r[2],null]:r, false, i)).join('');
     return `<div style="margin-bottom:20px">
       <div style="font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:600;
-        color:#5b4636;margin-bottom:10px;display:flex;align-items:center;gap:10px">
+        color:#1a1a1a;margin-bottom:10px;display:flex;align-items:center;gap:10px">
         ${title}
         <div style="flex:1;height:1px;background:var(--bdr)"></div>
       </div>
@@ -1402,8 +1391,8 @@ function renderIPO(rows){
         <div style="width:36px;height:36px;border-radius:9px;display:flex;align-items:center;
           justify-content:center;font-size:18px;flex-shrink:0;background:${color}18">${icon}</div>
         <div style="flex:1">
-          <div style="font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:700;color:#5b4636">${title}</div>
-          <div style="font-size:10px;color:#a8825f;margin-top:1px">${subtitle}</div>
+          <div style="font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:700;color:#1a1a1a">${title}</div>
+          <div style="font-size:10px;color:#6b6b6b;margin-top:1px">${subtitle}</div>
         </div>
         <span style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:10px;
           background:${color}18;color:${color};flex-shrink:0">${count} entries</span>
@@ -1414,11 +1403,11 @@ function renderIPO(rows){
   // Listed — compact table
   const listedBody = `<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse">
     <thead><tr>${['Company','Type','Listed','Issue ₹','Subs','List Open','List Close','List Gain','LTP ₹','Today','Size']
-      .map(h=>`<th style="font-size:10px;font-weight:700;color:#a8825f;padding:7px 10px;border-bottom:1px solid var(--bdr);text-align:left;white-space:nowrap">${h}</th>`).join('')}</tr></thead>
+      .map(h=>`<th style="font-size:10px;font-weight:700;color:#6b6b6b;padding:7px 10px;border-bottom:1px solid var(--bdr);text-align:left;white-space:nowrap">${h}</th>`).join('')}</tr></thead>
     <tbody>${listed.map(r=>`<tr style="border-bottom:1px solid rgba(120,75,30,.20)">
       <td style="padding:8px 10px;font-size:12px"><strong>${f(r[0])}</strong></td>
       <td style="padding:8px 10px">${tbadge(r[1])}</td>
-      <td style="padding:8px 10px;font-size:12px;color:#a8825f">${f(r[2])}</td>
+      <td style="padding:8px 10px;font-size:12px;color:#6b6b6b">${f(r[2])}</td>
       <td style="padding:8px 10px;font-size:12px;font-family:'Space Grotesk',sans-serif">${f(r[3])}</td>
       <td style="padding:8px 10px;font-size:12px">${f(r[4])}</td>
       <td style="padding:8px 10px;font-size:12px">${f(r[5])}</td>
@@ -1426,7 +1415,7 @@ function renderIPO(rows){
       <td style="padding:8px 10px;font-size:12px;font-weight:700" class="${ic(r[7])}">${f(r[7])}</td>
       <td style="padding:8px 10px;font-size:12px;font-family:'Space Grotesk',sans-serif">${f(r[8])}</td>
       <td style="padding:8px 10px;font-size:12px;font-weight:700" class="${ic(r[9])}">${f(r[9])}</td>
-      <td style="padding:8px 10px;font-size:12px;color:#a8825f">${f(r[10])}</td>
+      <td style="padding:8px 10px;font-size:12px;color:#6b6b6b">${f(r[10])}</td>
     </tr>`).join('')}</tbody>
   </table></div>`;
 
@@ -1438,25 +1427,25 @@ function renderIPO(rows){
       const bg=pos?'rgba(47,158,94,.07)':'rgba(224,86,47,.07)';
       const bc=pos?'rgba(47,158,94,.2)':'rgba(224,86,47,.2)';
       return `<div style="border:1px solid ${bc};background:${bg};border-radius:10px;padding:12px 14px">
-        <div style="font-size:12px;font-weight:700;color:#5b4636;margin-bottom:4px;
+        <div style="font-size:12px;font-weight:700;color:#1a1a1a;margin-bottom:4px;
           white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${st(r[0])}</div>
         <div style="margin-bottom:8px">${tbadge(r[6]||'Mainboard')}</div>
         <div style="display:flex;justify-content:space-between;align-items:baseline">
           <div>
-            <div style="font-size:9px;color:#a8825f;text-transform:uppercase;letter-spacing:.4px">GMP</div>
+            <div style="font-size:9px;color:#6b6b6b;text-transform:uppercase;letter-spacing:.4px">GMP</div>
             <div style="font-family:'Space Grotesk',sans-serif;font-size:22px;font-weight:700;color:${color}">${st(r[1])}</div>
           </div>
           <div style="text-align:right">
-            <div style="font-size:9px;color:#a8825f;text-transform:uppercase;letter-spacing:.4px">Price Band</div>
-            <div style="font-size:12px;font-weight:600;color:#5b4636">${st(r[3])}</div>
+            <div style="font-size:9px;color:#6b6b6b;text-transform:uppercase;letter-spacing:.4px">Price Band</div>
+            <div style="font-size:12px;font-weight:600;color:#1a1a1a">${st(r[3])}</div>
           </div>
         </div>
         <div style="font-size:11px;font-weight:700;color:${color};margin-top:6px">${st(r[4])}</div>
-        <div style="font-size:10px;color:#bfa07a;margin-top:3px">Updated: ${st(r[8])}</div>
+        <div style="font-size:10px;color:#999999;margin-top:3px">Updated: ${st(r[8])}</div>
       </div>`;
     }).join('')}
   </div>
-  <p style="margin-top:10px;font-size:11px;color:#a8825f">
+  <p style="margin-top:10px;font-size:11px;color:#6b6b6b">
     📅 For open/close dates see the <strong>Issue Dates</strong> section below.
   </p>`;
 
@@ -1464,7 +1453,7 @@ function renderIPO(rows){
   const expertsBody = `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px">
     ${experts.map(r=>`
       <div style="border:1px solid var(--bdr);border-radius:10px;padding:12px 14px;background:rgba(255,255,255,.55)">
-        <div style="font-size:12px;font-weight:700;color:#5b4636;margin-bottom:8px">${f(r[0])}</div>
+        <div style="font-size:12px;font-weight:700;color:#1a1a1a;margin-bottom:8px">${f(r[0])}</div>
         <div style="display:flex;gap:5px;flex-wrap:wrap">
           ${f(r[1])!=='—'?`<span style="font-size:10px;font-weight:700;padding:3px 8px;border-radius:6px;background:rgba(47,158,94,.12);color:var(--green)">Apply ${f(r[1])}</span>`:''}
           ${f(r[3])!=='—'?`<span style="font-size:10px;font-weight:700;padding:3px 8px;border-radius:6px;background:rgba(237,125,43,.12);color:var(--mc)">Neutral ${f(r[3])}</span>`:''}
@@ -1477,14 +1466,14 @@ function renderIPO(rows){
   // Subscription — table
   const subsBody = `<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse">
     <thead><tr>${['IPO','Type','Closing Date','QIB (×)','NII (×)','Retail (×)','Total (×)','Updated']
-      .map(h=>`<th style="font-size:10px;font-weight:700;color:#a8825f;padding:7px 10px;border-bottom:1px solid var(--bdr);text-align:left;white-space:nowrap">${h}</th>`).join('')}</tr></thead>
+      .map(h=>`<th style="font-size:10px;font-weight:700;color:#6b6b6b;padding:7px 10px;border-bottom:1px solid var(--bdr);text-align:left;white-space:nowrap">${h}</th>`).join('')}</tr></thead>
     <tbody>${subs.map(r=>{
       return `<tr style="border-bottom:1px solid rgba(120,75,30,.20)">
         <td style="padding:8px 10px;font-size:12px"><strong>${f(r[0])}</strong></td>
         <td style="padding:8px 10px">${tbadge(r[1])}</td>
-        <td style="padding:8px 10px;font-size:12px;color:#a8825f">${f(r[2])}</td>
+        <td style="padding:8px 10px;font-size:12px;color:#6b6b6b">${f(r[2])}</td>
         ${[3,4,5,6].map(i=>{const v=parseFloat(r[i]);const cl=isNaN(v)?'':v>=10?'color:var(--green);font-weight:700':v>=1?'':'color:var(--red)';return`<td style="padding:8px 10px;font-size:12px;font-family:'Space Grotesk',sans-serif;text-align:right;${cl}">${f(r[i])}</td>`;}).join('')}
-        <td style="padding:8px 10px;font-size:11px;color:#bfa07a">${f(r[7])}</td>
+        <td style="padding:8px 10px;font-size:11px;color:#999999">${f(r[7])}</td>
       </tr>`;
     }).join('')}</tbody>
   </table></div>`;
@@ -1493,7 +1482,7 @@ function renderIPO(rows){
   const datesBody = `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px">
     ${dates.map(d=>`
       <div style="background:rgba(255,255,255,.55);border:1px solid var(--bdr);border-radius:10px;
-        padding:11px 14px;font-size:12px;font-weight:600;color:#5b4636">
+        padding:11px 14px;font-size:12px;font-weight:600;color:#1a1a1a">
         📌 ${d}
       </div>`).join('')}
   </div>`;
@@ -1543,11 +1532,11 @@ function renderCurrency(rows){
       onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 6px 20px rgba(180,100,40,.12)'"
       onmouseout="this.style.transform='';this.style.boxShadow=''">
       <div style="position:absolute;top:0;left:0;right:0;height:3px;background:var(--mc);border-radius:12px 12px 0 0"></div>
-      <div style="font-size:11px;font-weight:700;color:#a8825f;text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px">${f(r[3])}</div>
-      <div style="font-family:'Space Grotesk',sans-serif;font-size:21px;font-weight:700;color:#5b4636;line-height:1;margin-bottom:5px">
-        <span style="font-size:13px;font-weight:600;color:#a8825f;vertical-align:middle;margin-right:1px">₹</span>${String(f(r[2])).replace(/^₹/,'')}
+      <div style="font-size:11px;font-weight:700;color:#6b6b6b;text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px">${f(r[3])}</div>
+      <div style="font-family:'Space Grotesk',sans-serif;font-size:21px;font-weight:700;color:#1a1a1a;line-height:1;margin-bottom:5px">
+        <span style="font-size:13px;font-weight:600;color:#6b6b6b;vertical-align:middle;margin-right:1px">₹</span>${String(f(r[2])).replace(/^₹/,'')}
       </div>
-      <div style="font-size:10px;color:#bfa07a;text-transform:uppercase;letter-spacing:.3px">${f(r[1])}</div>
+      <div style="font-size:10px;color:#999999;text-transform:uppercase;letter-spacing:.3px">${f(r[1])}</div>
     </div>`).join('');
 
   // Commodities heatmap — same bucket system as Indian Indices
@@ -1555,7 +1544,7 @@ function renderCurrency(rows){
     const pct = parseFloat(String(r[8]||'0').replace(/[^0-9.-]/g,'')) * (String(r[8]||'').includes('-')?-1:1);
     const bg  = hmColorFor(pct);
     const dark= hmTextDark(pct);
-    const ts  = dark?'color:#5b4636':'color:#fff';
+    const ts  = dark?'color:#1a1a1a':'color:#fff';
     const sign= pct>0?'+':'';
     const name= f(r[5]);
     const price= f(r[6]);
@@ -1618,8 +1607,8 @@ function renderCorporate(){
     <div style="background:var(--panel);border:1px solid var(--bdr);border-radius:14px;margin-bottom:12px;overflow:hidden">
       <div style="padding:14px 18px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--bdr)">
         <div style="flex:1">
-          <div style="font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:700;color:#5b4636">${title}</div>
-          <div style="font-size:10px;color:#a8825f;margin-top:1px">${subtitle}</div>
+          <div style="font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:700;color:#1a1a1a">${title}</div>
+          <div style="font-size:10px;color:#6b6b6b;margin-top:1px">${subtitle}</div>
         </div>
         <span style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:10px;background:${color}18;color:${color};flex-shrink:0">${count} companies</span>
       </div>
@@ -1633,35 +1622,35 @@ function renderCorporate(){
         const bg=isDv?'rgba(47,158,94,.07)':'rgba(13,71,161,.07)';
         const bc=isDv?'rgba(47,158,94,.2)':'rgba(13,71,161,.2)';
         return `<div style="border:1px solid ${bc};background:${bg};border-radius:10px;padding:12px 14px">
-          <div style="font-size:12px;font-weight:700;color:#5b4636;margin-bottom:6px">${f(r[0])}</div>
+          <div style="font-size:12px;font-weight:700;color:#1a1a1a;margin-bottom:6px">${f(r[0])}</div>
           <div style="margin-bottom:8px"><span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:6px;background:${bg};color:${color};border:1px solid ${bc}">${action}</span></div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;font-size:10px">
-            <div style="color:#a8825f">Announced</div><div style="color:#5b4636;font-weight:600;text-align:right">${f(r[2])}</div>
-            <div style="color:#a8825f">Ex-Date</div><div style="color:#5b4636;font-weight:600;text-align:right">${f(r[3])}</div>
-            ${f(r[4])!=='--'?`<div style="color:#a8825f">Dividend</div><div style="color:var(--green);font-weight:700;text-align:right">${f(r[4])}</div>`:''}
-            ${f(r[5])!=='--'?`<div style="color:#a8825f">Ratio</div><div style="color:#5b4636;font-weight:600;text-align:right">${f(r[5])}</div>`:''}
+            <div style="color:#6b6b6b">Announced</div><div style="color:#1a1a1a;font-weight:600;text-align:right">${f(r[2])}</div>
+            <div style="color:#6b6b6b">Ex-Date</div><div style="color:#1a1a1a;font-weight:600;text-align:right">${f(r[3])}</div>
+            ${f(r[4])!=='--'?`<div style="color:#6b6b6b">Dividend</div><div style="color:var(--green);font-weight:700;text-align:right">${f(r[4])}</div>`:''}
+            ${f(r[5])!=='--'?`<div style="color:#6b6b6b">Ratio</div><div style="color:#1a1a1a;font-weight:600;text-align:right">${f(r[5])}</div>`:''}
           </div>
         </div>`;}).join('')}</div>`
-    :'<div style="text-align:center;padding:24px;color:#a8825f;font-size:13px">No corporate actions today</div>';
+    :'<div style="text-align:center;padding:24px;color:#6b6b6b;font-size:13px">No corporate actions today</div>';
 
   const makeCards=(cards,valueLabel,valueColor)=>{
-    if(!cards.length)return'<div style="text-align:center;padding:24px;color:#a8825f;font-size:13px">No data available</div>';
+    if(!cards.length)return'<div style="text-align:center;padding:24px;color:#6b6b6b;font-size:13px">No data available</div>';
     return`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:8px">${cards.map(c=>{
       const pp=c.pct.includes('+');const pc=pp?'var(--green)':'var(--red)';const pb=pp?'rgba(47,158,94,.1)':'rgba(224,86,47,.1)';
       return`<div style="background:var(--panel);border:1px solid var(--bdr);border-radius:10px;padding:13px 15px;position:relative;overflow:hidden">
         <div style="position:absolute;top:0;left:0;bottom:0;width:4px;background:${valueColor};border-radius:10px 0 0 10px"></div>
         <div style="padding-left:8px">
-          <div style="font-size:12px;font-weight:700;color:#5b4636;margin-bottom:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${c.company}</div>
+          <div style="font-size:12px;font-weight:700;color:#1a1a1a;margin-bottom:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${c.company}</div>
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-            <div><div style="font-size:9px;color:#a8825f;text-transform:uppercase;letter-spacing:.4px;margin-bottom:2px">${valueLabel}</div>
+            <div><div style="font-size:9px;color:#6b6b6b;text-transform:uppercase;letter-spacing:.4px;margin-bottom:2px">${valueLabel}</div>
             <div style="font-family:'Space Grotesk',sans-serif;font-size:18px;font-weight:700;color:${valueColor}">${c.value}</div></div>
-            <div style="text-align:right"><div style="font-size:9px;color:#a8825f;margin-bottom:2px">LTP</div>
-            <div style="font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:600;color:#5b4636">&#8377;${c.ltp}</div>
+            <div style="text-align:right"><div style="font-size:9px;color:#6b6b6b;margin-bottom:2px">LTP</div>
+            <div style="font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:600;color:#1a1a1a">&#8377;${c.ltp}</div>
             <span style="font-size:10px;font-weight:700;padding:1px 6px;border-radius:5px;background:${pb};color:${pc}">${c.pct}</span></div>
           </div>
           <div style="display:flex;justify-content:space-between;font-size:10px;border-top:1px solid rgba(120,75,30,.22);padding-top:7px">
-            <div><div style="color:#bfa07a">Announced</div><div style="color:#5b4636;font-weight:600;margin-top:1px">${c.annDate}</div></div>
-            <div style="text-align:right"><div style="color:#bfa07a">Ex-Date</div><div style="color:#5b4636;font-weight:600;margin-top:1px">${c.exDate}</div></div>
+            <div><div style="color:#999999">Announced</div><div style="color:#1a1a1a;font-weight:600;margin-top:1px">${c.annDate}</div></div>
+            <div style="text-align:right"><div style="color:#999999">Ex-Date</div><div style="color:#1a1a1a;font-weight:600;margin-top:1px">${c.exDate}</div></div>
           </div>
         </div>
       </div>`;}).join('')}</div>`;
@@ -1669,7 +1658,7 @@ function renderCorporate(){
 
   $('s-corporate').innerHTML=
     '<div class="stitle">Corporate Actions</div>'+
-    '<div style="font-size:10px;color:#a8825f;margin-bottom:14px">Source: Niveshaka-bandhu Corporate Actions Sheet &middot; Auto-refreshes every 5 min</div>'+
+    '<div style="font-size:10px;color:#6b6b6b;margin-bottom:14px">Source: Niveshaka-bandhu Corporate Actions Sheet &middot; Auto-refreshes every 5 min</div>'+
     panel("Today's Events",'Corporate actions effective today',todayData.length,'#555555',todayBody)+
     panel('Dividends','Upcoming dividend declarations',divData.length,'#1a7a4a',makeCards(divData,'Dividend &#8377;','var(--green)'))+
     panel('Bonus Issues','Bonus share allotments',bonusData.length,'#0d47a1',makeCards(bonusData,'Bonus Ratio','#0d47a1'))+
@@ -1923,7 +1912,7 @@ setInterval(loadAll,5*60*1000);
     box-shadow:0 8px 32px rgba(120,75,30,.18);
     opacity:0;pointer-events:none;transform:translateY(8px);
     transition:all .2s ease">
-    <div style="font-size:10px;font-weight:700;color:#a8825f;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">Market Breadth</div>
+    <div style="font-size:10px;font-weight:700;color:#6b6b6b;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">Market Breadth</div>
     <div style="margin-bottom:10px">
       <div style="display:flex;justify-content:space-between;font-size:10px;font-weight:700;margin-bottom:5px">
         <span style="color:var(--green)">▲ Advances</span><span style="color:var(--red)">Declines ▼</span>
@@ -1932,22 +1921,22 @@ setInterval(loadAll,5*60*1000);
         <div id="mood-bar-adv" style="background:var(--green);height:100%;transition:.5s"></div>
         <div id="mood-bar-dec" style="background:var(--red);height:100%;transition:.5s"></div>
       </div>
-      <div style="text-align:center;font-size:10px;color:#a8825f;margin-top:5px">A/D Ratio: <strong id="mood-ratio" style="color:#5b4636">—</strong></div>
+      <div style="text-align:center;font-size:10px;color:#6b6b6b;margin-top:5px">A/D Ratio: <strong id="mood-ratio" style="color:#1a1a1a">—</strong></div>
     </div>
     <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid rgba(120,75,30,.20)">
-      <span style="font-size:11px;color:#8a6a4d;font-weight:600">NSE Advances</span>
+      <span style="font-size:11px;color:#444444;font-weight:600">NSE Advances</span>
       <span id="mood-p-nseadv" style="font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:700;color:var(--green)">—</span>
     </div>
     <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid rgba(120,75,30,.20)">
-      <span style="font-size:11px;color:#8a6a4d;font-weight:600">NSE Declines</span>
+      <span style="font-size:11px;color:#444444;font-weight:600">NSE Declines</span>
       <span id="mood-p-nsedec" style="font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:700;color:var(--red)">—</span>
     </div>
     <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid rgba(120,75,30,.20)">
-      <span style="font-size:11px;color:#8a6a4d;font-weight:600">BSE Advances</span>
+      <span style="font-size:11px;color:#444444;font-weight:600">BSE Advances</span>
       <span id="mood-p-bseadv" style="font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:700;color:var(--green)">—</span>
     </div>
     <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid rgba(120,75,30,.20)">
-      <span style="font-size:11px;color:#8a6a4d;font-weight:600">BSE Declines</span>
+      <span style="font-size:11px;color:#444444;font-weight:600">BSE Declines</span>
       <span id="mood-p-bsedec" style="font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:700;color:var(--red)">—</span>
     </div>
   </div>
@@ -1959,10 +1948,10 @@ setInterval(loadAll,5*60*1000);
       box-shadow:0 8px 32px rgba(120,75,30,.18);transition:all .25s ease">
     <div id="mood-dot" style="width:10px;height:10px;border-radius:50%;background:var(--green);flex-shrink:0;animation:pulse 2s infinite"></div>
     <div>
-      <div style="font-size:9px;color:#a8825f;font-weight:700;text-transform:uppercase;letter-spacing:.5px">Market Mood</div>
+      <div style="font-size:9px;color:#6b6b6b;font-weight:700;text-transform:uppercase;letter-spacing:.5px">Market Mood</div>
       <div id="mood-val" style="font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:700;color:var(--green);line-height:1">—</div>
     </div>
-    <div id="mood-chevron" style="font-size:14px;color:#a8825f;transition:transform .2s">⌃</div>
+    <div id="mood-chevron" style="font-size:14px;color:#6b6b6b;transition:transform .2s">⌃</div>
   </div>
 </div>
 
@@ -1974,7 +1963,7 @@ function mktTick(){
   const day=ist.getDay(),h=ist.getHours(),m=ist.getMinutes(),s=ist.getSeconds();
   const tot=h*60+m;
   let status,label,color,bg,cdLabel,target;
-  if(day===0||day===6){status='Closed';label='Weekend';color='#a8825f';bg='rgba(120,75,30,.10)';cdLabel='Opens Monday';}
+  if(day===0||day===6){status='Closed';label='Weekend';color='#6b6b6b';bg='rgba(120,75,30,.10)';cdLabel='Opens Monday';}
   else if(tot<9*60+15){status='Pre-Open';label='Pre-Open';color='var(--mc)';bg='rgba(237,125,43,.12)';cdLabel='Opens in';target=9*3600+15*60;}
   else if(tot<15*60+30){status='LIVE';label='NSE LIVE';color='var(--green)';bg='rgba(47,158,94,.12)';cdLabel='Closes in';target=15*3600+30*60;}
   else{status='Closed';label='Market Closed';color='var(--red)';bg='rgba(224,86,47,.10)';cdLabel='Opens tomorrow';}
@@ -2110,10 +2099,10 @@ function openSearch(){
     modal.innerHTML='<div style="background:#ffffff;border:1px solid var(--bdr);border-radius:16px;'+
       'width:min(520px,90vw);box-shadow:0 20px 60px rgba(120,75,30,.3);overflow:hidden">'+
       '<div style="padding:14px 18px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;gap:10px">'+
-      '<span style="color:#a8825f">Search</span>'+
+      '<span style="color:#6b6b6b">Search</span>'+
       '<input id="smart-search-input" placeholder="Search pages... (IPO, GMP, Nifty, Dividends...)" '+
-      'style="flex:1;border:none;outline:none;background:transparent;font-size:14px;color:#5b4636;font-family:Inter,sans-serif">'+
-      '<span style="font-size:10px;color:#bfa07a;border:1px solid var(--bdr);border-radius:5px;padding:2px 6px">ESC</span>'+
+      'style="flex:1;border:none;outline:none;background:transparent;font-size:14px;color:#1a1a1a;font-family:Inter,sans-serif">'+
+      '<span style="font-size:10px;color:#999999;border:1px solid var(--bdr);border-radius:5px;padding:2px 6px">ESC</span>'+
       '</div>'+
       '<div id="smart-search-results" style="max-height:50vh;overflow-y:auto;padding:6px"></div>'+
       '</div>';
@@ -2142,9 +2131,9 @@ function renderSearchResults(){
   const box=document.getElementById('smart-search-results');
   box.innerHTML=results.length?results.map(r=>
     '<div class="ss-result" onclick="jumpToTab(\''+r.key+'\')" '+
-    'style="padding:11px 14px;border-radius:10px;cursor:pointer;font-size:13px;font-weight:600;color:#5b4636;transition:.15s" '+
+    'style="padding:11px 14px;border-radius:10px;cursor:pointer;font-size:13px;font-weight:600;color:#1a1a1a;transition:.15s" '+
     'onmouseover="this.style.background=\'rgba(237,125,43,.10)\'" onmouseout="this.style.background=\'\'">'+r.label+'</div>'
-  ).join(''):'<div style="padding:14px;color:#a8825f;font-size:12px;text-align:center">No matches</div>';
+  ).join(''):'<div style="padding:14px;color:#6b6b6b;font-size:12px;text-align:center">No matches</div>';
 }
 function jumpToTab(key){
   closeSearch();
