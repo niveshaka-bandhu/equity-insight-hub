@@ -1058,7 +1058,7 @@ function hmColorFor(pct){
 function hmTextDark(pct){ return pct === 0 || hmBucket(Math.abs(pct)) <= 1; }
 
 function renderHeatmapSection(title, items){
-  if(!items.length) return `<div class="hm-section"><div class="hm-title">${title} (0)</div><p style="color:#aaa;padding:12px 0">No data</p></div>`;
+  if(!items.length) return `<div class="hm-section"><div class="hm-title">${title}</div><p style="color:#aaa;padding:12px 0">No data</p></div>`;
   // items: [name, pctChgNumber]
   const sorted = items.slice().sort((a,b)=>b[1]-a[1]);
   const up = items.filter(i=>i[1]>0).length;
@@ -1066,7 +1066,7 @@ function renderHeatmapSection(title, items){
   const flat = items.length - up - down;
   return `<div class="hm-section">
     <div class="hm-head">
-      <div class="hm-title">${title} <span style="color:#6b6b6b;font-weight:500;font-size:12px">(${items.length})</span></div>
+      <div class="hm-title">${title}</div>
       <div class="hm-legend">
         <span style="color:var(--green);font-weight:700">▲ ${up}</span>
         <span style="margin:0 4px">·</span>
@@ -1394,8 +1394,6 @@ function renderIPO(rows){
           <div style="font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:700;color:#1a1a1a">${title}</div>
           <div style="font-size:10px;color:#6b6b6b;margin-top:1px">${subtitle}</div>
         </div>
-        <span style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:10px;
-          background:${color}18;color:${color};flex-shrink:0">${count} entries</span>
       </div>
       <div style="padding:14px 18px">${body}</div>
     </div>`;
@@ -1610,7 +1608,6 @@ function renderCorporate(){
           <div style="font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:700;color:#1a1a1a">${title}</div>
           <div style="font-size:10px;color:#6b6b6b;margin-top:1px">${subtitle}</div>
         </div>
-        <span style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:10px;background:${color}18;color:${color};flex-shrink:0">${count} companies</span>
       </div>
       <div style="padding:14px 18px">${body}</div>
     </div>`;
