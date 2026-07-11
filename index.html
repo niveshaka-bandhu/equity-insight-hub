@@ -1955,6 +1955,65 @@ function renderCalculators(){
       resultRow('Net Gain (after tax)','cg-net','var(--green)')
     )}
 
+    <!-- ═══ STEP-UP SIP CALCULATOR ═══ -->
+    ${calcCard('Step-up SIP Calculator','SIP with annual increase in investment amount',
+      inp('sup-amt','Initial Monthly Investment (₹)','5,000',5000)+
+      inp('sup-step','Annual Step-up (%)','10',10,'0.1')+
+      inp('sup-ret','Expected Return (% p.a.)','12',12,'0.1')+
+      inp('sup-yrs','Time Period (Years)','10',10),
+      resultRow('Invested Amount','sup-invested')+
+      resultRow('Estimated Returns','sup-returns','var(--green)')+
+      resultRow('Total Value','sup-total','var(--mc)')
+    )}
+
+    <!-- ═══ FD CALCULATOR ═══ -->
+    ${calcCard('FD Calculator','Fixed deposit maturity value with compounding',
+      inp('fd-amt','Principal Amount (₹)','1,00,000',100000)+
+      inp('fd-ret','Interest Rate (% p.a.)','7',7,'0.1')+
+      inp('fd-yrs','Tenure (Years)','5',5,'0.1')+
+      `<div style="margin-bottom:10px">
+        <label style="font-size:11px;font-weight:700;color:#6b6b6b;text-transform:uppercase;letter-spacing:.4px;display:block;margin-bottom:4px">Compounding Frequency</label>
+        <select id="fd-freq" onchange="calcRun()" style="width:100%;padding:8px 10px;border:1px solid var(--bdr);border-radius:8px;font-size:13px;font-family:'Space Grotesk',sans-serif;background:#fff">
+          <option value="4">Quarterly</option>
+          <option value="12">Monthly</option>
+          <option value="1">Annually</option>
+        </select>
+      </div>`,
+      resultRow('Principal','fd-principal')+
+      resultRow('Interest Earned','fd-interest','var(--green)')+
+      resultRow('Maturity Value','fd-total','var(--mc)')
+    )}
+
+    <!-- ═══ RD CALCULATOR ═══ -->
+    ${calcCard('RD Calculator','Recurring deposit maturity value',
+      inp('rd-amt','Monthly Deposit (₹)','5,000',5000)+
+      inp('rd-ret','Interest Rate (% p.a.)','7',7,'0.1')+
+      inp('rd-yrs','Tenure (Years)','5',5,'0.1'),
+      resultRow('Total Deposited','rd-invested')+
+      resultRow('Interest Earned','rd-interest','var(--green)')+
+      resultRow('Maturity Value','rd-total','var(--mc)')
+    )}
+
+    <!-- ═══ PPF CALCULATOR ═══ -->
+    ${calcCard('PPF Calculator','Public Provident Fund maturity value (15-year lock-in)',
+      inp('ppf-amt','Annual Investment (₹, max 1.5L)','1,50,000',150000)+
+      inp('ppf-ret','Interest Rate (% p.a.)','7.1',7.1,'0.1')+
+      inp('ppf-yrs','Tenure (Years, min 15)','15',15),
+      resultRow('Total Invested','ppf-invested')+
+      resultRow('Interest Earned','ppf-interest','var(--green)')+
+      resultRow('Maturity Value','ppf-total','var(--mc)')
+    )}
+
+    <!-- ═══ INFLATION-ADJUSTED VALUE CALCULATOR ═══ -->
+    ${calcCard('Inflation Calculator','Future cost or real value of money after inflation',
+      inp('inf-amt','Current Amount (₹)','1,00,000',100000)+
+      inp('inf-rate','Inflation Rate (% p.a.)','6',6,'0.1')+
+      inp('inf-yrs','Time Period (Years)','10',10),
+      resultRow('Future Cost (same items)','inf-future','var(--red)')+
+      resultRow('Real Value (today\u2019s terms)','inf-real','var(--green)')+
+      resultRow('Purchasing Power Lost','inf-lost')
+    )}
+
     <p style="margin:4px 0 16px;font-size:10px;color:#999999">
       These calculators use simplified formulas for estimation purposes only and are not tax/investment advice.
       Actual figures may vary based on brokerage, STT, cess, surcharge, and current tax rules.
@@ -2083,6 +2142,73 @@ function calcRun(){
     setTxt('cg-taxable', fmtINR(taxable));
     setTxt('cg-tax', fmtINR(tax));
     setTxt('cg-net', fmtINR(gain-tax));
+  }
+
+  // Step-up SIP
+  const supA=gv('sup-amt'), supStep=gv('sup-step')/100, supR=gv('sup-ret')/100/12, supY=gv('sup-yrs');
+  if(supA&&supY){
+    let invested=0, fv=0, monthlyAmt=supA;
+    for(let yr=0; yr<supY; yr++){
+      for(let m=0; m<12; m++){
+        invested += monthlyAmt;
+        const monthsRemaining = (supY-yr)*12 - m;
+        fv += monthlyAmt * Math.pow(1+supR, monthsRemaining);
+      }
+      monthlyAmt *= (1+supStep);
+    }
+    setTxt('sup-invested', fmtINR(invested));
+    setTxt('sup-returns', fmtINR(fv-invested));
+    setTxt('sup-total', fmtINR(fv));
+  }
+
+  // FD Calculator
+  const fdA=gv('fd-amt'), fdR=gv('fd-ret')/100, fdY=gv('fd-yrs');
+  const fdFreqEl=$('fd-freq');
+  if(fdA&&fdY&&fdFreqEl){
+    const n=parseFloat(fdFreqEl.value)||4;
+    const fv = fdA * Math.pow(1+fdR/n, n*fdY);
+    setTxt('fd-principal', fmtINR(fdA));
+    setTxt('fd-interest', fmtINR(fv-fdA));
+    setTxt('fd-total', fmtINR(fv));
+  }
+
+  // RD Calculator (monthly compounding, standard RD formula)
+  const rdA=gv('rd-amt'), rdR=gv('rd-ret')/100/4, rdY=gv('rd-yrs'); // quarterly compounding standard for RD
+  if(rdA&&rdY){
+    const n=rdY*12;
+    const qRate=gv('rd-ret')/100/4;
+    let fv=0;
+    for(let m=1; m<=n; m++){
+      const quartersRemaining=(n-m+1)/3;
+      fv += rdA * Math.pow(1+qRate, quartersRemaining);
+    }
+    const invested=rdA*n;
+    setTxt('rd-invested', fmtINR(invested));
+    setTxt('rd-interest', fmtINR(fv-invested));
+    setTxt('rd-total', fmtINR(fv));
+  }
+
+  // PPF Calculator (annual compounding, deposit at start of year)
+  const ppfA=gv('ppf-amt'), ppfR=gv('ppf-ret')/100, ppfY=gv('ppf-yrs');
+  if(ppfA&&ppfY){
+    let fv=0;
+    for(let yr=0; yr<ppfY; yr++){
+      fv = (fv+ppfA)*(1+ppfR);
+    }
+    const invested=ppfA*ppfY;
+    setTxt('ppf-invested', fmtINR(invested));
+    setTxt('ppf-interest', fmtINR(fv-invested));
+    setTxt('ppf-total', fmtINR(fv));
+  }
+
+  // Inflation Calculator
+  const infA=gv('inf-amt'), infR=gv('inf-rate')/100, infY=gv('inf-yrs');
+  if(infA&&infY){
+    const futureCost = infA * Math.pow(1+infR, infY);
+    const realValue = infA / Math.pow(1+infR, infY);
+    setTxt('inf-future', fmtINR(futureCost));
+    setTxt('inf-real', fmtINR(realValue));
+    setTxt('inf-lost', fmtINR(infA-realValue));
   }
 }
 
@@ -2304,7 +2430,7 @@ const SEARCH_INDEX=[
   {key:'ipo',label:'IPO Corner',kw:'gmp grey market premium listed subscription expert issue dates ipo'},
   {key:'currency',label:'Currencies & Commodities',kw:'usd eur gbp mcx gold silver crude currency'},
   {key:'corporate',label:'Corporate Actions',kw:'dividend bonus split today events'},
-  {key:'calculators',label:'Calculators',kw:'sip lumpsum emi cagr calculator'},
+  {key:'calculators',label:'Calculators',kw:'sip lumpsum emi cagr fd rd ppf step-up inflation capital gains tax calculator'},
 ];
 function openSearch(){
   let modal=document.getElementById('smart-search-modal');
