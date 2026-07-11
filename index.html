@@ -1842,29 +1842,248 @@ function renderCalculators(){
     {name:'Other Financial Calculators',       url:'https://docs.google.com/spreadsheets/d/1BL9TGJblifa_aczth-qijnq6mABVz6X7/edit?usp=sharing'},
     {name:'EV vs ICE',                         url:'https://docs.google.com/spreadsheets/d/1-K4zM4ar4NOluWhlylicldRSeTCkhLBmACzOs1lEw8I/edit?usp=sharing'},
   ];
+
+  const inp = (id,label,ph,val,step) => `
+    <div style="margin-bottom:10px">
+      <label style="font-size:11px;font-weight:700;color:#6b6b6b;text-transform:uppercase;letter-spacing:.4px;display:block;margin-bottom:4px">${label}</label>
+      <input type="number" id="${id}" placeholder="${ph}" value="${val||''}" step="${step||'any'}"
+        oninput="calcRun()"
+        style="width:100%;padding:8px 10px;border:1px solid var(--bdr);border-radius:8px;
+          font-size:14px;font-family:'Space Grotesk',sans-serif;color:#1a1a1a;background:#fff">
+    </div>`;
+
+  const resultRow = (label,id,color) => `
+    <div style="display:flex;justify-content:space-between;align-items:baseline;padding:7px 0;border-bottom:1px solid rgba(120,75,30,.15)">
+      <span style="font-size:12px;color:#444444;font-weight:600">${label}</span>
+      <span id="${id}" style="font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:700;color:${color||'#1a1a1a'}">—</span>
+    </div>`;
+
+  const calcCard = (title, subtitle, inputsHtml, resultsHtml) => `
+    <div style="background:var(--panel);border:1px solid var(--bdr);border-radius:14px;margin-bottom:14px;overflow:hidden">
+      <div style="padding:14px 18px;border-bottom:1px solid var(--bdr)">
+        <div style="font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:700;color:#1a1a1a">${title}</div>
+        <div style="font-size:10px;color:#6b6b6b;margin-top:1px">${subtitle}</div>
+      </div>
+      <div style="padding:16px 18px;display:grid;grid-template-columns:1fr 1fr;gap:20px">
+        <div>${inputsHtml}</div>
+        <div style="padding-left:6px">${resultsHtml}</div>
+      </div>
+    </div>`;
+
   $('s-calculators').innerHTML=`
     <div class="stitle">Financial Calculators</div>
-    <div style="margin:12px 16px;padding:12px 16px;background:#fff8e1;border-left:4px solid #f59e0b;border-radius:6px;font-size:13px;color:#7c5a00;line-height:1.7">
-      📥 <strong>How to download:</strong>
-      Open Link &nbsp;➜&nbsp; Go to <strong>File → Share and Export or Download</strong>
-      &nbsp;➜&nbsp; Select <strong>.xlsx</strong> or <strong>.ods</strong> format &nbsp;➜&nbsp; Download
+
+    <!-- ═══ SIP CALCULATOR ═══ -->
+    ${calcCard('SIP Calculator','Estimate returns on your monthly investment',
+      inp('sip-amt','Monthly Investment (₹)','5,000',5000)+
+      inp('sip-ret','Expected Return (% p.a.)','12',12,'0.1')+
+      inp('sip-yrs','Time Period (Years)','10',10),
+      resultRow('Invested Amount','sip-invested')+
+      resultRow('Estimated Returns','sip-returns','var(--green)')+
+      resultRow('Total Value','sip-total','var(--mc)')
+    )}
+
+    <!-- ═══ LUMPSUM CALCULATOR ═══ -->
+    ${calcCard('Lumpsum Calculator','Estimate returns on a one-time investment',
+      inp('lp-amt','Investment Amount (₹)','1,00,000',100000)+
+      inp('lp-ret','Expected Return (% p.a.)','12',12,'0.1')+
+      inp('lp-yrs','Time Period (Years)','10',10),
+      resultRow('Invested Amount','lp-invested')+
+      resultRow('Estimated Returns','lp-returns','var(--green)')+
+      resultRow('Total Value','lp-total','var(--mc)')
+    )}
+
+    <!-- ═══ EMI CALCULATOR ═══ -->
+    ${calcCard('EMI Calculator','Loan equated monthly installment',
+      inp('emi-amt','Loan Amount (₹)','25,00,000',2500000)+
+      inp('emi-ret','Interest Rate (% p.a.)','8.5',8.5,'0.01')+
+      inp('emi-yrs','Loan Tenure (Years)','20',20),
+      resultRow('Monthly EMI','emi-monthly','var(--mc)')+
+      resultRow('Total Interest','emi-interest','var(--red)')+
+      resultRow('Total Payment','emi-total')
+    )}
+
+    <!-- ═══ CAGR CALCULATOR ═══ -->
+    ${calcCard('CAGR Calculator','Compound annual growth rate of an investment',
+      inp('cagr-begin','Beginning Value (₹)','1,00,000',100000)+
+      inp('cagr-end','Ending Value (₹)','2,50,000',250000)+
+      inp('cagr-yrs','Time Period (Years)','5',5),
+      resultRow('Absolute Return','cagr-abs')+
+      resultRow('CAGR','cagr-result','var(--mc)')
+    )}
+
+    <!-- ═══ STOCK AVERAGE CALCULATOR ═══ -->
+    <div style="background:var(--panel);border:1px solid var(--bdr);border-radius:14px;margin-bottom:14px;overflow:hidden">
+      <div style="padding:14px 18px;border-bottom:1px solid var(--bdr)">
+        <div style="font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:700;color:#1a1a1a">Stock Average Calculator</div>
+        <div style="font-size:10px;color:#6b6b6b;margin-top:1px">Average cost across multiple buys</div>
+      </div>
+      <div style="padding:16px 18px">
+        <div id="avg-rows" style="margin-bottom:10px">
+          <div class="avg-row" style="display:grid;grid-template-columns:1fr 1fr auto;gap:8px;margin-bottom:8px;align-items:end">
+            <div><label style="font-size:10px;font-weight:700;color:#6b6b6b;text-transform:uppercase">Price ₹</label>
+              <input type="number" class="avg-price" oninput="calcRun()" placeholder="e.g. 100" style="width:100%;padding:7px 9px;border:1px solid var(--bdr);border-radius:8px;font-size:13px;font-family:'Space Grotesk',sans-serif"></div>
+            <div><label style="font-size:10px;font-weight:700;color:#6b6b6b;text-transform:uppercase">Quantity</label>
+              <input type="number" class="avg-qty" oninput="calcRun()" placeholder="e.g. 10" style="width:100%;padding:7px 9px;border:1px solid var(--bdr);border-radius:8px;font-size:13px;font-family:'Space Grotesk',sans-serif"></div>
+            <button onclick="removeAvgRow(this)" style="padding:7px 10px;border:1px solid var(--bdr);border-radius:8px;background:#fff;color:var(--red);cursor:pointer;font-size:12px">✕</button>
+          </div>
+        </div>
+        <button onclick="addAvgRow()" style="padding:6px 14px;border:1px solid var(--bdr);border-radius:8px;background:#fff;color:var(--mc);font-weight:700;font-size:12px;cursor:pointer;margin-bottom:14px">+ Add Buy</button>
+        <div style="border-top:1px solid var(--bdr);padding-top:10px">
+          ${resultRow('Total Quantity','avg-totqty')}
+          ${resultRow('Total Invested','avg-totinv')}
+          ${resultRow('Average Price','avg-result','var(--mc)')}
+        </div>
+      </div>
     </div>
-    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;padding:16px">
+
+    <!-- ═══ CAPITAL GAINS TAX (EQUITY) ═══ -->
+    ${calcCard('Capital Gains Tax — Equity (India)','Simplified STCG/LTCG estimate for listed shares/equity MF',
+      inp('cg-buy','Buy Price (₹)','100',100)+
+      inp('cg-sell','Sell Price (₹)','150',150)+
+      inp('cg-qty','Quantity','100',100)+
+      `<div style="margin-bottom:10px">
+        <label style="font-size:11px;font-weight:700;color:#6b6b6b;text-transform:uppercase;letter-spacing:.4px;display:block;margin-bottom:4px">Holding Period</label>
+        <select id="cg-period" onchange="calcRun()" style="width:100%;padding:8px 10px;border:1px solid var(--bdr);border-radius:8px;font-size:13px;font-family:'Space Grotesk',sans-serif;background:#fff">
+          <option value="stcg">Short Term (&lt; 12 months) — 20%</option>
+          <option value="ltcg">Long Term (&gt; 12 months) — 12.5% above ₹1.25L exemption</option>
+        </select>
+      </div>`,
+      resultRow('Total Gain','cg-gain')+
+      resultRow('Taxable Gain','cg-taxable')+
+      resultRow('Tax Payable','cg-tax','var(--red)')+
+      resultRow('Net Gain (after tax)','cg-net','var(--green)')
+    )}
+
+    <p style="margin:4px 0 16px;font-size:10px;color:#999999">
+      These calculators use simplified formulas for estimation purposes only and are not tax/investment advice.
+      Actual figures may vary based on brokerage, STT, cess, surcharge, and current tax rules.
+    </p>
+
+    <!-- ═══ EXISTING SHEET-BASED CALCULATORS ═══ -->
+    <div class="stitle-sm" style="margin-top:6px">More Calculators (Google Sheets)</div>
+    <div style="margin:12px 0;padding:12px 16px;background:rgba(237,125,43,.08);border-left:4px solid var(--mc);border-radius:6px;font-size:13px;color:#444444;line-height:1.7">
+      <strong>How to download:</strong>
+      Open Link → Go to <strong>File → Share and Export or Download</strong>
+      → Select <strong>.xlsx</strong> or <strong>.ods</strong> format → Download
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;padding:2px 0 16px">
       ${calcs.map(c=>`
         <a href="${c.url}" target="_blank" rel="noopener"
            style="display:flex;align-items:center;gap:12px;padding:16px 18px;
-                  background:#fff;border:1px solid #e5e7eb;border-radius:10px;
-                  text-decoration:none;color:#1a237e;font-weight:600;font-size:14px;
+                  background:#fff;border:1px solid var(--bdr);border-radius:10px;
+                  text-decoration:none;color:#1a1a1a;font-weight:600;font-size:14px;
                   box-shadow:0 1px 4px rgba(0,0,0,0.06);transition:box-shadow 0.2s"
            onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,0.12)'"
            onmouseout="this.style.boxShadow='0 1px 4px rgba(0,0,0,0.06)'">
           <span style="font-size:22px">📊</span>
           <span>${c.name}</span>
-          <span style="margin-left:auto;font-size:16px;color:#aaa">↗</span>
+          <span style="margin-left:auto;font-size:16px;color:#999999">↗</span>
         </a>`).join('')}
     </div>
-    <p style="margin:4px 16px 16px;font-size:11px;color:#bbb">Source: Niveshaka-bandhu Financial Tools</p>
+    <p style="margin:4px 0 16px;font-size:11px;color:#999999">Source: Niveshaka-bandhu Financial Tools</p>
   `;
+  // Set default for CG period dropdown and run once
+  calcRun();
+}
+
+/* ── Calculator logic (runs on any input change) ── */
+function fmtINR(n){
+  if(isNaN(n)) return '—';
+  return '₹'+n.toLocaleString('en-IN',{maximumFractionDigits:0});
+}
+function gv(id){ const el=$(id); return el? parseFloat(el.value)||0 : 0; }
+function setTxt(id,val){ const el=$(id); if(el) el.textContent=val; }
+
+function addAvgRow(){
+  const wrap=$('avg-rows');
+  const row=document.createElement('div');
+  row.className='avg-row';
+  row.style.cssText='display:grid;grid-template-columns:1fr 1fr auto;gap:8px;margin-bottom:8px;align-items:end';
+  row.innerHTML=`
+    <div><label style="font-size:10px;font-weight:700;color:#6b6b6b;text-transform:uppercase">Price ₹</label>
+      <input type="number" class="avg-price" oninput="calcRun()" placeholder="e.g. 100" style="width:100%;padding:7px 9px;border:1px solid var(--bdr);border-radius:8px;font-size:13px;font-family:'Space Grotesk',sans-serif"></div>
+    <div><label style="font-size:10px;font-weight:700;color:#6b6b6b;text-transform:uppercase">Quantity</label>
+      <input type="number" class="avg-qty" oninput="calcRun()" placeholder="e.g. 10" style="width:100%;padding:7px 9px;border:1px solid var(--bdr);border-radius:8px;font-size:13px;font-family:'Space Grotesk',sans-serif"></div>
+    <button onclick="removeAvgRow(this)" style="padding:7px 10px;border:1px solid var(--bdr);border-radius:8px;background:#fff;color:var(--red);cursor:pointer;font-size:12px">✕</button>`;
+  wrap.appendChild(row);
+}
+function removeAvgRow(btn){
+  const wrap=$('avg-rows');
+  if(wrap.children.length>1){ btn.closest('.avg-row').remove(); calcRun(); }
+}
+
+function calcRun(){
+  // SIP
+  const sA=gv('sip-amt'), sR=gv('sip-ret')/100/12, sY=gv('sip-yrs')*12;
+  if(sA&&sR&&sY){
+    const fv = sA * ((Math.pow(1+sR,sY)-1)/sR) * (1+sR);
+    const invested = sA*sY;
+    setTxt('sip-invested', fmtINR(invested));
+    setTxt('sip-returns', fmtINR(fv-invested));
+    setTxt('sip-total', fmtINR(fv));
+  }
+
+  // Lumpsum
+  const lA=gv('lp-amt'), lR=gv('lp-ret')/100, lY=gv('lp-yrs');
+  if(lA&&lY){
+    const fv = lA * Math.pow(1+lR, lY);
+    setTxt('lp-invested', fmtINR(lA));
+    setTxt('lp-returns', fmtINR(fv-lA));
+    setTxt('lp-total', fmtINR(fv));
+  }
+
+  // EMI
+  const eA=gv('emi-amt'), eR=gv('emi-ret')/100/12, eY=gv('emi-yrs')*12;
+  if(eA&&eR&&eY){
+    const emi = eA*eR*Math.pow(1+eR,eY)/(Math.pow(1+eR,eY)-1);
+    const total = emi*eY;
+    setTxt('emi-monthly', fmtINR(emi));
+    setTxt('emi-interest', fmtINR(total-eA));
+    setTxt('emi-total', fmtINR(total));
+  }
+
+  // CAGR
+  const cB=gv('cagr-begin'), cE=gv('cagr-end'), cY=gv('cagr-yrs');
+  if(cB&&cE&&cY){
+    const cagr = (Math.pow(cE/cB, 1/cY)-1)*100;
+    setTxt('cagr-abs', ((cE-cB)/cB*100).toFixed(2)+'%');
+    setTxt('cagr-result', cagr.toFixed(2)+'%');
+  }
+
+  // Stock Average
+  const prices=document.querySelectorAll('.avg-price');
+  const qtys=document.querySelectorAll('.avg-qty');
+  let totQty=0, totInv=0;
+  prices.forEach((p,i)=>{
+    const price=parseFloat(p.value)||0;
+    const qty=parseFloat(qtys[i]?.value)||0;
+    totQty+=qty; totInv+=price*qty;
+  });
+  if(totQty>0){
+    setTxt('avg-totqty', totQty.toLocaleString('en-IN'));
+    setTxt('avg-totinv', fmtINR(totInv));
+    setTxt('avg-result', fmtINR(totInv/totQty));
+  }
+
+  // Capital Gains Tax
+  const gBuy=gv('cg-buy'), gSell=gv('cg-sell'), gQty=gv('cg-qty');
+  const periodEl=$('cg-period');
+  if(gBuy&&gSell&&gQty&&periodEl){
+    const period=periodEl.value;
+    const gain=(gSell-gBuy)*gQty;
+    let taxable=gain, tax=0;
+    if(period==='stcg'){
+      tax = Math.max(0,gain)*0.20;
+    } else {
+      taxable = Math.max(0, gain-125000);
+      tax = taxable*0.125;
+    }
+    setTxt('cg-gain', fmtINR(gain));
+    setTxt('cg-taxable', fmtINR(taxable));
+    setTxt('cg-tax', fmtINR(tax));
+    setTxt('cg-net', fmtINR(gain-tax));
+  }
 }
 
 function showTab(key,btn){
