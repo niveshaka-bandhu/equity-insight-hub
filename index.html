@@ -1903,6 +1903,16 @@ function renderCalculators(){
       resultRow('Total Payment','emi-total')
     )}
 
+    <!-- ═══ REVERSE EMI CALCULATOR ═══ -->
+    ${calcCard('Reverse EMI Calculator','Find the loan amount you can afford for a given EMI',
+      inp('remi-emi','Affordable EMI (₹/month)','25,000',25000)+
+      inp('remi-ret','Interest Rate (% p.a.)','8.5',8.5,'0.01')+
+      inp('remi-yrs','Loan Tenure (Years)','20',20),
+      resultRow('Eligible Loan Amount','remi-principal','var(--mc)')+
+      resultRow('Total Interest','remi-interest','var(--red)')+
+      resultRow('Total Payment','remi-total')
+    )}
+
     <!-- ═══ CAGR CALCULATOR ═══ -->
     ${calcCard('CAGR Calculator','Compound annual growth rate of an investment',
       inp('cagr-begin','Beginning Value (₹)','1,00,000',100000)+
@@ -2014,6 +2024,48 @@ function renderCalculators(){
       resultRow('Purchasing Power Lost','inf-lost')
     )}
 
+    <!-- ═══ SWP CALCULATOR ═══ -->
+    ${calcCard('SWP Calculator','Systematic Withdrawal Plan — how long your corpus lasts',
+      inp('swp-corpus','Initial Corpus (₹)','25,00,000',2500000)+
+      inp('swp-wd','Monthly Withdrawal (₹)','20,000',20000)+
+      inp('swp-ret','Expected Return (% p.a.)','10',10,'0.1')+
+      inp('swp-yrs','Time Period to Check (Years)','20',20),
+      resultRow('Total Withdrawn','swp-withdrawn')+
+      resultRow('Remaining Corpus','swp-remaining','var(--mc)')+
+      resultRow('Corpus Lasts For','swp-duration','var(--green)')
+    )}
+
+    <!-- ═══ XIRR CALCULATOR ═══ -->
+    <div style="background:var(--panel);border:1px solid var(--bdr);border-radius:14px;margin-bottom:14px;overflow:hidden">
+      <div style="padding:14px 18px;border-bottom:1px solid var(--bdr)">
+        <div style="font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:700;color:#1a1a1a">XIRR Calculator</div>
+        <div style="font-size:10px;color:#6b6b6b;margin-top:1px">Extended internal rate of return for irregular cash flows</div>
+      </div>
+      <div style="padding:16px 18px">
+        <div id="xirr-rows" style="margin-bottom:10px">
+          <div class="xirr-row" style="display:grid;grid-template-columns:1fr 1fr auto;gap:8px;margin-bottom:8px;align-items:end">
+            <div><label style="font-size:10px;font-weight:700;color:#6b6b6b;text-transform:uppercase">Date</label>
+              <input type="date" class="xirr-date" oninput="calcRun()" style="width:100%;padding:7px 9px;border:1px solid var(--bdr);border-radius:8px;font-size:13px;font-family:'Space Grotesk',sans-serif"></div>
+            <div><label style="font-size:10px;font-weight:700;color:#6b6b6b;text-transform:uppercase">Amount (₹, − for investment)</label>
+              <input type="number" class="xirr-amt" oninput="calcRun()" placeholder="e.g. -50000" style="width:100%;padding:7px 9px;border:1px solid var(--bdr);border-radius:8px;font-size:13px;font-family:'Space Grotesk',sans-serif"></div>
+            <button onclick="removeXirrRow(this)" style="padding:7px 10px;border:1px solid var(--bdr);border-radius:8px;background:#fff;color:var(--red);cursor:pointer;font-size:12px">✕</button>
+          </div>
+          <div class="xirr-row" style="display:grid;grid-template-columns:1fr 1fr auto;gap:8px;margin-bottom:8px;align-items:end">
+            <div><label style="font-size:10px;font-weight:700;color:#6b6b6b;text-transform:uppercase">Date</label>
+              <input type="date" class="xirr-date" oninput="calcRun()" style="width:100%;padding:7px 9px;border:1px solid var(--bdr);border-radius:8px;font-size:13px;font-family:'Space Grotesk',sans-serif"></div>
+            <div><label style="font-size:10px;font-weight:700;color:#6b6b6b;text-transform:uppercase">Amount (₹, + for return)</label>
+              <input type="number" class="xirr-amt" oninput="calcRun()" placeholder="e.g. 65000" style="width:100%;padding:7px 9px;border:1px solid var(--bdr);border-radius:8px;font-size:13px;font-family:'Space Grotesk',sans-serif"></div>
+            <button onclick="removeXirrRow(this)" style="padding:7px 10px;border:1px solid var(--bdr);border-radius:8px;background:#fff;color:var(--red);cursor:pointer;font-size:12px">✕</button>
+          </div>
+        </div>
+        <button onclick="addXirrRow()" style="padding:6px 14px;border:1px solid var(--bdr);border-radius:8px;background:#fff;color:var(--mc);font-weight:700;font-size:12px;cursor:pointer;margin-bottom:14px">+ Add Cash Flow</button>
+        <div style="border-top:1px solid var(--bdr);padding-top:10px">
+          ${resultRow('XIRR (Annualized Return)','xirr-result','var(--mc)')}
+        </div>
+        <p style="font-size:10px;color:#999999;margin-top:8px">Enter negative amounts for money invested (outflows) and positive amounts for money received (inflows/current value). Needs at least one negative and one positive entry.</p>
+      </div>
+    </div>
+
     <p style="margin:4px 0 16px;font-size:10px;color:#999999">
       These calculators use simplified formulas for estimation purposes only and are not tax/investment advice.
       Actual figures may vary based on brokerage, STT, cess, surcharge, and current tax rules.
@@ -2072,6 +2124,46 @@ function removeAvgRow(btn){
   if(wrap.children.length>1){ btn.closest('.avg-row').remove(); calcRun(); }
 }
 
+function addXirrRow(){
+  const wrap=$('xirr-rows');
+  const row=document.createElement('div');
+  row.className='xirr-row';
+  row.style.cssText='display:grid;grid-template-columns:1fr 1fr auto;gap:8px;margin-bottom:8px;align-items:end';
+  row.innerHTML=`
+    <div><label style="font-size:10px;font-weight:700;color:#6b6b6b;text-transform:uppercase">Date</label>
+      <input type="date" class="xirr-date" oninput="calcRun()" style="width:100%;padding:7px 9px;border:1px solid var(--bdr);border-radius:8px;font-size:13px;font-family:'Space Grotesk',sans-serif"></div>
+    <div><label style="font-size:10px;font-weight:700;color:#6b6b6b;text-transform:uppercase">Amount (₹)</label>
+      <input type="number" class="xirr-amt" oninput="calcRun()" placeholder="e.g. -10000" style="width:100%;padding:7px 9px;border:1px solid var(--bdr);border-radius:8px;font-size:13px;font-family:'Space Grotesk',sans-serif"></div>
+    <button onclick="removeXirrRow(this)" style="padding:7px 10px;border:1px solid var(--bdr);border-radius:8px;background:#fff;color:var(--red);cursor:pointer;font-size:12px">✕</button>`;
+  wrap.appendChild(row);
+}
+function removeXirrRow(btn){
+  const wrap=$('xirr-rows');
+  if(wrap.children.length>1){ btn.closest('.xirr-row').remove(); calcRun(); }
+}
+/* XIRR solver — Newton-Raphson on XNPV */
+function xnpv(rate, cashflows){
+  const d0 = cashflows[0].date;
+  return cashflows.reduce((sum,cf)=>{
+    const days = (cf.date - d0) / (1000*60*60*24);
+    return sum + cf.amount / Math.pow(1+rate, days/365);
+  }, 0);
+}
+function xirrSolve(cashflows){
+  let rate = 0.1;
+  for(let i=0;i<100;i++){
+    const npv = xnpv(rate, cashflows);
+    const npv2 = xnpv(rate+0.0001, cashflows);
+    const deriv = (npv2-npv)/0.0001;
+    if(Math.abs(deriv) < 1e-10) break;
+    const newRate = rate - npv/deriv;
+    if(!isFinite(newRate)) break;
+    if(Math.abs(newRate-rate) < 1e-7) { rate=newRate; break; }
+    rate = newRate;
+  }
+  return rate;
+}
+
 function calcRun(){
   // SIP
   const sA=gv('sip-amt'), sR=gv('sip-ret')/100/12, sY=gv('sip-yrs')*12;
@@ -2100,6 +2192,16 @@ function calcRun(){
     setTxt('emi-monthly', fmtINR(emi));
     setTxt('emi-interest', fmtINR(total-eA));
     setTxt('emi-total', fmtINR(total));
+  }
+
+  // Reverse EMI — given affordable EMI, find eligible loan principal
+  const rEmi=gv('remi-emi'), rR=gv('remi-ret')/100/12, rY=gv('remi-yrs')*12;
+  if(rEmi&&rR&&rY){
+    const principal = rEmi * (Math.pow(1+rR,rY)-1) / (rR*Math.pow(1+rR,rY));
+    const total = rEmi*rY;
+    setTxt('remi-principal', fmtINR(principal));
+    setTxt('remi-interest', fmtINR(total-principal));
+    setTxt('remi-total', fmtINR(total));
   }
 
   // CAGR
@@ -2209,6 +2311,54 @@ function calcRun(){
     setTxt('inf-future', fmtINR(futureCost));
     setTxt('inf-real', fmtINR(realValue));
     setTxt('inf-lost', fmtINR(infA-realValue));
+  }
+
+  // SWP Calculator — simulate month by month
+  const swpCorpus=gv('swp-corpus'), swpWd=gv('swp-wd'), swpR=gv('swp-ret')/100/12, swpY=gv('swp-yrs');
+  if(swpCorpus&&swpWd&&swpY){
+    let balance=swpCorpus, totalWithdrawn=0, monthsLasted=0;
+    const maxMonths=swpY*12;
+    for(let m=0; m<maxMonths; m++){
+      if(balance<=0) break;
+      balance = balance*(1+swpR) - swpWd;
+      totalWithdrawn += swpWd;
+      monthsLasted++;
+      if(balance<0) balance=0;
+    }
+    const yrs=Math.floor(monthsLasted/12), mos=monthsLasted%12;
+    const durationTxt = monthsLasted>=maxMonths
+      ? 'Beyond '+swpY+' years'
+      : yrs+'y '+mos+'m';
+    setTxt('swp-withdrawn', fmtINR(totalWithdrawn));
+    setTxt('swp-remaining', fmtINR(balance));
+    setTxt('swp-duration', durationTxt);
+  }
+
+  // XIRR Calculator
+  const xirrDates=document.querySelectorAll('.xirr-date');
+  const xirrAmts=document.querySelectorAll('.xirr-amt');
+  const cashflows=[];
+  xirrDates.forEach((d,i)=>{
+    const dateVal=d.value;
+    const amtVal=parseFloat(xirrAmts[i]?.value);
+    if(dateVal && !isNaN(amtVal) && amtVal!==0){
+      cashflows.push({date:new Date(dateVal), amount:amtVal});
+    }
+  });
+  if(cashflows.length>=2){
+    cashflows.sort((a,b)=>a.date-b.date);
+    const hasPos=cashflows.some(c=>c.amount>0);
+    const hasNeg=cashflows.some(c=>c.amount<0);
+    if(hasPos&&hasNeg){
+      const rate=xirrSolve(cashflows);
+      if(isFinite(rate) && !isNaN(rate)){
+        setTxt('xirr-result', (rate*100).toFixed(2)+'%');
+      } else {
+        setTxt('xirr-result', '—');
+      }
+    } else {
+      setTxt('xirr-result', 'Need +ve & −ve');
+    }
   }
 }
 
@@ -2430,7 +2580,7 @@ const SEARCH_INDEX=[
   {key:'ipo',label:'IPO Corner',kw:'gmp grey market premium listed subscription expert issue dates ipo'},
   {key:'currency',label:'Currencies & Commodities',kw:'usd eur gbp mcx gold silver crude currency'},
   {key:'corporate',label:'Corporate Actions',kw:'dividend bonus split today events'},
-  {key:'calculators',label:'Calculators',kw:'sip lumpsum emi cagr fd rd ppf step-up inflation capital gains tax calculator'},
+  {key:'calculators',label:'Calculators',kw:'sip lumpsum emi reverse emi cagr fd rd ppf step-up inflation capital gains tax xirr swp systematic withdrawal calculator'},
 ];
 function openSearch(){
   let modal=document.getElementById('smart-search-modal');
