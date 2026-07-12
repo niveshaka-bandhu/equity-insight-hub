@@ -2066,6 +2066,43 @@ function renderCalculators(){
       </div>
     </div>
 
+    <!-- ═══ RETIREMENT CORPUS CALCULATOR (multi-scenario) ═══ -->
+    <div style="background:var(--panel);border:1px solid var(--bdr);border-radius:14px;margin-bottom:14px;overflow:hidden">
+      <div style="padding:14px 18px;border-bottom:1px solid var(--bdr)">
+        <div style="font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:700;color:#1a1a1a">Retirement Corpus Calculator</div>
+        <div style="font-size:10px;color:#6b6b6b;margin-top:1px">See your corpus at different return rates — and what it's worth after inflation</div>
+      </div>
+      <div style="padding:16px 18px">
+        ${inp('ret-age','Current Age','30',30)}
+        ${inp('ret-retage','Retirement Age','60',60)}
+        ${inp('ret-amt','Monthly Contribution (₹)','10,000',10000)}
+        ${inp('ret-step','Yearly Increase in Contribution (%)','5',5,'0.1')}
+        ${inp('ret-infl','Inflation Rate (% p.a.)','6',6,'0.1')}
+        <div id="ret-results" style="margin-top:14px;border-top:1px solid var(--bdr);padding-top:12px">
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;font-size:10px;font-weight:700;color:#6b6b6b;text-transform:uppercase;letter-spacing:.4px;padding-bottom:6px;border-bottom:1px solid var(--bdr)">
+            <span>Return</span><span style="text-align:right">Corpus (Nominal)</span><span style="text-align:right">Corpus (Today's Value)</span>
+          </div>
+          <div id="ret-rows"></div>
+        </div>
+        <p style="font-size:10px;color:#999999;margin-top:10px">Based on the classic Warikoo retirement model — shows how return rate dramatically changes long-term outcomes. FD ≈5-6%, Gold ≈8-10%, Equity ≈12-15% are realistic long-term reference points.</p>
+      </div>
+    </div>
+
+    <!-- ═══ PAY OFF VS INVEST CALCULATOR ═══ -->
+    ${calcCard('Pay Off vs Invest Calculator','Should you prepay your loan or invest the surplus instead?',
+      inp('poi-loan','Loan Amount Remaining (₹)','10,00,000',1000000)+
+      inp('poi-rate','Loan Interest Rate (% p.a.)','8',8,'0.1')+
+      inp('poi-months','Months Remaining on Loan','60',60)+
+      inp('poi-lump','Lumpsum Available (₹)','1,00,000',100000)+
+      inp('poi-monthly','Amount You Can Invest Monthly (₹)','7,000',7000)+
+      inp('poi-invret','Expected Investment Return (% p.a.)','10',10,'0.1'),
+      resultRow('Interest You\u2019ll Pay Over Loan Tenure','poi-interest','var(--red)')+
+      resultRow('Total You Would Invest','poi-invested')+
+      resultRow('Investment Grows To','poi-grown','var(--green)')+
+      resultRow('Net Benefit of Investing','poi-benefit','var(--mc)')+
+      `<div id="poi-verdict" style="margin-top:10px;padding:10px 14px;border-radius:10px;font-size:13px;font-weight:700;text-align:center"></div>`
+    )}
+
     <p style="margin:4px 0 16px;font-size:10px;color:#999999">
       These calculators use simplified formulas for estimation purposes only and are not tax/investment advice.
       Actual figures may vary based on brokerage, STT, cess, surcharge, and current tax rules.
@@ -2360,6 +2397,71 @@ function calcRun(){
       setTxt('xirr-result', 'Need +ve & −ve');
     }
   }
+
+  // Retirement Corpus Calculator — multi-scenario
+  const retAge=gv('ret-age'), retRetAge=gv('ret-retage'), retAmt=gv('ret-amt'),
+        retStep=gv('ret-step')/100, retInfl=gv('ret-infl')/100;
+  if(retAge&&retRetAge&&retAmt&&retRetAge>retAge){
+    const years=retRetAge-retAge;
+    const scenarios=[5,10,15,20,25,30,35,40];
+    let rowsHtml='';
+    scenarios.forEach(retPct=>{
+      const r=retPct/100/12;
+      let corpus=0, monthlyAmt=retAmt;
+      for(let yr=0; yr<years; yr++){
+        for(let m=0; m<12; m++){
+          const monthsRemaining=(years-yr)*12-m;
+          corpus += monthlyAmt*Math.pow(1+r,monthsRemaining);
+        }
+        monthlyAmt *= (1+retStep);
+      }
+      const realValue = corpus / Math.pow(1+retInfl, years);
+      const crores=(corpus/10000000).toFixed(2);
+      const realCrores=(realValue/10000000).toFixed(2);
+      rowsHtml += `<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;padding:7px 0;border-bottom:1px solid rgba(120,75,30,.14);align-items:center">
+        <span style="font-size:12px;font-weight:700;color:#1a1a1a">${retPct}%</span>
+        <span style="font-size:12px;font-family:'Space Grotesk',sans-serif;text-align:right;color:#1a1a1a">${fmtINR(corpus)}</span>
+        <span style="font-size:12px;font-family:'Space Grotesk',sans-serif;text-align:right;color:var(--green);font-weight:700">${fmtINR(realValue)} <span style="font-size:9px;color:#6b6b6b;font-weight:500">(₹${realCrores}Cr)</span></span>
+      </div>`;
+    });
+    const rowsEl=$('ret-rows');
+    if(rowsEl) rowsEl.innerHTML=rowsHtml;
+  }
+
+  // Pay Off vs Invest Calculator
+  const poiLoan=gv('poi-loan'), poiRate=gv('poi-rate')/100/12, poiMonths=gv('poi-months'),
+        poiLump=gv('poi-lump'), poiMonthly=gv('poi-monthly'), poiInvRet=gv('poi-invret')/100/12;
+  if(poiLoan&&poiMonths&&poiMonthly){
+    // Interest over loan tenure (amortized)
+    const emi = poiLoan*poiRate*Math.pow(1+poiRate,poiMonths)/(Math.pow(1+poiRate,poiMonths)-1);
+    const totalPayment = emi*poiMonths;
+    const totalInterest = totalPayment - poiLoan;
+    // Investment growth: lumpsum + monthly SIP over same tenure
+    const lumpGrown = poiLump * Math.pow(1+poiInvRet, poiMonths);
+    const sipGrown = poiInvRet>0
+      ? poiMonthly * ((Math.pow(1+poiInvRet,poiMonths)-1)/poiInvRet) * (1+poiInvRet)
+      : poiMonthly*poiMonths;
+    const totalGrown = lumpGrown + sipGrown;
+    const totalInvested = poiLump + poiMonthly*poiMonths;
+    const netBenefit = totalGrown - totalInvested;
+    setTxt('poi-interest', fmtINR(totalInterest));
+    setTxt('poi-invested', fmtINR(totalInvested));
+    setTxt('poi-grown', fmtINR(totalGrown));
+    setTxt('poi-benefit', fmtINR(netBenefit));
+    const verdictEl=$('poi-verdict');
+    if(verdictEl){
+      if(netBenefit > totalInterest*0.15){ // investing clearly wins by a healthy margin
+        verdictEl.textContent='💡 Verdict: INVEST THE AMOUNT — your investment growth likely outweighs loan interest saved';
+        verdictEl.style.background='rgba(47,158,94,.10)'; verdictEl.style.color='var(--green)';
+      } else if(netBenefit < -totalInterest*0.15){
+        verdictEl.textContent='💡 Verdict: PAY OFF THE LOAN — prepaying saves more than investing would earn';
+        verdictEl.style.background='rgba(224,86,47,.10)'; verdictEl.style.color='var(--red)';
+      } else {
+        verdictEl.textContent='💡 Verdict: FAIRLY CLOSE — either choice is reasonable; consider risk tolerance & loan mental burden';
+        verdictEl.style.background='rgba(237,125,43,.10)'; verdictEl.style.color='var(--mc)';
+      }
+    }
+  }
 }
 
 function showTab(key,btn){
@@ -2580,7 +2682,7 @@ const SEARCH_INDEX=[
   {key:'ipo',label:'IPO Corner',kw:'gmp grey market premium listed subscription expert issue dates ipo'},
   {key:'currency',label:'Currencies & Commodities',kw:'usd eur gbp mcx gold silver crude currency'},
   {key:'corporate',label:'Corporate Actions',kw:'dividend bonus split today events'},
-  {key:'calculators',label:'Calculators',kw:'sip lumpsum emi reverse emi cagr fd rd ppf step-up inflation capital gains tax xirr swp systematic withdrawal calculator'},
+  {key:'calculators',label:'Calculators',kw:'sip lumpsum emi reverse emi cagr fd rd ppf step-up inflation capital gains tax xirr swp systematic withdrawal retirement corpus pay off vs invest loan prepay calculator'},
 ];
 function openSearch(){
   let modal=document.getElementById('smart-search-modal');
