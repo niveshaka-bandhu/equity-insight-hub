@@ -621,6 +621,21 @@ function renderDashboard(rows, newsRows){
         opacity:0.05;pointer-events:none;z-index:0" preserveAspectRatio="none"></svg>
       <div style="position:relative;z-index:1">
     <div class="stitle">Dashboard</div>
+
+    <!-- STOCK LOOKUP SEARCH BAR -->
+    <div style="background:var(--panel);border:1px solid var(--bdr);border-radius:14px;padding:16px 18px;margin-bottom:14px">
+      <div style="font-size:11px;font-weight:700;color:var(--mc);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">🔍 Stock Lookup</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <input id="stock-lookup-input" type="text" placeholder="e.g. RELIANCE, TCS, INFY, HDFCBANK..."
+          onkeydown="if(event.key==='Enter') openStockLookup()"
+          style="flex:1;min-width:200px;padding:10px 14px;border:1px solid var(--bdr);border-radius:9px;
+            font-size:14px;font-family:'Space Grotesk',sans-serif;color:#1a1a1a;background:#fff">
+        <button onclick="openStockLookup()"
+          style="padding:10px 20px;border:none;border-radius:9px;background:var(--mc);color:#fff;
+            font-weight:700;font-size:13px;cursor:pointer;flex-shrink:0">Search on Screener →</button>
+      </div>
+      <p style="font-size:10px;color:#999999;margin-top:8px">Enter the exact NSE/BSE symbol (not company name) · Opens Screener.in in a new tab · Not affiliated with Screener.in</p>
+    </div>
     <!-- INDICES -->
     <div class="tcw">
       <div class="tch" style="color:#0d47a1">Indian Indices</div>
@@ -2999,6 +3014,17 @@ function jumpToTab(key){
   closeSearch();
   const btn=document.querySelector('[onclick*="showTab(\''+key+'\'"]');
   if(btn) showTab(key,btn);
+}
+
+/* Stock Lookup — deep-links to Screener.in for the entered symbol (no live scraping, just navigation) */
+function openStockLookup(){
+  const input=document.getElementById('stock-lookup-input');
+  if(!input) return;
+  const raw=input.value.trim();
+  if(!raw) return;
+  const symbol=raw.toUpperCase().replace(/[^A-Z0-9&]/g,'');
+  if(!symbol) return;
+  window.open('https://www.screener.in/company/'+symbol+'/consolidated/', '_blank', 'noopener');
 }
 document.addEventListener('keydown',function(e){
   if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='k'){ e.preventDefault(); openSearch(); return; }
