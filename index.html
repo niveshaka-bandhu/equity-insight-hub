@@ -1882,6 +1882,11 @@ function renderCalculators(){
   $('s-calculators').innerHTML=`
     <div class="stitle">Financial Calculators</div>
 
+    <div style="display:flex;align-items:center;gap:10px;margin:22px 0 12px">
+      <div style="font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:800;color:var(--mc);text-transform:uppercase;letter-spacing:.6px">Growth & Investment Planning</div>
+      <div style="flex:1;height:1px;background:var(--bdr)"></div>
+      <div style="font-size:10px;color:#999999">Grow a lumpsum or recurring investment</div>
+    </div>
     <!-- ═══ SIP CALCULATOR ═══ -->
     ${calcCard('SIP Calculator','Estimate returns on your monthly investment',
       inp('sip-amt','Monthly Investment (₹)','5,000',5000)+
@@ -1890,6 +1895,17 @@ function renderCalculators(){
       resultRow('Invested Amount','sip-invested')+
       resultRow('Estimated Returns','sip-returns','var(--green)')+
       resultRow('Total Value','sip-total','var(--mc)')
+    )}
+
+    <!-- ═══ STEP-UP SIP CALCULATOR ═══ -->
+    ${calcCard('Step-up SIP Calculator','SIP with annual increase in investment amount',
+      inp('sup-amt','Initial Monthly Investment (₹)','5,000',5000)+
+      inp('sup-step','Annual Step-up (%)','10',10,'0.1')+
+      inp('sup-ret','Expected Return (% p.a.)','12',12,'0.1')+
+      inp('sup-yrs','Time Period (Years)','10',10),
+      resultRow('Invested Amount','sup-invested')+
+      resultRow('Estimated Returns','sup-returns','var(--green)')+
+      resultRow('Total Value','sup-total','var(--mc)')
     )}
 
     <!-- ═══ LUMPSUM CALCULATOR ═══ -->
@@ -1902,6 +1918,69 @@ function renderCalculators(){
       resultRow('Total Value','lp-total','var(--mc)')
     )}
 
+    <!-- ═══ FUTURE VALUE CALCULATOR ═══ -->
+    ${calcCard('Future Value Calculator','Projects growth of a lumpsum plus optional monthly additions',
+      inp('fv-pv','Present Amount (₹)','1,00,000',100000)+
+      inp('fv-pmt','Additional Monthly Contribution (₹)','0',0)+
+      inp('fv-ret','Expected Return (% p.a.)','12',12,'0.1')+
+      inp('fv-yrs','Time Period (Years)','10',10),
+      resultRow('Total Invested','fv-invested')+
+      resultRow('Estimated Returns','fv-returns','var(--green)')+
+      resultRow('Future Value','fv-total','var(--mc)')
+    )}
+
+    <!-- ═══ CAGR CALCULATOR ═══ -->
+    ${calcCard('CAGR Calculator','Compound annual growth rate of an investment',
+      inp('cagr-begin','Beginning Value (₹)','1,00,000',100000)+
+      inp('cagr-end','Ending Value (₹)','2,50,000',250000)+
+      inp('cagr-yrs','Time Period (Years)','5',5),
+      resultRow('Absolute Return','cagr-abs')+
+      resultRow('CAGR','cagr-result','var(--mc)')
+    )}
+
+    <div style="display:flex;align-items:center;gap:10px;margin:22px 0 12px">
+      <div style="font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:800;color:#6a1b9a;text-transform:uppercase;letter-spacing:.6px">Retirement & Withdrawal</div>
+      <div style="flex:1;height:1px;background:var(--bdr)"></div>
+      <div style="font-size:10px;color:#999999">Long-term corpus building and drawdown</div>
+    </div>
+    <!-- ═══ RETIREMENT CORPUS CALCULATOR (multi-scenario) ═══ -->
+    <div style="background:var(--panel);border:1px solid var(--bdr);border-radius:14px;margin-bottom:14px;overflow:hidden">
+      <div style="padding:14px 18px;border-bottom:1px solid var(--bdr)">
+        <div style="font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:700;color:#1a1a1a">Retirement Corpus Calculator</div>
+        <div style="font-size:10px;color:#6b6b6b;margin-top:1px">See your corpus at different return rates — and what it's worth after inflation</div>
+      </div>
+      <div style="padding:16px 18px">
+        ${inp('ret-age','Current Age','30',30)}
+        ${inp('ret-retage','Retirement Age','60',60)}
+        ${inp('ret-amt','Monthly Contribution (₹)','10,000',10000)}
+        ${inp('ret-step','Yearly Increase in Contribution (%)','5',5,'0.1')}
+        ${inp('ret-infl','Inflation Rate (% p.a.)','6',6,'0.1')}
+        <div id="ret-results" style="margin-top:14px;border-top:1px solid var(--bdr);padding-top:12px">
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;font-size:10px;font-weight:700;color:#6b6b6b;text-transform:uppercase;letter-spacing:.4px;padding-bottom:6px;border-bottom:1px solid var(--bdr)">
+            <span>Return</span><span style="text-align:right">Corpus (Nominal)</span><span style="text-align:right">Corpus (Today's Value)</span>
+          </div>
+          <div id="ret-rows"></div>
+        </div>
+        <p style="font-size:10px;color:#999999;margin-top:10px">Based on the classic Warikoo retirement model — shows how return rate dramatically changes long-term outcomes. FD ≈5-6%, Gold ≈8-10%, Equity ≈12-15% are realistic long-term reference points.</p>
+      </div>
+    </div>
+
+    <!-- ═══ SWP CALCULATOR ═══ -->
+    ${calcCard('SWP Calculator','Systematic Withdrawal Plan — how long your corpus lasts',
+      inp('swp-corpus','Initial Corpus (₹)','25,00,000',2500000)+
+      inp('swp-wd','Monthly Withdrawal (₹)','20,000',20000)+
+      inp('swp-ret','Expected Return (% p.a.)','10',10,'0.1')+
+      inp('swp-yrs','Time Period to Check (Years)','20',20),
+      resultRow('Total Withdrawn','swp-withdrawn')+
+      resultRow('Remaining Corpus','swp-remaining','var(--mc)')+
+      resultRow('Corpus Lasts For','swp-duration','var(--green)')
+    )}
+
+    <div style="display:flex;align-items:center;gap:10px;margin:22px 0 12px">
+      <div style="font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:800;color:#0d47a1;text-transform:uppercase;letter-spacing:.6px">Loans & EMI</div>
+      <div style="flex:1;height:1px;background:var(--bdr)"></div>
+      <div style="font-size:10px;color:#999999">Borrowing cost and prepay-vs-invest decisions</div>
+    </div>
     <!-- ═══ EMI CALCULATOR ═══ -->
     ${calcCard('EMI Calculator','Loan equated monthly installment',
       inp('emi-amt','Loan Amount (₹)','25,00,000',2500000)+
@@ -1922,69 +2001,26 @@ function renderCalculators(){
       resultRow('Total Payment','remi-total')
     )}
 
-    <!-- ═══ CAGR CALCULATOR ═══ -->
-    ${calcCard('CAGR Calculator','Compound annual growth rate of an investment',
-      inp('cagr-begin','Beginning Value (₹)','1,00,000',100000)+
-      inp('cagr-end','Ending Value (₹)','2,50,000',250000)+
-      inp('cagr-yrs','Time Period (Years)','5',5),
-      resultRow('Absolute Return','cagr-abs')+
-      resultRow('CAGR','cagr-result','var(--mc)')
+    <!-- ═══ PAY OFF VS INVEST CALCULATOR ═══ -->
+    ${calcCard('Pay Off vs Invest Calculator','Should you prepay your loan or invest the surplus instead?',
+      inp('poi-loan','Loan Amount Remaining (₹)','10,00,000',1000000)+
+      inp('poi-rate','Loan Interest Rate (% p.a.)','8',8,'0.1')+
+      inp('poi-months','Months Remaining on Loan','60',60)+
+      inp('poi-lump','Lumpsum Available (₹)','1,00,000',100000)+
+      inp('poi-monthly','Amount You Can Invest Monthly (₹)','7,000',7000)+
+      inp('poi-invret','Expected Investment Return (% p.a.)','10',10,'0.1'),
+      resultRow('Interest You\u2019ll Pay Over Loan Tenure','poi-interest','var(--red)')+
+      resultRow('Total You Would Invest','poi-invested')+
+      resultRow('Investment Grows To','poi-grown','var(--green)')+
+      resultRow('Net Benefit of Investing','poi-benefit','var(--mc)')+
+      `<div id="poi-verdict" style="margin-top:10px;padding:10px 14px;border-radius:10px;font-size:13px;font-weight:700;text-align:center"></div>`
     )}
 
-    <!-- ═══ STOCK AVERAGE CALCULATOR ═══ -->
-    <div style="background:var(--panel);border:1px solid var(--bdr);border-radius:14px;margin-bottom:14px;overflow:hidden">
-      <div style="padding:14px 18px;border-bottom:1px solid var(--bdr)">
-        <div style="font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:700;color:#1a1a1a">Stock Average Calculator</div>
-        <div style="font-size:10px;color:#6b6b6b;margin-top:1px">Average cost across multiple buys</div>
-      </div>
-      <div style="padding:16px 18px">
-        <div id="avg-rows" style="margin-bottom:10px">
-          <div class="avg-row" style="display:grid;grid-template-columns:1fr 1fr auto;gap:8px;margin-bottom:8px;align-items:end">
-            <div><label style="font-size:10px;font-weight:700;color:#6b6b6b;text-transform:uppercase">Price ₹</label>
-              <input type="number" class="avg-price" oninput="calcRun()" placeholder="e.g. 100" style="width:100%;padding:7px 9px;border:1px solid var(--bdr);border-radius:8px;font-size:13px;font-family:'Space Grotesk',sans-serif"></div>
-            <div><label style="font-size:10px;font-weight:700;color:#6b6b6b;text-transform:uppercase">Quantity</label>
-              <input type="number" class="avg-qty" oninput="calcRun()" placeholder="e.g. 10" style="width:100%;padding:7px 9px;border:1px solid var(--bdr);border-radius:8px;font-size:13px;font-family:'Space Grotesk',sans-serif"></div>
-            <button onclick="removeAvgRow(this)" style="padding:7px 10px;border:1px solid var(--bdr);border-radius:8px;background:#fff;color:var(--red);cursor:pointer;font-size:12px">✕</button>
-          </div>
-        </div>
-        <button onclick="addAvgRow()" style="padding:6px 14px;border:1px solid var(--bdr);border-radius:8px;background:#fff;color:var(--mc);font-weight:700;font-size:12px;cursor:pointer;margin-bottom:14px">+ Add Buy</button>
-        <div style="border-top:1px solid var(--bdr);padding-top:10px">
-          ${resultRow('Total Quantity','avg-totqty')}
-          ${resultRow('Total Invested','avg-totinv')}
-          ${resultRow('Average Price','avg-result','var(--mc)')}
-        </div>
-      </div>
+    <div style="display:flex;align-items:center;gap:10px;margin:22px 0 12px">
+      <div style="font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:800;color:var(--green);text-transform:uppercase;letter-spacing:.6px">Fixed Income & Deposits</div>
+      <div style="flex:1;height:1px;background:var(--bdr)"></div>
+      <div style="font-size:10px;color:#999999">Bank/post-office guaranteed-return instruments</div>
     </div>
-
-    <!-- ═══ CAPITAL GAINS TAX (EQUITY) ═══ -->
-    ${calcCard('Capital Gains Tax — Equity (India)','Simplified STCG/LTCG estimate for listed shares/equity MF',
-      inp('cg-buy','Buy Price (₹)','100',100)+
-      inp('cg-sell','Sell Price (₹)','150',150)+
-      inp('cg-qty','Quantity','100',100)+
-      `<div style="margin-bottom:10px">
-        <label style="font-size:11px;font-weight:700;color:#6b6b6b;text-transform:uppercase;letter-spacing:.4px;display:block;margin-bottom:4px">Holding Period</label>
-        <select id="cg-period" onchange="calcRun()" style="width:100%;padding:8px 10px;border:1px solid var(--bdr);border-radius:8px;font-size:13px;font-family:'Space Grotesk',sans-serif;background:#fff">
-          <option value="stcg">Short Term (&lt; 12 months) — 20%</option>
-          <option value="ltcg">Long Term (&gt; 12 months) — 12.5% above ₹1.25L exemption</option>
-        </select>
-      </div>`,
-      resultRow('Total Gain','cg-gain')+
-      resultRow('Taxable Gain','cg-taxable')+
-      resultRow('Tax Payable','cg-tax','var(--red)')+
-      resultRow('Net Gain (after tax)','cg-net','var(--green)')
-    )}
-
-    <!-- ═══ STEP-UP SIP CALCULATOR ═══ -->
-    ${calcCard('Step-up SIP Calculator','SIP with annual increase in investment amount',
-      inp('sup-amt','Initial Monthly Investment (₹)','5,000',5000)+
-      inp('sup-step','Annual Step-up (%)','10',10,'0.1')+
-      inp('sup-ret','Expected Return (% p.a.)','12',12,'0.1')+
-      inp('sup-yrs','Time Period (Years)','10',10),
-      resultRow('Invested Amount','sup-invested')+
-      resultRow('Estimated Returns','sup-returns','var(--green)')+
-      resultRow('Total Value','sup-total','var(--mc)')
-    )}
-
     <!-- ═══ FD CALCULATOR ═══ -->
     ${calcCard('FD Calculator','Fixed deposit maturity value with compounding',
       inp('fd-amt','Principal Amount (₹)','1,00,000',100000)+
@@ -2023,26 +2059,35 @@ function renderCalculators(){
       resultRow('Maturity Value','ppf-total','var(--mc)')
     )}
 
-    <!-- ═══ INFLATION-ADJUSTED VALUE CALCULATOR ═══ -->
-    ${calcCard('Inflation Calculator','Future cost or real value of money after inflation',
-      inp('inf-amt','Current Amount (₹)','1,00,000',100000)+
-      inp('inf-rate','Inflation Rate (% p.a.)','6',6,'0.1')+
-      inp('inf-yrs','Time Period (Years)','10',10),
-      resultRow('Future Cost (same items)','inf-future','var(--red)')+
-      resultRow('Real Value (today\u2019s terms)','inf-real','var(--green)')+
-      resultRow('Purchasing Power Lost','inf-lost')
-    )}
-
-    <!-- ═══ SWP CALCULATOR ═══ -->
-    ${calcCard('SWP Calculator','Systematic Withdrawal Plan — how long your corpus lasts',
-      inp('swp-corpus','Initial Corpus (₹)','25,00,000',2500000)+
-      inp('swp-wd','Monthly Withdrawal (₹)','20,000',20000)+
-      inp('swp-ret','Expected Return (% p.a.)','10',10,'0.1')+
-      inp('swp-yrs','Time Period to Check (Years)','20',20),
-      resultRow('Total Withdrawn','swp-withdrawn')+
-      resultRow('Remaining Corpus','swp-remaining','var(--mc)')+
-      resultRow('Corpus Lasts For','swp-duration','var(--green)')
-    )}
+    <div style="display:flex;align-items:center;gap:10px;margin:22px 0 12px">
+      <div style="font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:800;color:var(--mc);text-transform:uppercase;letter-spacing:.6px">Stock Valuation & Analysis</div>
+      <div style="flex:1;height:1px;background:var(--bdr)"></div>
+      <div style="font-size:10px;color:#999999">Estimate what a stock may be worth</div>
+    </div>
+    <!-- ═══ STOCK AVERAGE CALCULATOR ═══ -->
+    <div style="background:var(--panel);border:1px solid var(--bdr);border-radius:14px;margin-bottom:14px;overflow:hidden">
+      <div style="padding:14px 18px;border-bottom:1px solid var(--bdr)">
+        <div style="font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:700;color:#1a1a1a">Stock Average Calculator</div>
+        <div style="font-size:10px;color:#6b6b6b;margin-top:1px">Average cost across multiple buys</div>
+      </div>
+      <div style="padding:16px 18px">
+        <div id="avg-rows" style="margin-bottom:10px">
+          <div class="avg-row" style="display:grid;grid-template-columns:1fr 1fr auto;gap:8px;margin-bottom:8px;align-items:end">
+            <div><label style="font-size:10px;font-weight:700;color:#6b6b6b;text-transform:uppercase">Price ₹</label>
+              <input type="number" class="avg-price" oninput="calcRun()" placeholder="e.g. 100" style="width:100%;padding:7px 9px;border:1px solid var(--bdr);border-radius:8px;font-size:13px;font-family:'Space Grotesk',sans-serif"></div>
+            <div><label style="font-size:10px;font-weight:700;color:#6b6b6b;text-transform:uppercase">Quantity</label>
+              <input type="number" class="avg-qty" oninput="calcRun()" placeholder="e.g. 10" style="width:100%;padding:7px 9px;border:1px solid var(--bdr);border-radius:8px;font-size:13px;font-family:'Space Grotesk',sans-serif"></div>
+            <button onclick="removeAvgRow(this)" style="padding:7px 10px;border:1px solid var(--bdr);border-radius:8px;background:#fff;color:var(--red);cursor:pointer;font-size:12px">✕</button>
+          </div>
+        </div>
+        <button onclick="addAvgRow()" style="padding:6px 14px;border:1px solid var(--bdr);border-radius:8px;background:#fff;color:var(--mc);font-weight:700;font-size:12px;cursor:pointer;margin-bottom:14px">+ Add Buy</button>
+        <div style="border-top:1px solid var(--bdr);padding-top:10px">
+          ${resultRow('Total Quantity','avg-totqty')}
+          ${resultRow('Total Invested','avg-totinv')}
+          ${resultRow('Average Price','avg-result','var(--mc)')}
+        </div>
+      </div>
+    </div>
 
     <!-- ═══ XIRR CALCULATOR ═══ -->
     <div style="background:var(--panel);border:1px solid var(--bdr);border-radius:14px;margin-bottom:14px;overflow:hidden">
@@ -2075,43 +2120,67 @@ function renderCalculators(){
       </div>
     </div>
 
-    <!-- ═══ RETIREMENT CORPUS CALCULATOR (multi-scenario) ═══ -->
-    <div style="background:var(--panel);border:1px solid var(--bdr);border-radius:14px;margin-bottom:14px;overflow:hidden">
-      <div style="padding:14px 18px;border-bottom:1px solid var(--bdr)">
-        <div style="font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:700;color:#1a1a1a">Retirement Corpus Calculator</div>
-        <div style="font-size:10px;color:#6b6b6b;margin-top:1px">See your corpus at different return rates — and what it's worth after inflation</div>
-      </div>
-      <div style="padding:16px 18px">
-        ${inp('ret-age','Current Age','30',30)}
-        ${inp('ret-retage','Retirement Age','60',60)}
-        ${inp('ret-amt','Monthly Contribution (₹)','10,000',10000)}
-        ${inp('ret-step','Yearly Increase in Contribution (%)','5',5,'0.1')}
-        ${inp('ret-infl','Inflation Rate (% p.a.)','6',6,'0.1')}
-        <div id="ret-results" style="margin-top:14px;border-top:1px solid var(--bdr);padding-top:12px">
-          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;font-size:10px;font-weight:700;color:#6b6b6b;text-transform:uppercase;letter-spacing:.4px;padding-bottom:6px;border-bottom:1px solid var(--bdr)">
-            <span>Return</span><span style="text-align:right">Corpus (Nominal)</span><span style="text-align:right">Corpus (Today's Value)</span>
-          </div>
-          <div id="ret-rows"></div>
-        </div>
-        <p style="font-size:10px;color:#999999;margin-top:10px">Based on the classic Warikoo retirement model — shows how return rate dramatically changes long-term outcomes. FD ≈5-6%, Gold ≈8-10%, Equity ≈12-15% are realistic long-term reference points.</p>
-      </div>
-    </div>
-
-    <!-- ═══ PAY OFF VS INVEST CALCULATOR ═══ -->
-    ${calcCard('Pay Off vs Invest Calculator','Should you prepay your loan or invest the surplus instead?',
-      inp('poi-loan','Loan Amount Remaining (₹)','10,00,000',1000000)+
-      inp('poi-rate','Loan Interest Rate (% p.a.)','8',8,'0.1')+
-      inp('poi-months','Months Remaining on Loan','60',60)+
-      inp('poi-lump','Lumpsum Available (₹)','1,00,000',100000)+
-      inp('poi-monthly','Amount You Can Invest Monthly (₹)','7,000',7000)+
-      inp('poi-invret','Expected Investment Return (% p.a.)','10',10,'0.1'),
-      resultRow('Interest You\u2019ll Pay Over Loan Tenure','poi-interest','var(--red)')+
-      resultRow('Total You Would Invest','poi-invested')+
-      resultRow('Investment Grows To','poi-grown','var(--green)')+
-      resultRow('Net Benefit of Investing','poi-benefit','var(--mc)')+
-      `<div id="poi-verdict" style="margin-top:10px;padding:10px 14px;border-radius:10px;font-size:13px;font-weight:700;text-align:center"></div>`
+    <!-- ═══ INTRINSIC VALUE CALCULATOR ═══ -->
+    ${calcCard('Intrinsic Value Calculator','Benjamin Graham formula — estimate a stock\u2019s fair worth from EPS & growth',
+      inp('iv-eps','Current EPS (₹)','25',25,'0.01')+
+      inp('iv-growth','Expected EPS Growth Rate (% p.a.)','12',12,'0.1')+
+      inp('iv-bondyield','Current AAA Bond Yield (%)','7.5',7.5,'0.1')+
+      inp('iv-cmp','Current Market Price (₹, optional)','',0),
+      resultRow('Intrinsic Value / Share','iv-value','var(--mc)')+
+      resultRow('Margin of Safety vs CMP','iv-margin')+
+      `<div id="iv-verdict" style="margin-top:10px;padding:9px 12px;border-radius:9px;font-size:12px;font-weight:700;text-align:center"></div>
+      <p style="font-size:10px;color:#999999;margin-top:8px">Graham Formula: V = EPS × (8.5 + 2g) × 4.4 / Y. A simplified valuation heuristic, not a substitute for full fundamental analysis.</p>`
     )}
 
+    <!-- ═══ FAIR VALUE CALCULATOR ═══ -->
+    ${calcCard('Fair Value Calculator','P/E-based fair value using earnings and a benchmark multiple',
+      inp('fair-eps','EPS — Trailing 12M (₹)','25',25,'0.01')+
+      inp('fair-pe','Fair / Industry Average P/E','20',20,'0.1')+
+      inp('fair-cmp','Current Market Price (₹, optional)','',0),
+      resultRow('Fair Value / Share','fair-value','var(--mc)')+
+      resultRow('Current P/E (if CMP given)','fair-currentpe')+
+      `<div id="fair-verdict" style="margin-top:10px;padding:9px 12px;border-radius:9px;font-size:12px;font-weight:700;text-align:center"></div>
+      <p style="font-size:10px;color:#999999;margin-top:8px">Fair Value = EPS × Benchmark P/E. Use a sector-appropriate P/E for meaningful results — compare CMP to see if a stock trades above or below fair value.</p>`
+    )}
+
+    <div style="display:flex;align-items:center;gap:10px;margin:22px 0 12px">
+      <div style="font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:800;color:var(--red);text-transform:uppercase;letter-spacing:.6px">Tax & Inflation</div>
+      <div style="flex:1;height:1px;background:var(--bdr)"></div>
+      <div style="font-size:10px;color:#999999">Understand real returns and tax impact</div>
+    </div>
+    <!-- ═══ CAPITAL GAINS TAX (EQUITY) ═══ -->
+    ${calcCard('Capital Gains Tax — Equity (India)','Simplified STCG/LTCG estimate for listed shares/equity MF',
+      inp('cg-buy','Buy Price (₹)','100',100)+
+      inp('cg-sell','Sell Price (₹)','150',150)+
+      inp('cg-qty','Quantity','100',100)+
+      `<div style="margin-bottom:10px">
+        <label style="font-size:11px;font-weight:700;color:#6b6b6b;text-transform:uppercase;letter-spacing:.4px;display:block;margin-bottom:4px">Holding Period</label>
+        <select id="cg-period" onchange="calcRun()" style="width:100%;padding:8px 10px;border:1px solid var(--bdr);border-radius:8px;font-size:13px;font-family:'Space Grotesk',sans-serif;background:#fff">
+          <option value="stcg">Short Term (&lt; 12 months) — 20%</option>
+          <option value="ltcg">Long Term (&gt; 12 months) — 12.5% above ₹1.25L exemption</option>
+        </select>
+      </div>`,
+      resultRow('Total Gain','cg-gain')+
+      resultRow('Taxable Gain','cg-taxable')+
+      resultRow('Tax Payable','cg-tax','var(--red)')+
+      resultRow('Net Gain (after tax)','cg-net','var(--green)')
+    )}
+
+    <!-- ═══ INFLATION-ADJUSTED VALUE CALCULATOR ═══ -->
+    ${calcCard('Inflation Calculator','Future cost or real value of money after inflation',
+      inp('inf-amt','Current Amount (₹)','1,00,000',100000)+
+      inp('inf-rate','Inflation Rate (% p.a.)','6',6,'0.1')+
+      inp('inf-yrs','Time Period (Years)','10',10),
+      resultRow('Future Cost (same items)','inf-future','var(--red)')+
+      resultRow('Real Value (today\u2019s terms)','inf-real','var(--green)')+
+      resultRow('Purchasing Power Lost','inf-lost')
+    )}
+
+    <div style="display:flex;align-items:center;gap:10px;margin:22px 0 12px">
+      <div style="font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:800;color:#444444;text-transform:uppercase;letter-spacing:.6px">Big-Ticket Purchases</div>
+      <div style="flex:1;height:1px;background:var(--bdr)"></div>
+      <div style="font-size:10px;color:#999999">Major life & lifestyle cost comparisons</div>
+    </div>
     <!-- ═══ EV vs ICE TOTAL COST OF OWNERSHIP CALCULATOR ═══ -->
     <div style="background:var(--panel);border:1px solid var(--bdr);border-radius:14px;margin-bottom:14px;overflow:hidden">
       <div style="padding:14px 18px;border-bottom:1px solid var(--bdr)">
@@ -2183,6 +2252,11 @@ function renderCalculators(){
       Actual figures may vary based on brokerage, STT, cess, surcharge, and current tax rules.
     </p>
 
+
+    <p style="margin:4px 0 16px;font-size:10px;color:#999999">
+      These calculators use simplified formulas for estimation purposes only and are not tax/investment advice.
+      Actual figures may vary based on brokerage, STT, cess, surcharge, and current tax rules.
+    </p>
   `;
   // Set default for CG period dropdown and run once
   calcRun();
@@ -2585,6 +2659,74 @@ function calcRun(){
       }
     }
   }
+
+  // Future Value Calculator (PV + optional monthly PMT)
+  const fvPV=gv('fv-pv'), fvPMT=gv('fv-pmt'), fvR=gv('fv-ret')/100/12, fvY=gv('fv-yrs')*12;
+  if((fvPV||fvPMT)&&fvY){
+    const fvOfPV = fvPV * Math.pow(1+fvR, fvY);
+    const fvOfPMT = fvR>0
+      ? fvPMT * ((Math.pow(1+fvR,fvY)-1)/fvR) * (1+fvR)
+      : fvPMT*fvY;
+    const total = fvOfPV + fvOfPMT;
+    const invested = fvPV + fvPMT*fvY;
+    setTxt('fv-invested', fmtINR(invested));
+    setTxt('fv-returns', fmtINR(total-invested));
+    setTxt('fv-total', fmtINR(total));
+  }
+
+  // Intrinsic Value Calculator (Graham Formula)
+  const ivEps=gv('iv-eps'), ivGrowth=gv('iv-growth'), ivBond=gv('iv-bondyield'), ivCmp=gv('iv-cmp');
+  if(ivEps&&ivBond){
+    const intrinsic = (ivEps*(8.5+2*ivGrowth)*4.4)/ivBond;
+    setTxt('iv-value', fmtINR(intrinsic));
+    const ivVerdict=$('iv-verdict');
+    if(ivCmp>0){
+      const margin = ((intrinsic-ivCmp)/ivCmp)*100;
+      setTxt('iv-margin', (margin>=0?'+':'')+margin.toFixed(1)+'%');
+      if(ivVerdict){
+        if(margin>15){
+          ivVerdict.textContent='✅ Potentially Undervalued — trades below estimated intrinsic value';
+          ivVerdict.style.background='rgba(47,158,94,.10)'; ivVerdict.style.color='var(--green)';
+        } else if(margin<-15){
+          ivVerdict.textContent='⚠️ Potentially Overvalued — trades above estimated intrinsic value';
+          ivVerdict.style.background='rgba(224,86,47,.10)'; ivVerdict.style.color='var(--red)';
+        } else {
+          ivVerdict.textContent='⚖️ Near Fair Value — CMP close to intrinsic estimate';
+          ivVerdict.style.background='rgba(237,125,43,.10)'; ivVerdict.style.color='var(--mc)';
+        }
+      }
+    } else {
+      setTxt('iv-margin', '—');
+      if(ivVerdict){ ivVerdict.textContent=''; ivVerdict.style.background='transparent'; }
+    }
+  }
+
+  // Fair Value Calculator (P/E based)
+  const fairEps=gv('fair-eps'), fairPE=gv('fair-pe'), fairCmp=gv('fair-cmp');
+  if(fairEps&&fairPE){
+    const fairValue = fairEps*fairPE;
+    setTxt('fair-value', fmtINR(fairValue));
+    const fairVerdict=$('fair-verdict');
+    if(fairCmp>0){
+      const currentPE = fairCmp/fairEps;
+      setTxt('fair-currentpe', currentPE.toFixed(1)+'x');
+      if(fairVerdict){
+        if(fairCmp<fairValue*0.9){
+          fairVerdict.textContent='✅ Trading Below Fair Value';
+          fairVerdict.style.background='rgba(47,158,94,.10)'; fairVerdict.style.color='var(--green)';
+        } else if(fairCmp>fairValue*1.1){
+          fairVerdict.textContent='⚠️ Trading Above Fair Value';
+          fairVerdict.style.background='rgba(224,86,47,.10)'; fairVerdict.style.color='var(--red)';
+        } else {
+          fairVerdict.textContent='⚖️ Trading Near Fair Value';
+          fairVerdict.style.background='rgba(237,125,43,.10)'; fairVerdict.style.color='var(--mc)';
+        }
+      }
+    } else {
+      setTxt('fair-currentpe', '—');
+      if(fairVerdict){ fairVerdict.textContent=''; fairVerdict.style.background='transparent'; }
+    }
+  }
 }
 
 function showTab(key,btn){
@@ -2805,7 +2947,7 @@ const SEARCH_INDEX=[
   {key:'ipo',label:'IPO Corner',kw:'gmp grey market premium listed subscription expert issue dates ipo'},
   {key:'currency',label:'Currencies & Commodities',kw:'usd eur gbp mcx gold silver crude currency'},
   {key:'corporate',label:'Corporate Actions',kw:'dividend bonus split today events'},
-  {key:'calculators',label:'Calculators',kw:'sip lumpsum emi reverse emi cagr fd rd ppf step-up inflation capital gains tax xirr swp systematic withdrawal retirement corpus pay off vs invest loan prepay ev ice electric vehicle total cost of ownership calculator'},
+  {key:'calculators',label:'Calculators',kw:'sip lumpsum emi reverse emi cagr fd rd ppf step-up inflation capital gains tax xirr swp systematic withdrawal retirement corpus pay off vs invest loan prepay ev ice electric vehicle total cost of ownership intrinsic value fair value future value graham formula pe valuation calculator'},
 ];
 function openSearch(){
   let modal=document.getElementById('smart-search-modal');
