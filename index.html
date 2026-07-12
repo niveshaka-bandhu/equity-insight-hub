@@ -1852,6 +1852,15 @@ function renderCalculators(){
           font-size:14px;font-family:'Space Grotesk',sans-serif;color:#1a1a1a;background:#fff">
     </div>`;
 
+  const evInp = (id,label,val,step) => `
+    <div style="margin-bottom:8px">
+      <label style="font-size:9px;font-weight:700;color:#6b6b6b;text-transform:uppercase;letter-spacing:.3px;display:block;margin-bottom:3px">${label}</label>
+      <input type="number" id="${id}" value="${(val||'').toString().replace(/,/g,'')}" step="${step||'any'}"
+        oninput="calcRun()"
+        style="width:100%;padding:6px 8px;border:1px solid var(--bdr);border-radius:7px;
+          font-size:12px;font-family:'Space Grotesk',sans-serif;color:#1a1a1a;background:#fff">
+    </div>`;
+
   const resultRow = (label,id,color) => `
     <div style="display:flex;justify-content:space-between;align-items:baseline;padding:7px 0;border-bottom:1px solid rgba(120,75,30,.15)">
       <span style="font-size:12px;color:#444444;font-weight:600">${label}</span>
@@ -2103,33 +2112,77 @@ function renderCalculators(){
       `<div id="poi-verdict" style="margin-top:10px;padding:10px 14px;border-radius:10px;font-size:13px;font-weight:700;text-align:center"></div>`
     )}
 
+    <!-- ═══ EV vs ICE TOTAL COST OF OWNERSHIP CALCULATOR ═══ -->
+    <div style="background:var(--panel);border:1px solid var(--bdr);border-radius:14px;margin-bottom:14px;overflow:hidden">
+      <div style="padding:14px 18px;border-bottom:1px solid var(--bdr)">
+        <div style="font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:700;color:#1a1a1a">EV vs ICE — Total Cost of Ownership</div>
+        <div style="font-size:10px;color:#6b6b6b;margin-top:1px">Compare electric vs petrol/diesel vehicle cost including loan interest and resale</div>
+      </div>
+      <div style="padding:16px 18px">
+        <div style="font-size:11px;font-weight:700;color:var(--mc);text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px">Shared Inputs</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:16px">
+          ${evInp('evi-km','Monthly km Driven','900')}
+          ${evInp('evi-own','Ownership Period (Years)','5')}
+          ${evInp('evi-tenure','Loan Tenure (Years)','5')}
+          ${evInp('evi-loanrate','Loan Interest (%)','9','0.1')}
+          ${evInp('evi-down','Down Payment (%)','20')}
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+          <div>
+            <div style="font-size:11px;font-weight:700;color:#444444;text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px;padding-bottom:5px;border-bottom:2px solid #444444">⛽ ICE (Petrol/Diesel)</div>
+            ${evInp('ice-price','Ex-Showroom Price (₹)','6,31,290')}
+            ${evInp('ice-tax','Road Tax Rate (%)','7')}
+            ${evInp('ice-ins1','Insurance — Year 1 (₹)','15,000')}
+            ${evInp('ice-misc','Misc / Handling (₹)','10,000')}
+            ${evInp('ice-insY','Ongoing Annual Insurance (₹)','11,000')}
+            ${evInp('ice-maint','Annual Maintenance (₹)','6,000')}
+            ${evInp('ice-tyre','Tyre Cost — one-time (₹)','18,000')}
+            ${evInp('ice-fuel','Fuel Price (₹/Litre)','100','0.1')}
+            ${evInp('ice-mileage','Mileage (km/Litre)','17','0.1')}
+            ${evInp('ice-resale','Resale Value after period (%)','50')}
+          </div>
+          <div>
+            <div style="font-size:11px;font-weight:700;color:var(--green);text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px;padding-bottom:5px;border-bottom:2px solid var(--green)">⚡ EV (Electric)</div>
+            ${evInp('ev-price','Ex-Showroom Price (₹)','7,99,999')}
+            ${evInp('ev-tax','Road Tax Rate (%)','0')}
+            ${evInp('ev-ins1','Insurance — Year 1 (₹)','30,000')}
+            ${evInp('ev-misc','Misc / Handling (₹)','10,000')}
+            ${evInp('ev-insY','Ongoing Annual Insurance (₹)','26,000')}
+            ${evInp('ev-maint','Annual Maintenance (₹)','4,000')}
+            ${evInp('ev-tyre','Tyre Cost — one-time (₹)','20,000')}
+            ${evInp('ev-elec','Electricity Cost (₹/kWh)','7','0.1')}
+            ${evInp('ev-range','Range per Full Charge (km)','168')}
+            ${evInp('ev-battery','Battery Capacity (kWh)','19','0.1')}
+            ${evInp('ev-resale','Resale Value after period (%)','40')}
+          </div>
+        </div>
+
+        <div style="margin-top:16px;border-top:1px solid var(--bdr);padding-top:12px;overflow-x:auto">
+          <table style="width:100%;border-collapse:collapse;font-size:12px">
+            <thead><tr>
+              <th style="text-align:left;padding:6px 8px;color:#6b6b6b;font-size:10px;text-transform:uppercase">Metric</th>
+              <th style="text-align:right;padding:6px 8px;color:#444444;font-size:10px;text-transform:uppercase">ICE</th>
+              <th style="text-align:right;padding:6px 8px;color:var(--green);font-size:10px;text-transform:uppercase">EV</th>
+            </tr></thead>
+            <tbody>
+              <tr style="border-top:1px solid rgba(120,75,30,.14)"><td style="padding:7px 8px;color:#444444;font-weight:600">Effective On-Road Price</td><td id="evi-onroad-ice" style="padding:7px 8px;text-align:right;font-family:'Space Grotesk',sans-serif;font-weight:700">—</td><td id="evi-onroad-ev" style="padding:7px 8px;text-align:right;font-family:'Space Grotesk',sans-serif;font-weight:700">—</td></tr>
+              <tr style="border-top:1px solid rgba(120,75,30,.14)"><td style="padding:7px 8px;color:#444444;font-weight:600">Running Cost (fuel/elec + ins + maint + tyre)</td><td id="evi-run-ice" style="padding:7px 8px;text-align:right;font-family:'Space Grotesk',sans-serif">—</td><td id="evi-run-ev" style="padding:7px 8px;text-align:right;font-family:'Space Grotesk',sans-serif">—</td></tr>
+              <tr style="border-top:1px solid rgba(120,75,30,.14)"><td style="padding:7px 8px;color:#444444;font-weight:600">Loan Interest Paid</td><td id="evi-int-ice" style="padding:7px 8px;text-align:right;font-family:'Space Grotesk',sans-serif;color:var(--red)">—</td><td id="evi-int-ev" style="padding:7px 8px;text-align:right;font-family:'Space Grotesk',sans-serif;color:var(--red)">—</td></tr>
+              <tr style="border-top:1px solid rgba(120,75,30,.14)"><td style="padding:7px 8px;color:#444444;font-weight:600">Resale Value</td><td id="evi-resale-ice" style="padding:7px 8px;text-align:right;font-family:'Space Grotesk',sans-serif;color:var(--green)">—</td><td id="evi-resale-ev" style="padding:7px 8px;text-align:right;font-family:'Space Grotesk',sans-serif;color:var(--green)">—</td></tr>
+              <tr style="border-top:2px solid var(--bdr)"><td style="padding:8px;color:#1a1a1a;font-weight:700">Total Cost of Ownership</td><td id="evi-tco-ice" style="padding:8px;text-align:right;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:15px;color:var(--mc)">—</td><td id="evi-tco-ev" style="padding:8px;text-align:right;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:15px;color:var(--mc)">—</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div id="evi-verdict" style="margin-top:12px;padding:10px 14px;border-radius:10px;font-size:13px;font-weight:700;text-align:center"></div>
+        <p style="font-size:10px;color:#999999;margin-top:10px">Assumes fixed fuel/electricity prices and straight-line resale % over the ownership period. Actual EV range/mileage may vary with driving conditions and battery degradation.</p>
+      </div>
+    </div>
+
     <p style="margin:4px 0 16px;font-size:10px;color:#999999">
       These calculators use simplified formulas for estimation purposes only and are not tax/investment advice.
       Actual figures may vary based on brokerage, STT, cess, surcharge, and current tax rules.
     </p>
 
-    <!-- ═══ EXISTING SHEET-BASED CALCULATORS ═══ -->
-    <div class="stitle-sm" style="margin-top:6px">More Calculators (Google Sheets)</div>
-    <div style="margin:12px 0;padding:12px 16px;background:rgba(237,125,43,.08);border-left:4px solid var(--mc);border-radius:6px;font-size:13px;color:#444444;line-height:1.7">
-      <strong>How to download:</strong>
-      Open Link → Go to <strong>File → Share and Export or Download</strong>
-      → Select <strong>.xlsx</strong> or <strong>.ods</strong> format → Download
-    </div>
-    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;padding:2px 0 16px">
-      ${calcs.map(c=>`
-        <a href="${c.url}" target="_blank" rel="noopener"
-           style="display:flex;align-items:center;gap:12px;padding:16px 18px;
-                  background:#fff;border:1px solid var(--bdr);border-radius:10px;
-                  text-decoration:none;color:#1a1a1a;font-weight:600;font-size:14px;
-                  box-shadow:0 1px 4px rgba(0,0,0,0.06);transition:box-shadow 0.2s"
-           onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,0.12)'"
-           onmouseout="this.style.boxShadow='0 1px 4px rgba(0,0,0,0.06)'">
-          <span style="font-size:22px">📊</span>
-          <span>${c.name}</span>
-          <span style="margin-left:auto;font-size:16px;color:#999999">↗</span>
-        </a>`).join('')}
-    </div>
-    <p style="margin:4px 0 16px;font-size:11px;color:#999999">Source: Niveshaka-bandhu Financial Tools</p>
   `;
   // Set default for CG period dropdown and run once
   calcRun();
@@ -2462,6 +2515,76 @@ function calcRun(){
       }
     }
   }
+
+  // EV vs ICE Total Cost of Ownership
+  const eviKm=gv('evi-km'), eviOwn=gv('evi-own'), eviTenure=gv('evi-tenure'),
+        eviLoanRate=gv('evi-loanrate')/100/12, eviDown=gv('evi-down')/100;
+  if(eviKm&&eviOwn&&eviTenure){
+    const totalKm = eviKm*12*eviOwn;
+    const nMonths = eviTenure*12;
+
+    function computeVehicle(prefix, isEV){
+      const price=gv(prefix+'-price'), taxRate=gv(prefix+'-tax')/100,
+            ins1=gv(prefix+'-ins1'), misc=gv(prefix+'-misc'),
+            insY=gv(prefix+'-insY'), maint=gv(prefix+'-maint'),
+            tyre=gv(prefix+'-tyre'), resalePct=gv(prefix+'-resale')/100;
+      const roadTax = price*taxRate;
+      const onRoad = price + roadTax + ins1 + misc;
+
+      let runCost;
+      if(isEV){
+        const range=gv('ev-range'), battery=gv('ev-battery'), elecCost=gv('ev-elec');
+        const kmPerKwh = battery>0 ? range/battery : 0;
+        const energyUsed = kmPerKwh>0 ? totalKm/kmPerKwh : 0;
+        runCost = energyUsed*elecCost + insY*Math.max(0,eviOwn-1) + maint*eviOwn + tyre;
+      } else {
+        const mileage=gv('ice-mileage'), fuelPrice=gv('ice-fuel');
+        const litersUsed = mileage>0 ? totalKm/mileage : 0;
+        runCost = litersUsed*fuelPrice + insY*Math.max(0,eviOwn-1) + maint*eviOwn + tyre;
+      }
+
+      const loanAmt = onRoad*(1-eviDown);
+      let interest=0;
+      if(eviLoanRate>0 && nMonths>0){
+        const emi = loanAmt*eviLoanRate*Math.pow(1+eviLoanRate,nMonths)/(Math.pow(1+eviLoanRate,nMonths)-1);
+        interest = emi*nMonths - loanAmt;
+      }
+      const resale = onRoad*resalePct;
+      const tcoBeforeAdj = onRoad + runCost;
+      const finalTCO = tcoBeforeAdj - resale + interest;
+
+      return {onRoad, runCost, interest, resale, finalTCO};
+    }
+
+    const iceR = computeVehicle('ice', false);
+    const evR  = computeVehicle('ev', true);
+
+    setTxt('evi-onroad-ice', fmtINR(iceR.onRoad));
+    setTxt('evi-onroad-ev',  fmtINR(evR.onRoad));
+    setTxt('evi-run-ice', fmtINR(iceR.runCost));
+    setTxt('evi-run-ev',  fmtINR(evR.runCost));
+    setTxt('evi-int-ice', fmtINR(iceR.interest));
+    setTxt('evi-int-ev',  fmtINR(evR.interest));
+    setTxt('evi-resale-ice', fmtINR(iceR.resale));
+    setTxt('evi-resale-ev',  fmtINR(evR.resale));
+    setTxt('evi-tco-ice', fmtINR(iceR.finalTCO));
+    setTxt('evi-tco-ev',  fmtINR(evR.finalTCO));
+
+    const eviVerdict=$('evi-verdict');
+    if(eviVerdict){
+      const diff = iceR.finalTCO - evR.finalTCO;
+      if(Math.abs(diff) < Math.max(iceR.finalTCO,evR.finalTCO)*0.03){
+        eviVerdict.textContent='⚖️ Verdict: Very close — pick based on preference, charging access & driving pattern';
+        eviVerdict.style.background='rgba(237,125,43,.10)'; eviVerdict.style.color='var(--mc)';
+      } else if(diff>0){
+        eviVerdict.textContent='⚡ Verdict: EV is cheaper by '+fmtINR(diff)+' over '+eviOwn+' years';
+        eviVerdict.style.background='rgba(47,158,94,.10)'; eviVerdict.style.color='var(--green)';
+      } else {
+        eviVerdict.textContent='⛽ Verdict: ICE is cheaper by '+fmtINR(-diff)+' over '+eviOwn+' years';
+        eviVerdict.style.background='rgba(224,86,47,.10)'; eviVerdict.style.color='var(--red)';
+      }
+    }
+  }
 }
 
 function showTab(key,btn){
@@ -2682,7 +2805,7 @@ const SEARCH_INDEX=[
   {key:'ipo',label:'IPO Corner',kw:'gmp grey market premium listed subscription expert issue dates ipo'},
   {key:'currency',label:'Currencies & Commodities',kw:'usd eur gbp mcx gold silver crude currency'},
   {key:'corporate',label:'Corporate Actions',kw:'dividend bonus split today events'},
-  {key:'calculators',label:'Calculators',kw:'sip lumpsum emi reverse emi cagr fd rd ppf step-up inflation capital gains tax xirr swp systematic withdrawal retirement corpus pay off vs invest loan prepay calculator'},
+  {key:'calculators',label:'Calculators',kw:'sip lumpsum emi reverse emi cagr fd rd ppf step-up inflation capital gains tax xirr swp systematic withdrawal retirement corpus pay off vs invest loan prepay ev ice electric vehicle total cost of ownership calculator'},
 ];
 function openSearch(){
   let modal=document.getElementById('smart-search-modal');
