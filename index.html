@@ -639,25 +639,19 @@ function renderDashboard(rows, newsRows){
 
     <!-- LIVE CHART -->
     <div style="background:var(--panel);border:1px solid var(--bdr);border-radius:14px;padding:16px 18px;margin-bottom:14px">
-      <div style="font-size:11px;font-weight:700;color:var(--mc);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">📈 Live Chart</div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">
-        <input id="chart-lookup-input" type="text" placeholder="e.g. RELIANCE, TCS, INFY..."
-          onkeydown="if(event.key==='Enter') loadChartSymbol()"
-          style="flex:1;min-width:200px;padding:10px 14px;border:1px solid var(--bdr);border-radius:9px;
-            font-size:14px;font-family:'Space Grotesk',sans-serif;color:#1a1a1a;background:#fff">
-        <button onclick="loadChartSymbol()"
-          style="padding:10px 20px;border:none;border-radius:9px;background:var(--mc);color:#fff;
-            font-weight:700;font-size:13px;cursor:pointer;flex-shrink:0">Load Chart →</button>
+      <div style="font-size:11px;font-weight:700;color:var(--mc);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">📈 Live Chart</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
+        ${CHART_PRESETS.map((p,i)=>`<button onclick="loadChartSymbol('${p.symbol}',this)"
+          class="chart-preset-btn${i===0?' active':''}"
+          style="padding:8px 20px;border:1px solid ${i===0?'var(--mc)':'var(--bdr)'};border-radius:9px;
+            background:${i===0?'var(--mc)':'#fff'};color:${i===0?'#fff':'#444444'};
+            font-weight:700;font-size:12.5px;cursor:pointer">${p.label}</button>`).join('')}
       </div>
-      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">
-        ${CHART_PRESETS.map(p=>`<button onclick="loadChartSymbol('${p.symbol}')"
-          style="padding:6px 14px;border:1px solid var(--bdr);border-radius:20px;background:#fff;color:#444444;
-            font-weight:600;font-size:11.5px;cursor:pointer">${p.label}</button>`).join('')}
+      <div style="border:1px solid var(--bdr);border-radius:10px;overflow:hidden">
+        <iframe id="tv-chart-iframe" src="" style="width:100%;height:480px;border:none;display:block"
+          allowtransparency="true" scrolling="no"></iframe>
       </div>
-      <div class="tradingview-widget-container" style="height:480px;border:1px solid var(--bdr);border-radius:10px;overflow:hidden">
-        <div id="tv-chart-widget" style="height:100%"></div>
-      </div>
-      <p style="font-size:10px;color:#999999;margin-top:8px">Defaults to NIFTY 50 · Index charts embed live; individual NSE stocks open on TradingView due to data-licensing rules · Powered by TradingView</p>
+      <p style="font-size:10px;color:#999999;margin-top:8px">Powered by TradingView</p>
     </div>
 
     <!-- INDICES -->
@@ -749,11 +743,11 @@ function renderDashboard(rows, newsRows){
   `;
   try{ drawCandlestickBG(); }catch(e){}
   try{
-    // Only mount the chart on first render — avoid re-mounting the TradingView iframe on every 5-min auto-refresh
-    const chartContainer=document.getElementById('tv-chart-widget');
-    if(chartContainer && !chartContainer.dataset.mounted){
-      chartContainer.dataset.mounted='1';
-      mountTVWidget(CURRENT_CHART_SYMBOL);
+    // Only mount the chart on first render — avoid re-mounting the iframe on every 5-min auto-refresh
+    const chartFrame=document.getElementById('tv-chart-iframe');
+    if(chartFrame && !chartFrame.dataset.mounted){
+      chartFrame.dataset.mounted='1';
+      loadChartSymbol(CURRENT_CHART_SYMBOL);
     }
   }catch(e){}
 }
@@ -2310,102 +2304,37 @@ function renderCalculators(){
 }
 
 /* ══════════════════════════════════════════════
-   CHARTS — Embedded TradingView Advanced Chart widget
-   Official free embed (script + widget), not scraping.
-   Chart is embedded directly in the Dashboard, defaulting to NIFTY 50.
+   CHARTS — Embedded via TradingView's dedicated public
+   embed-widget iframe (official embed path, not scraping).
+   Limited to 3 confirmed-working index charts.
 ══════════════════════════════════════════════ */
 const CHART_PRESETS=[
   {label:'NIFTY 50',   symbol:'NSE:NIFTY'},
   {label:'SENSEX',     symbol:'BSE:SENSEX'},
   {label:'BANK NIFTY', symbol:'NSE:BANKNIFTY'},
-  {label:'RELIANCE',   symbol:'NSE:RELIANCE'},
-  {label:'TCS',        symbol:'NSE:TCS'},
-  {label:'HDFC BANK',  symbol:'NSE:HDFCBANK'},
-  {label:'INFY',       symbol:'NSE:INFY'},
 ];
 let CURRENT_CHART_SYMBOL='NSE:NIFTY';
 
-/* Indices are freely embeddable via TradingView's widget; individual NSE equities
-   are frequently blocked from free embedding due to exchange data-licensing rules
-   (TradingView shows "This symbol is only available on TradingView" for those). */
-const CHART_EMBEDDABLE_INDICES=['NSE:NIFTY','BSE:SENSEX','NSE:BANKNIFTY','NSE:NIFTYMIDCAP150','NSE:NIFTYSMLCAP250'];
-
-function loadChartSymbol(presetSymbol){
-  let symbol=presetSymbol;
-  if(!symbol){
-    const input=document.getElementById('chart-lookup-input');
-    const raw=input? input.value.trim() : '';
-    if(!raw) return;
-    const clean=raw.toUpperCase().replace(/[^A-Z0-9&:]/g,'');
-    if(!clean) return;
-    symbol=clean.includes(':') ? clean : 'NSE:'+clean;
-  }
+function loadChartSymbol(symbol, btn){
   CURRENT_CHART_SYMBOL=symbol;
-  mountTVWidget(symbol);
-}
-
-function mountTVWidget(symbol){
-  const container=document.getElementById('tv-chart-widget');
-  if(!container) return;
-
-  // Individual NSE equities are usually not licensed for free embedding — skip straight to a deep-link fallback
-  if(!CHART_EMBEDDABLE_INDICES.includes(symbol)){
-    const tvUrl='https://www.tradingview.com/symbols/'+symbol.replace(':','-')+'/';
-    container.innerHTML=`
-      <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;
-        gap:12px;padding:24px;text-align:center">
-        <div style="font-size:13px;color:#444444;max-width:380px;line-height:1.6">
-          <strong>${symbol}</strong> can't be embedded here — TradingView restricts free live charts for
-          individual NSE stocks to their own site due to exchange data-licensing rules.
-          Index charts (NIFTY 50, SENSEX, BANK NIFTY) work directly above.
-        </div>
-        <a href="${tvUrl}" target="_blank" rel="noopener"
-          style="padding:10px 20px;border:none;border-radius:9px;background:var(--mc);color:#fff;
-            font-weight:700;font-size:13px;text-decoration:none">Open ${symbol.split(':')[1]} Chart on TradingView →</a>
-      </div>`;
-    return;
+  const iframe=document.getElementById('tv-chart-iframe');
+  if(iframe){
+    const config={
+      autosize:true, symbol:symbol, interval:'D', timezone:'Asia/Kolkata',
+      theme:'light', style:'1', locale:'in', toolbar_bg:'#fff7ee',
+      enable_publishing:false, withdateranges:true, allow_symbol_change:false,
+      save_image:false, hide_side_toolbar:false
+    };
+    const encoded=encodeURIComponent(JSON.stringify(config));
+    iframe.src='https://s.tradingview.com/embed-widget/advanced-chart/?locale=in#'+encoded;
   }
-
-  container.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#999999;font-size:12px">Loading chart…</div>';
-
-  function build(){
-    container.innerHTML='';
-    try{
-      new TradingView.widget({
-        autosize:true,
-        symbol:symbol,
-        interval:'D',
-        timezone:'Asia/Kolkata',
-        theme:'light',
-        style:'1',
-        locale:'in',
-        toolbar_bg:'#fff7ee',
-        enable_publishing:false,
-        allow_symbol_change:false,
-        hide_top_toolbar:false,
-        withdateranges:true,
-        container_id:'tv-chart-widget'
-      });
-    }catch(e){
-      container.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--red);font-size:12px;padding:20px;text-align:center">Chart failed to load — TradingView widget may be blocked or unavailable.</div>';
-    }
-  }
-
-  if(window.TradingView && window.TradingView.widget){
-    build();
-  } else {
-    let script=document.getElementById('tv-widget-script');
-    if(!script){
-      script=document.createElement('script');
-      script.id='tv-widget-script';
-      script.src='https://s3.tradingview.com/tv.js';
-      script.onload=build;
-      script.onerror=()=>{ container.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--red);font-size:12px;padding:20px;text-align:center">Could not load TradingView script.</div>'; };
-      document.head.appendChild(script);
-    } else {
-      script.addEventListener('load', build);
-    }
-  }
+  // Update active button styling
+  document.querySelectorAll('.chart-preset-btn').forEach(b=>{
+    const isActive = b.getAttribute('onclick').includes("'"+symbol+"'");
+    b.style.background = isActive ? 'var(--mc)' : '#fff';
+    b.style.color = isActive ? '#fff' : '#444444';
+    b.style.borderColor = isActive ? 'var(--mc)' : 'var(--bdr)';
+  });
 }
 
 /* ── Calculator logic (runs on any input change) ── */
