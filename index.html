@@ -632,26 +632,12 @@ function renderDashboard(rows, newsRows){
             font-size:14px;font-family:'Space Grotesk',sans-serif;color:#1a1a1a;background:#fff">
         <button onclick="openStockLookup()"
           style="padding:10px 18px;border:none;border-radius:9px;background:var(--mc);color:#fff;
-            font-weight:700;font-size:13px;cursor:pointer;flex-shrink:0;white-space:nowrap">📊 Fundamentals →</button>
+            font-weight:700;font-size:13px;cursor:pointer;flex-shrink:0;white-space:nowrap">📊 Fundamentals</button>
+        <button onclick="openChartLookup()"
+          style="padding:10px 18px;border:1px solid var(--mc);border-radius:9px;background:#fff;color:var(--mc);
+            font-weight:700;font-size:13px;cursor:pointer;flex-shrink:0;white-space:nowrap">📈 TradingView</button>
       </div>
-      <p style="font-size:10px;color:#999999;margin-top:8px">Enter the exact NSE/BSE symbol (not company name) · Fundamentals via Screener.in · Opens in new tab · Not affiliated with Screener.in</p>
-    </div>
-
-    <!-- LIVE CHART -->
-    <div style="background:var(--panel);border:1px solid var(--bdr);border-radius:14px;padding:16px 18px;margin-bottom:14px">
-      <div style="font-size:11px;font-weight:700;color:var(--mc);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">📈 Live Chart</div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
-        ${CHART_PRESETS.map((p,i)=>`<button onclick="loadChartSymbol('${p.symbol}',this)"
-          class="chart-preset-btn${i===0?' active':''}"
-          style="padding:8px 20px;border:1px solid ${i===0?'var(--mc)':'var(--bdr)'};border-radius:9px;
-            background:${i===0?'var(--mc)':'#fff'};color:${i===0?'#fff':'#444444'};
-            font-weight:700;font-size:12.5px;cursor:pointer">${p.label}</button>`).join('')}
-      </div>
-      <div style="border:1px solid var(--bdr);border-radius:10px;overflow:hidden">
-        <iframe id="tv-chart-iframe" src="" style="width:100%;height:480px;border:none;display:block"
-          allowtransparency="true" scrolling="no"></iframe>
-      </div>
-      <p style="font-size:10px;color:#999999;margin-top:8px">Powered by TradingView</p>
+      <p style="font-size:10px;color:#999999;margin-top:8px">Enter the exact NSE/BSE symbol (not company name) · Fundamentals via Screener.in, Chart via TradingView · Opens in new tab · Not affiliated with either site</p>
     </div>
 
     <!-- INDICES -->
@@ -742,14 +728,6 @@ function renderDashboard(rows, newsRows){
     </div>
   `;
   try{ drawCandlestickBG(); }catch(e){}
-  try{
-    // Only mount the chart on first render — avoid re-mounting the iframe on every 5-min auto-refresh
-    const chartFrame=document.getElementById('tv-chart-iframe');
-    if(chartFrame && !chartFrame.dataset.mounted){
-      chartFrame.dataset.mounted='1';
-      loadChartSymbol(CURRENT_CHART_SYMBOL);
-    }
-  }catch(e){}
 }
 
 /* ── Dashboard widget: Watchlist of specific Futures + Global indices ── */
@@ -2303,40 +2281,6 @@ function renderCalculators(){
   calcRun();
 }
 
-/* ══════════════════════════════════════════════
-   CHARTS — Embedded via TradingView's dedicated public
-   embed-widget iframe (official embed path, not scraping).
-   Limited to 3 confirmed-working index charts.
-══════════════════════════════════════════════ */
-const CHART_PRESETS=[
-  {label:'NIFTY 50',   symbol:'NSE:NIFTY'},
-  {label:'SENSEX',     symbol:'BSE:SENSEX'},
-  {label:'BANK NIFTY', symbol:'NSE:BANKNIFTY'},
-];
-let CURRENT_CHART_SYMBOL='NSE:NIFTY';
-
-function loadChartSymbol(symbol, btn){
-  CURRENT_CHART_SYMBOL=symbol;
-  const iframe=document.getElementById('tv-chart-iframe');
-  if(iframe){
-    const config={
-      autosize:true, symbol:symbol, interval:'D', timezone:'Asia/Kolkata',
-      theme:'light', style:'1', locale:'in', toolbar_bg:'#fff7ee',
-      enable_publishing:false, withdateranges:true, allow_symbol_change:false,
-      save_image:false, hide_side_toolbar:false
-    };
-    const encoded=encodeURIComponent(JSON.stringify(config));
-    iframe.src='https://s.tradingview.com/embed-widget/advanced-chart/?locale=in#'+encoded;
-  }
-  // Update active button styling
-  document.querySelectorAll('.chart-preset-btn').forEach(b=>{
-    const isActive = b.getAttribute('onclick').includes("'"+symbol+"'");
-    b.style.background = isActive ? 'var(--mc)' : '#fff';
-    b.style.color = isActive ? '#fff' : '#444444';
-    b.style.borderColor = isActive ? 'var(--mc)' : 'var(--bdr)';
-  });
-}
-
 /* ── Calculator logic (runs on any input change) ── */
 function fmtINR(n){
   if(isNaN(n)) return '—';
@@ -3085,6 +3029,17 @@ function openStockLookup(){
   const symbol=raw.toUpperCase().replace(/[^A-Z0-9&]/g,'');
   if(!symbol) return;
   window.open('https://www.screener.in/company/'+symbol+'/consolidated/', '_blank', 'noopener');
+}
+
+/* Chart Lookup — deep-links to TradingView's full chart page (not embedded) for the entered symbol */
+function openChartLookup(){
+  const input=document.getElementById('stock-lookup-input');
+  if(!input) return;
+  const raw=input.value.trim();
+  if(!raw) return;
+  const symbol=raw.toUpperCase().replace(/[^A-Z0-9&]/g,'');
+  if(!symbol) return;
+  window.open('https://www.tradingview.com/chart/?symbol=NSE%3A'+symbol, '_blank', 'noopener');
 }
 
 document.addEventListener('keydown',function(e){
