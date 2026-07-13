@@ -291,6 +291,7 @@ footer a{color:var(--mc)}
       <button class="nb"     onclick="showTab('currency',this)">Currencies</button>
       <button class="nb"     onclick="showTab('corporate',this)">Corporate Actions</button>
       <button class="nb"     onclick="showTab('calculators',this)">Calculators</button>
+      <button class="nb"     onclick="showTab('charts',this)">Charts</button>
     </nav>
   </div>
 </header>
@@ -372,6 +373,7 @@ footer a{color:var(--mc)}
     </div>
   </div>
   <div class="sec"    id="s-calculators"></div>
+  <div class="sec"    id="s-charts"></div>
 </div>
 
 <footer>
@@ -1779,6 +1781,9 @@ async function loadTab(key){
     if(key==='calculators'){
       renderCalculators();
       stampUpdated('calculators');
+    } else if(key==='charts'){
+      renderCharts();
+      stampUpdated('charts');
     } else if(key==='corporate'){
       await Promise.allSettled(Object.entries(CORP_GIDS).map(async([k,gid])=>{
         try{DATA['corp_'+k]=await fetchSheet2(gid);}catch(e){console.warn('corp_'+k,e.message);}
@@ -2278,6 +2283,116 @@ function renderCalculators(){
   `;
   // Set default for CG period dropdown and run once
   calcRun();
+}
+
+/* ══════════════════════════════════════════════
+   CHARTS — Embedded TradingView Advanced Chart widget
+   Official free embed (script + widget), not scraping.
+   Loads tv.js lazily only when this tab is first opened.
+══════════════════════════════════════════════ */
+const CHART_PRESETS=[
+  {label:'NIFTY 50',   symbol:'NSE:NIFTY'},
+  {label:'SENSEX',     symbol:'BSE:SENSEX'},
+  {label:'BANK NIFTY', symbol:'NSE:BANKNIFTY'},
+  {label:'RELIANCE',   symbol:'NSE:RELIANCE'},
+  {label:'TCS',        symbol:'NSE:TCS'},
+  {label:'HDFC BANK',  symbol:'NSE:HDFCBANK'},
+  {label:'INFY',       symbol:'NSE:INFY'},
+];
+let CURRENT_CHART_SYMBOL='NSE:NIFTY';
+
+function renderCharts(){
+  $('s-charts').innerHTML=`
+    <div class="stitle">Charts</div>
+
+    <!-- Symbol search -->
+    <div style="background:var(--panel);border:1px solid var(--bdr);border-radius:14px;padding:16px 18px;margin-bottom:14px">
+      <div style="font-size:11px;font-weight:700;color:var(--mc);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">📈 Live Chart</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">
+        <input id="chart-lookup-input" type="text" placeholder="e.g. RELIANCE, TCS, INFY..."
+          onkeydown="if(event.key==='Enter') loadChartSymbol()"
+          style="flex:1;min-width:200px;padding:10px 14px;border:1px solid var(--bdr);border-radius:9px;
+            font-size:14px;font-family:'Space Grotesk',sans-serif;color:#1a1a1a;background:#fff">
+        <button onclick="loadChartSymbol()"
+          style="padding:10px 20px;border:none;border-radius:9px;background:var(--mc);color:#fff;
+            font-weight:700;font-size:13px;cursor:pointer;flex-shrink:0">Load Chart →</button>
+      </div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        ${CHART_PRESETS.map(p=>`<button onclick="loadChartSymbol('${p.symbol}')"
+          style="padding:6px 14px;border:1px solid var(--bdr);border-radius:20px;background:#fff;color:#444444;
+            font-weight:600;font-size:11.5px;cursor:pointer">${p.label}</button>`).join('')}
+      </div>
+      <p style="font-size:10px;color:#999999;margin-top:8px">Enter NSE symbol · Defaults to NSE exchange · Powered by TradingView's free embedded widget</p>
+    </div>
+
+    <!-- Chart container -->
+    <div style="background:var(--panel);border:1px solid var(--bdr);border-radius:14px;overflow:hidden;margin-bottom:14px">
+      <div class="tradingview-widget-container" style="height:520px">
+        <div id="tv-chart-widget" style="height:100%"></div>
+      </div>
+    </div>
+    <p style="font-size:10px;color:#999999;text-align:center">Chart data & interface © TradingView · Not affiliated with Niveshaka-bandhu</p>
+  `;
+  mountTVWidget(CURRENT_CHART_SYMBOL);
+}
+
+function loadChartSymbol(presetSymbol){
+  let symbol=presetSymbol;
+  if(!symbol){
+    const input=document.getElementById('chart-lookup-input');
+    const raw=input? input.value.trim() : '';
+    if(!raw) return;
+    const clean=raw.toUpperCase().replace(/[^A-Z0-9&:]/g,'');
+    if(!clean) return;
+    symbol=clean.includes(':') ? clean : 'NSE:'+clean;
+  }
+  CURRENT_CHART_SYMBOL=symbol;
+  mountTVWidget(symbol);
+}
+
+function mountTVWidget(symbol){
+  const container=document.getElementById('tv-chart-widget');
+  if(!container) return;
+  container.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#999999;font-size:12px">Loading chart…</div>';
+
+  function build(){
+    container.innerHTML='';
+    try{
+      new TradingView.widget({
+        autosize:true,
+        symbol:symbol,
+        interval:'D',
+        timezone:'Asia/Kolkata',
+        theme:'light',
+        style:'1',
+        locale:'in',
+        toolbar_bg:'#fff7ee',
+        enable_publishing:false,
+        allow_symbol_change:true,
+        hide_top_toolbar:false,
+        withdateranges:true,
+        container_id:'tv-chart-widget'
+      });
+    }catch(e){
+      container.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--red);font-size:12px;padding:20px;text-align:center">Chart failed to load — TradingView widget may be blocked or unavailable.</div>';
+    }
+  }
+
+  if(window.TradingView && window.TradingView.widget){
+    build();
+  } else {
+    let script=document.getElementById('tv-widget-script');
+    if(!script){
+      script=document.createElement('script');
+      script.id='tv-widget-script';
+      script.src='https://s3.tradingview.com/tv.js';
+      script.onload=build;
+      script.onerror=()=>{ container.innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--red);font-size:12px;padding:20px;text-align:center">Could not load TradingView script.</div>'; };
+      document.head.appendChild(script);
+    } else {
+      script.addEventListener('load', build);
+    }
+  }
 }
 
 /* ── Calculator logic (runs on any input change) ── */
@@ -2966,6 +3081,7 @@ const SEARCH_INDEX=[
   {key:'currency',label:'Currencies & Commodities',kw:'usd eur gbp mcx gold silver crude currency'},
   {key:'corporate',label:'Corporate Actions',kw:'dividend bonus split today events'},
   {key:'calculators',label:'Calculators',kw:'sip lumpsum emi reverse emi cagr fd rd ppf step-up inflation capital gains tax xirr swp systematic withdrawal retirement corpus pay off vs invest loan prepay ev ice electric vehicle total cost of ownership intrinsic value fair value future value graham formula pe valuation calculator'},
+  {key:'charts',label:'Charts',kw:'tradingview candlestick chart nifty sensex technical analysis live'},
 ];
 function openSearch(){
   let modal=document.getElementById('smart-search-modal');
