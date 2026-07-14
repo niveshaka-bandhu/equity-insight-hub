@@ -640,6 +640,18 @@ function renderDashboard(rows, newsRows){
       <p style="font-size:10px;color:#999999;margin-top:8px">Enter the exact NSE/BSE symbol (not company name) · Fundamentals via Screener.in, Chart via TradingView · Opens in new tab · Not affiliated with either site</p>
     </div>
 
+    <!-- MARKET NEWS VIDEO (YouTube live embed) -->
+    <div style="background:var(--panel);border:1px solid var(--bdr);border-radius:14px;padding:16px 18px;margin-bottom:14px">
+      <div style="font-size:11px;font-weight:700;color:var(--mc);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">📺 Market News (Live)</div>
+      <div style="border:1px solid var(--bdr);border-radius:10px;overflow:hidden;position:relative;padding-bottom:56.25%;height:0">
+        <iframe src="https://www.youtube.com/embed/live_stream?channel=UCmRbHAgG2k2vDUvb3xsEunQ&autoplay=0"
+          style="position:absolute;top:0;left:0;width:100%;height:100%;border:none"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowfullscreen></iframe>
+      </div>
+      <p style="font-size:10px;color:#999999;margin-top:8px">Shows CNBC-TV18's current live stream if one is active, otherwise their channel page · Powered by YouTube · Not affiliated with Niveshaka-bandhu</p>
+    </div>
+
     <!-- INDICES -->
     <div class="tcw">
       <div class="tch" style="color:#0d47a1">Indian Indices</div>
@@ -1957,6 +1969,14 @@ function renderCalculators(){
       resultRow('CAGR','cagr-result','var(--mc)')
     )}
 
+    <!-- ═══ RULE OF 72 / 114 CALCULATOR ═══ -->
+    ${calcCard('Rule of 72 / 114 Calculator','Quick mental-math estimate of doubling & tripling time',
+      inp('r72-rate','Expected Annual Return (%)','12',12,'0.1'),
+      resultRow('Years to Double (Rule of 72)','r72-double','var(--mc)')+
+      resultRow('Years to Triple (Rule of 114)','r72-triple','var(--green)')+
+      `<p style="font-size:10px;color:#999999;margin-top:8px">Quick approximation only — actual compounding math (CAGR calculator above) is more precise for larger time periods.</p>`
+    )}
+
     <div style="display:flex;align-items:center;gap:10px;margin:22px 0 12px">
       <div style="font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:800;color:#6a1b9a;text-transform:uppercase;letter-spacing:.6px">Retirement & Withdrawal</div>
       <div style="flex:1;height:1px;background:var(--bdr)"></div>
@@ -1993,6 +2013,21 @@ function renderCalculators(){
       resultRow('Total Withdrawn','swp-withdrawn')+
       resultRow('Remaining Corpus','swp-remaining','var(--mc)')+
       resultRow('Corpus Lasts For','swp-duration','var(--green)')
+    )}
+
+    <!-- ═══ NPS CALCULATOR ═══ -->
+    ${calcCard('NPS Calculator','National Pension System — corpus and estimated monthly pension',
+      inp('nps-age','Current Age','30',30)+
+      inp('nps-retage','Retirement Age','60',60)+
+      inp('nps-amt','Monthly Contribution (₹)','5,000',5000)+
+      inp('nps-ret','Expected Return (% p.a.)','9',9,'0.1')+
+      inp('nps-annuity-pct','Annuity Purchase (% of corpus, min 40)','40',40)+
+      inp('nps-annuity-rate','Expected Annuity Rate (% p.a.)','6',6,'0.1'),
+      resultRow('Total Corpus at Retirement','nps-corpus','var(--mc)')+
+      resultRow('Lump Sum Withdrawable','nps-lumpsum','var(--green)')+
+      resultRow('Annuity Corpus','nps-annuitycorpus')+
+      resultRow('Estimated Monthly Pension','nps-pension','var(--mc)')+
+      `<p style="font-size:10px;color:#999999;margin-top:8px">Minimum 40% of corpus must be used to buy an annuity by law; the rest can be withdrawn as lump sum (tax-free up to limits). Pension amount depends on the annuity provider's rate at the time.</p>`
     )}
 
     <div style="display:flex;align-items:center;gap:10px;margin:22px 0 12px">
@@ -2033,6 +2068,19 @@ function renderCalculators(){
       resultRow('Investment Grows To','poi-grown','var(--green)')+
       resultRow('Net Benefit of Investing','poi-benefit','var(--mc)')+
       `<div id="poi-verdict" style="margin-top:10px;padding:10px 14px;border-radius:10px;font-size:13px;font-weight:700;text-align:center"></div>`
+    )}
+
+    <!-- ═══ HOME LOAN AFFORDABILITY CALCULATOR ═══ -->
+    ${calcCard('Home Loan Affordability Calculator','Estimate the loan amount a bank would typically approve',
+      inp('hla-income','Monthly Net Income (₹)','1,00,000',100000)+
+      inp('hla-existing','Existing Monthly EMIs (₹)','0',0)+
+      inp('hla-foir','FOIR — Fixed Obligation to Income Ratio (%)','50',50)+
+      inp('hla-rate','Interest Rate (% p.a.)','8.5',8.5,'0.01')+
+      inp('hla-yrs','Loan Tenure (Years)','20',20),
+      resultRow('Maximum Affordable EMI','hla-maxemi','var(--mc)')+
+      resultRow('Eligible Loan Amount','hla-loan','var(--green)')+
+      resultRow('Suggested Property Budget','hla-budget')+
+      `<p style="font-size:10px;color:#999999;margin-top:8px">FOIR is the % of income banks typically allow toward all EMIs combined (usually 40-55%). Property budget assumes an 80% loan-to-value ratio. Actual eligibility varies by lender, credit score, and other factors.</p>`
     )}
 
     <div style="display:flex;align-items:center;gap:10px;margin:22px 0 12px">
@@ -2195,6 +2243,29 @@ function renderCalculators(){
       resultRow('Purchasing Power Lost','inf-lost')
     )}
 
+    <!-- ═══ REAL RATE OF RETURN CALCULATOR ═══ -->
+    ${calcCard('Real Rate of Return Calculator','Fisher-adjusted return after accounting for inflation',
+      inp('rrr-nominal','Nominal Return (% p.a.)','12',12,'0.1')+
+      inp('rrr-inflation','Inflation Rate (% p.a.)','6',6,'0.1'),
+      resultRow('Real Rate of Return (precise)','rrr-precise','var(--mc)')+
+      resultRow('Simple Approximation (nominal − inflation)','rrr-approx')+
+      `<p style="font-size:10px;color:#999999;margin-top:8px">Fisher equation: Real Rate = ((1+Nominal)/(1+Inflation)) − 1. More accurate than the simple subtraction method, especially at higher rates.</p>`
+    )}
+
+    <!-- ═══ POST-TAX RETURN COMPARATOR ═══ -->
+    ${calcCard('Post-Tax Return Comparator','Compare FD, Debt Fund & Equity after applicable tax treatment',
+      inp('ptr-amt','Investment Amount (₹)','1,00,000',100000)+
+      inp('ptr-fd','FD Interest Rate (% p.a.)','7',7,'0.1')+
+      inp('ptr-debt','Debt Fund Return (% p.a.)','7.5',7.5,'0.1')+
+      inp('ptr-equity','Equity Fund Return (% p.a.)','12',12,'0.1')+
+      inp('ptr-slab','Your Income Tax Slab (%)','30',30)+
+      inp('ptr-yrs','Holding Period (Years)','5',5),
+      resultRow('FD — Value After Tax','ptr-fd-value')+
+      resultRow('Debt Fund — Value After Tax','ptr-debt-value')+
+      resultRow('Equity Fund — Value After Tax','ptr-equity-value','var(--mc)')+
+      `<p style="font-size:10px;color:#999999;margin-top:8px">FD & Debt Funds taxed at your slab rate every year (current rules, no indexation). Equity assumes &gt;1 year holding taxed at 12.5% LTCG on gains (ignoring the ₹1.25L exemption for simplicity — actual tax may be lower).</p>`
+    )}
+
     <div style="display:flex;align-items:center;gap:10px;margin:22px 0 12px">
       <div style="font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:800;color:#444444;text-transform:uppercase;letter-spacing:.6px">Big-Ticket Purchases</div>
       <div style="flex:1;height:1px;background:var(--bdr)"></div>
@@ -2266,11 +2337,51 @@ function renderCalculators(){
       </div>
     </div>
 
-    <p style="margin:4px 0 16px;font-size:10px;color:#999999">
-      These calculators use simplified formulas for estimation purposes only and are not tax/investment advice.
-      Actual figures may vary based on brokerage, STT, cess, surcharge, and current tax rules.
-    </p>
-
+    <!-- ═══ RENT VS BUY CALCULATOR ═══ -->
+    <div style="background:var(--panel);border:1px solid var(--bdr);border-radius:14px;margin-bottom:14px;overflow:hidden">
+      <div style="padding:14px 18px;border-bottom:1px solid var(--bdr)">
+        <div style="font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:700;color:#1a1a1a">Rent vs Buy Calculator</div>
+        <div style="font-size:10px;color:#6b6b6b;margin-top:1px">Should you rent and invest the difference, or buy a home?</div>
+      </div>
+      <div style="padding:16px 18px">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+          <div>
+            <div style="font-size:11px;font-weight:700;color:#444444;text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px;padding-bottom:5px;border-bottom:2px solid #444444">🏠 Renting</div>
+            ${evInp('rvb-rent','Current Monthly Rent (₹)','25,000')}
+            ${evInp('rvb-rentinc','Annual Rent Increase (%)','5')}
+            ${evInp('rvb-investret','Return if Investing Savings (% p.a.)','10','0.1')}
+          </div>
+          <div>
+            <div style="font-size:11px;font-weight:700;color:var(--mc);text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px;padding-bottom:5px;border-bottom:2px solid var(--mc)">🏡 Buying</div>
+            ${evInp('rvb-price','Property Price (₹)','80,00,000')}
+            ${evInp('rvb-down','Down Payment (%)','20')}
+            ${evInp('rvb-rate','Home Loan Rate (% p.a.)','8.5','0.1')}
+            ${evInp('rvb-tenure','Loan Tenure (Years)','20')}
+            ${evInp('rvb-apprec','Property Appreciation (% p.a.)','5','0.1')}
+            ${evInp('rvb-maint','Maintenance + Tax (% of price, per year)','1','0.1')}
+          </div>
+        </div>
+        <div style="margin-top:10px">
+          ${evInp('rvb-horizon','Compare Over (Years)','10')}
+        </div>
+        <div style="margin-top:14px;border-top:1px solid var(--bdr);padding-top:12px">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+            <div style="background:rgba(120,75,30,.05);border-radius:10px;padding:12px 14px">
+              <div style="font-size:9px;color:#6b6b6b;text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px">Net Worth if Renting</div>
+              <div id="rvb-networth-rent" style="font-family:'Space Grotesk',sans-serif;font-size:19px;font-weight:700;color:#1a1a1a">—</div>
+              <div style="font-size:9px;color:#999999;margin-top:4px">Total rent paid: <span id="rvb-rentpaid">—</span></div>
+            </div>
+            <div style="background:rgba(237,125,43,.08);border-radius:10px;padding:12px 14px">
+              <div style="font-size:9px;color:#6b6b6b;text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px">Net Worth if Buying</div>
+              <div id="rvb-networth-buy" style="font-family:'Space Grotesk',sans-serif;font-size:19px;font-weight:700;color:var(--mc)">—</div>
+              <div style="font-size:9px;color:#999999;margin-top:4px">Property value: <span id="rvb-propvalue">—</span></div>
+            </div>
+          </div>
+        </div>
+        <div id="rvb-verdict" style="margin-top:12px;padding:10px 14px;border-radius:10px;font-size:13px;font-weight:700;text-align:center"></div>
+        <p style="font-size:10px;color:#999999;margin-top:10px">Simplified model: assumes down payment + any month where EMI exceeds rent are invested (if renting); maintenance is a flat % of the initial price each year; ignores stamp duty, brokerage, rent deposits, and taxes. For guidance only.</p>
+      </div>
+    </div>
 
     <p style="margin:4px 0 16px;font-size:10px;color:#999999">
       These calculators use simplified formulas for estimation purposes only and are not tax/investment advice.
@@ -2746,6 +2857,130 @@ function calcRun(){
       if(fairVerdict){ fairVerdict.textContent=''; fairVerdict.style.background='transparent'; }
     }
   }
+
+  // Rule of 72 / 114
+  const r72Rate=gv('r72-rate');
+  if(r72Rate>0){
+    setTxt('r72-double', (72/r72Rate).toFixed(1)+' years');
+    setTxt('r72-triple', (114/r72Rate).toFixed(1)+' years');
+  }
+
+  // NPS Calculator
+  const npsAge=gv('nps-age'), npsRetAge=gv('nps-retage'), npsAmt=gv('nps-amt'),
+        npsRet=gv('nps-ret')/100/12, npsAnnPct=gv('nps-annuity-pct')/100, npsAnnRate=gv('nps-annuity-rate')/100;
+  if(npsAge&&npsRetAge&&npsAmt&&npsRetAge>npsAge){
+    const months=(npsRetAge-npsAge)*12;
+    const corpus = npsRet>0
+      ? npsAmt * ((Math.pow(1+npsRet,months)-1)/npsRet) * (1+npsRet)
+      : npsAmt*months;
+    const annuityPct = Math.max(0.4, npsAnnPct); // min 40% mandatory
+    const annuityCorpus = corpus*annuityPct;
+    const lumpSum = corpus - annuityCorpus;
+    const monthlyPension = (annuityCorpus*npsAnnRate)/12;
+    setTxt('nps-corpus', fmtINR(corpus));
+    setTxt('nps-lumpsum', fmtINR(lumpSum));
+    setTxt('nps-annuitycorpus', fmtINR(annuityCorpus));
+    setTxt('nps-pension', fmtINR(monthlyPension)+'/mo');
+  }
+
+  // Home Loan Affordability
+  const hlaIncome=gv('hla-income'), hlaExisting=gv('hla-existing'), hlaFoir=gv('hla-foir')/100,
+        hlaRate=gv('hla-rate')/100/12, hlaYrs=gv('hla-yrs')*12;
+  if(hlaIncome&&hlaYrs){
+    const maxEmi = Math.max(0, hlaIncome*hlaFoir - hlaExisting);
+    const eligibleLoan = hlaRate>0
+      ? maxEmi * (Math.pow(1+hlaRate,hlaYrs)-1) / (hlaRate*Math.pow(1+hlaRate,hlaYrs))
+      : maxEmi*hlaYrs;
+    const budget = eligibleLoan/0.8; // assumes 80% LTV
+    setTxt('hla-maxemi', fmtINR(maxEmi));
+    setTxt('hla-loan', fmtINR(eligibleLoan));
+    setTxt('hla-budget', fmtINR(budget));
+  }
+
+  // Real Rate of Return (Fisher equation)
+  const rrrNominal=gv('rrr-nominal')/100, rrrInflation=gv('rrr-inflation')/100;
+  if(gv('rrr-nominal')||gv('rrr-inflation')){
+    const preciseReal = ((1+rrrNominal)/(1+rrrInflation) - 1)*100;
+    const approxReal = gv('rrr-nominal') - gv('rrr-inflation');
+    setTxt('rrr-precise', preciseReal.toFixed(2)+'%');
+    setTxt('rrr-approx', approxReal.toFixed(2)+'%');
+  }
+
+  // Post-Tax Return Comparator
+  const ptrAmt=gv('ptr-amt'), ptrFd=gv('ptr-fd')/100, ptrDebt=gv('ptr-debt')/100,
+        ptrEquity=gv('ptr-equity')/100, ptrSlab=gv('ptr-slab')/100, ptrYrs=gv('ptr-yrs');
+  if(ptrAmt&&ptrYrs){
+    const fdPostTaxRate = ptrFd*(1-ptrSlab);
+    const debtPostTaxRate = ptrDebt*(1-ptrSlab);
+    const fdValue = ptrAmt*Math.pow(1+fdPostTaxRate, ptrYrs);
+    const debtValue = ptrAmt*Math.pow(1+debtPostTaxRate, ptrYrs);
+    const equityGrown = ptrAmt*Math.pow(1+ptrEquity, ptrYrs);
+    const equityGain = equityGrown-ptrAmt;
+    const equityTax = equityGain*0.125; // flat LTCG approx, ignoring exemption
+    const equityValue = equityGrown-equityTax;
+    setTxt('ptr-fd-value', fmtINR(fdValue));
+    setTxt('ptr-debt-value', fmtINR(debtValue));
+    setTxt('ptr-equity-value', fmtINR(equityValue));
+  }
+
+  // Rent vs Buy Calculator (month-by-month simulation)
+  const rvbRent=gv('rvb-rent'), rvbRentInc=gv('rvb-rentinc')/100, rvbInvestRet=gv('rvb-investret')/100/12,
+        rvbPrice=gv('rvb-price'), rvbDown=gv('rvb-down')/100, rvbRate=gv('rvb-rate')/100/12,
+        rvbTenure=gv('rvb-tenure')*12, rvbApprec=gv('rvb-apprec')/100, rvbMaint=gv('rvb-maint')/100,
+        rvbHorizon=gv('rvb-horizon');
+  if(rvbRent&&rvbPrice&&rvbHorizon){
+    const loanAmt=rvbPrice*(1-rvbDown);
+    const emi = rvbRate>0 && rvbTenure>0
+      ? loanAmt*rvbRate*Math.pow(1+rvbRate,rvbTenure)/(Math.pow(1+rvbRate,rvbTenure)-1)
+      : loanAmt/Math.max(1,rvbTenure);
+    const downPaymentAmt = rvbPrice*rvbDown;
+    const horizonMonths = rvbHorizon*12;
+
+    let rentInvestCorpus = downPaymentAmt;
+    let currentRent = rvbRent;
+    let totalRentPaid = 0;
+    let month = 0;
+    for(let y=0; y<rvbHorizon; y++){
+      for(let m=0; m<12; m++){
+        month++;
+        const emiThisMonth = month<=rvbTenure ? emi : 0;
+        const diff = emiThisMonth - currentRent;
+        rentInvestCorpus *= (1+rvbInvestRet);
+        if(diff>0) rentInvestCorpus += diff;
+        totalRentPaid += currentRent;
+      }
+      currentRent *= (1+rvbRentInc);
+    }
+
+    const monthsPaid=Math.min(horizonMonths, rvbTenure);
+    const remainingBalance = (horizonMonths<rvbTenure && rvbTenure>0 && rvbRate>0)
+      ? loanAmt*(Math.pow(1+rvbRate,rvbTenure)-Math.pow(1+rvbRate,monthsPaid))/(Math.pow(1+rvbRate,rvbTenure)-1)
+      : 0;
+    const propertyValueAtHorizon = rvbPrice*Math.pow(1+rvbApprec, rvbHorizon);
+    const maintenanceTotal = rvbPrice*rvbMaint*rvbHorizon;
+    const netWorthBuy = propertyValueAtHorizon - remainingBalance - maintenanceTotal;
+    const netWorthRent = rentInvestCorpus;
+
+    setTxt('rvb-networth-rent', fmtINR(netWorthRent));
+    setTxt('rvb-rentpaid', fmtINR(totalRentPaid));
+    setTxt('rvb-networth-buy', fmtINR(netWorthBuy));
+    setTxt('rvb-propvalue', fmtINR(propertyValueAtHorizon));
+
+    const rvbVerdict=$('rvb-verdict');
+    if(rvbVerdict){
+      const diff=netWorthBuy-netWorthRent;
+      if(Math.abs(diff) < Math.max(netWorthBuy,netWorthRent)*0.05){
+        rvbVerdict.textContent='⚖️ Verdict: Very close — either choice works out similarly over '+rvbHorizon+' years';
+        rvbVerdict.style.background='rgba(237,125,43,.10)'; rvbVerdict.style.color='var(--mc)';
+      } else if(diff>0){
+        rvbVerdict.textContent='🏡 Verdict: Buying builds '+fmtINR(diff)+' more net worth over '+rvbHorizon+' years';
+        rvbVerdict.style.background='rgba(237,125,43,.10)'; rvbVerdict.style.color='var(--mc)';
+      } else {
+        rvbVerdict.textContent='🏠 Verdict: Renting + investing builds '+fmtINR(-diff)+' more net worth over '+rvbHorizon+' years';
+        rvbVerdict.style.background='rgba(47,158,94,.10)'; rvbVerdict.style.color='var(--green)';
+      }
+    }
+  }
 }
 
 function showTab(key,btn){
@@ -2966,7 +3201,7 @@ const SEARCH_INDEX=[
   {key:'ipo',label:'IPO Corner',kw:'gmp grey market premium listed subscription expert issue dates ipo'},
   {key:'currency',label:'Currencies & Commodities',kw:'usd eur gbp mcx gold silver crude currency'},
   {key:'corporate',label:'Corporate Actions',kw:'dividend bonus split today events'},
-  {key:'calculators',label:'Calculators',kw:'sip lumpsum emi reverse emi cagr fd rd ppf step-up inflation capital gains tax xirr swp systematic withdrawal retirement corpus pay off vs invest loan prepay ev ice electric vehicle total cost of ownership intrinsic value fair value future value graham formula pe valuation calculator'},
+  {key:'calculators',label:'Calculators',kw:'sip lumpsum emi reverse emi cagr fd rd ppf step-up inflation capital gains tax xirr swp systematic withdrawal retirement corpus pay off vs invest loan prepay ev ice electric vehicle total cost of ownership intrinsic value fair value future value graham formula pe valuation nps national pension rule of 72 114 home loan affordability real rate of return post tax comparator rent vs buy house calculator'},
 ];
 function openSearch(){
   let modal=document.getElementById('smart-search-modal');
