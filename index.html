@@ -33,12 +33,6 @@ nav{display:flex;gap:2px;flex:1;flex-wrap:wrap}
 .rbtn{padding:6px 12px;border-radius:9px;font-size:11px;font-weight:600;color:var(--mc);cursor:pointer;border:1px solid rgba(237,125,43,.4);background:rgba(237,125,43,.08);font-family:'Inter',sans-serif;flex-shrink:0;transition:.2s}
 .rbtn:hover{background:var(--mc);color:#fff}.rbtn:disabled{opacity:.4;cursor:not-allowed}
 
-.ticker{background:rgba(255,255,255,0.5);backdrop-filter:blur(10px);border-bottom:1px solid var(--bdr);overflow:hidden;height:30px;display:flex;align-items:center}
-.tscrl{display:flex;align-items:center;animation:tsc 60s linear infinite;white-space:nowrap}
-.tscrl:hover{animation-play-state:paused}
-@keyframes tsc{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
-.ti{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;padding:0 16px;border-right:1px solid rgba(120,75,30,.10)}
-.tn{color:#444444;font-weight:500}.tv{font-weight:700;color:#1a1a1a}.tc{font-size:10.5px}
 .up{color:var(--green)}.dn{color:var(--red)}
 
 .wrap{max-width:1360px;margin:0 auto;padding:12px 14px}
@@ -294,8 +288,6 @@ footer a{color:var(--mc)}
     </nav>
   </div>
 </header>
-<div class="ticker"><div class="tscrl" id="tick1"><div class="ti"><span class="tn">Loading…</span></div></div></div>
-<div class="ticker" style="border-top:1px solid #f0f0f0"><div class="tscrl" id="tick2"><div class="ti"><span class="tn">Loading…</span></div></div></div>
 
 <div class="wrap">
   <div class="sec on" id="s-dashboard">
@@ -638,18 +630,6 @@ function renderDashboard(rows, newsRows){
             font-weight:700;font-size:13px;cursor:pointer;flex-shrink:0;white-space:nowrap">📈 TradingView</button>
       </div>
       <p style="font-size:10px;color:#999999;margin-top:8px">Enter the exact NSE/BSE symbol (not company name) · Fundamentals via Screener.in, Chart via TradingView · Opens in new tab · Not affiliated with either site</p>
-    </div>
-
-    <!-- MARKET NEWS VIDEO (YouTube live embed) -->
-    <div style="background:var(--panel);border:1px solid var(--bdr);border-radius:14px;padding:16px 18px;margin-bottom:14px">
-      <div style="font-size:11px;font-weight:700;color:var(--mc);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">📺 Market News (Live)</div>
-      <div style="border:1px solid var(--bdr);border-radius:10px;overflow:hidden;position:relative;padding-bottom:56.25%;height:0">
-        <iframe src="https://www.youtube.com/embed/live_stream?channel=UCmRbHAgG2k2vDUvb3xsEunQ&autoplay=0"
-          style="position:absolute;top:0;left:0;width:100%;height:100%;border:none"
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-          allowfullscreen></iframe>
-      </div>
-      <p style="font-size:10px;color:#999999;margin-top:8px">Shows CNBC-TV18's current live stream if one is active, otherwise their channel page · Powered by YouTube · Not affiliated with Niveshaka-bandhu</p>
     </div>
 
     <!-- INDICES -->
@@ -1714,33 +1694,6 @@ function showCorpTab(key, btn, color){
 }
 
 /* ── TICKER ── */
-function buildTicker(gRows,fRows){
-  const G_NAMES=['NIFTY 50','SENSEX','INDIA VIX','DOW JONES','NASDAQ','S&P 500','NIKKEI','SHENZEN','HANG SENG','KOSPI','FTSE 100','IBOVESPA','EURONEXT','DAX','CAC 40'];
-  const F_NAMES=['DOW FUTURES','NASDAQ FUTURES','FTSE FUTURES','EURO STOXX FUTURES','NIKKEI FUTURES','NIFTY FUTURES','GIFT NIFTY FUTURES','US DOLLAR INDEX','BITCOIN FUTURES'];
-
-  const gItems=[], fItems=[];
-
-  // Scan ALL rows (not slice(1)) to catch NIFTY 50 even if gviz puts it at row 0
-  gRows.filter(r=>r[2]&&r[3]).forEach(r=>{
-    const name=(r[2]||'').toUpperCase();
-    if(!G_NAMES.some(k=>name.includes(k.toUpperCase()))) return;
-    const pos=parseFloat(r[4]||'0')>=0;
-    gItems.push(`<div class="ti"><span class="tn">${f(r[2])}</span><span class="tv">${f(r[3])}</span><span class="tc ${pos?'up':'dn'}">${pctFmt(r[5])}</span></div>`);
-  });
-
-  fRows.filter(r=>r[0]&&r[2]&&r[0]!=='Symbol'&&r[0]!=='Close'&&r[0]!=='Gift Nifty').forEach(r=>{
-    const name=(r[0]||'').toUpperCase();
-    if(!F_NAMES.some(k=>name.includes(k.toUpperCase()))) return;
-    const pos=!String(r[3]||'').startsWith('-');
-    fItems.push(`<div class="ti"><span class="tn">${f(r[0])}</span><span class="tv">${f(r[2])}</span><span class="tc ${pos?'up':'dn'}">${pctFmt(r[4])}</span></div>`);
-  });
-
-  // Row 1: Indices
-  const t1=document.getElementById('tick1');
-  const t2=document.getElementById('tick2');
-  if(t1) t1.innerHTML=[...gItems,...gItems].join('')||'<div class="ti"><span class="tn">Loading…</span></div>';
-  if(t2) t2.innerHTML=[...fItems,...fItems].join('')||'<div class="ti"><span class="tn">Loading…</span></div>';
-}
 /* ── LOAD ALL ── */
 const DATA={};
 async function loadAll(){
@@ -1775,7 +1728,6 @@ async function loadAll(){
   if(DATA.dashboard?.length) try{renderDashboard(DATA.dashboard, DATA.news||[]);stampUpdated('dashboard');}catch(e){console.error('Dashboard',e);}
   if(DATA.global?.length)    try{renderGlobal(DATA.global);stampUpdated('global');}catch(e){console.error('Global',e);}
   if(DATA.futures?.length)   try{renderFutures(DATA.futures);stampUpdated('futures');}catch(e){console.error('Futures',e);}
-  try{buildTicker(DATA.global||[], DATA.futures||[]);}catch(e){}
   const now=new Date();
   $('ts').textContent=`Live · Updated ${now.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'})} IST`;
   if(btn){btn.textContent='⟳ Refresh'; btn.disabled=false;}
@@ -1813,7 +1765,6 @@ async function loadTab(key){
       }
      if(key==='dashboard'){ renderDashboard(DATA.dashboard||[], DATA.news||[]); stampUpdated('dashboard'); }
       if(key==='futures'){  renderFutures(DATA.futures||[]); stampUpdated('futures'); }
-      if(key==='futures')   buildTicker(DATA.global||[],DATA.futures||[]);
       if(key==='indian'){   renderIndian(DATA.indian||[]); stampUpdated('indian'); }
       if(key==='market'){   renderMarket(DATA.market||[]); stampUpdated('market'); }
       if(key==='ipo'){      renderIPO(patchIPOTypes((DATA.ipo||[]).concat(DATA.ipo2||[]), DATA.ipoTypes||[])); stampUpdated('ipo'); }
@@ -1857,7 +1808,6 @@ async function refreshAll(){
       }
     } catch(e){ console.error(k,e); }
   }));
-  try{buildTicker(DATA.global||[],DATA.futures||[]);}catch(e){}
   const now=new Date();
   $('ts').textContent=`Live · Updated ${now.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'})} IST`;
   if(btn){btn.textContent='⟳ Refresh'; btn.disabled=false;}
