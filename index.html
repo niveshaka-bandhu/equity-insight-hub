@@ -663,6 +663,20 @@ function renderDashboard(rows, newsRows){
       <div style="position:relative;z-index:1">
     <div class="stitle">Dashboard</div>
 
+    <!-- NIFTY 50 CANDLESTICK CHART (real data via Yahoo Finance) -->
+    <div class="tcw">
+      <div class="tch" style="color:#0d47a1">Nifty 50 — 3 Month Chart
+        <span id="nifty-chart-range" style="font-size:10px;color:#999999;font-weight:400;margin-left:8px"></span>
+      </div>
+      <div style="padding:14px 18px">
+        <div id="nifty-chart-wrap" style="position:relative;height:280px">
+          <svg id="nifty-chart-svg" viewBox="0 0 1200 280" preserveAspectRatio="none" style="width:100%;height:100%"></svg>
+          <div id="nifty-chart-status" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#999999;font-size:12px">Loading chart…</div>
+        </div>
+        <p style="font-size:10px;color:#999999;margin-top:8px">Daily candles · Data via Yahoo Finance (proxied) · For reference only, may lag real-time price by up to a day</p>
+      </div>
+    </div>
+
     <!-- STOCK LOOKUP SEARCH BAR -->
     <div style="background:var(--panel);border:1px solid var(--bdr);border-radius:14px;padding:16px 18px;margin-bottom:14px">
       <div style="font-size:11px;font-weight:700;color:var(--mc);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">🔍 Stock Lookup</div>
@@ -784,6 +798,7 @@ function renderDashboard(rows, newsRows){
     </div>
   `;
   try{ drawCandlestickBG(); }catch(e){}
+  try{ loadNiftyChart(); }catch(e){}
 }
 
 /* ── Dashboard widget: Watchlist of specific Futures + Global indices ── */
@@ -3169,6 +3184,113 @@ document.addEventListener('click',function(e){
 });
 
 /* ── ANIMATED CANDLESTICK BACKGROUND (Dashboard hero watermark) ── */
+/* ══════════════════════════════════════════════
+   NIFTY 50 CHART — real daily candles via Yahoo Finance,
+   routed through a CORS proxy since GitHub Pages (HTTPS)
+   can't fetch query1.finance.yahoo.com directly.
+══════════════════════════════════════════════ */
+let NIFTY_CHART_LOADED=false;
+async function loadNiftyChart(){
+  if(NIFTY_CHART_LOADED) return;
+  const status=document.getElementById('nifty-chart-status');
+  const svg=document.getElementById('nifty-chart-svg');
+  if(!svg) return;
+  try{
+    const yahooUrl='https://query1.finance.yahoo.com/v8/finance/chart/%5ENSEI?range=3mo&interval=1d';
+    const proxyUrl='https://api.allorigins.win/raw?url='+encodeURIComponent(yahooUrl);
+    const res=await fetch(proxyUrl);
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    const data=await res.json();
+    const result=data?.chart?.result?.[0];
+    if(!result) throw new Error('No chart data returned');
+    const timestamps=result.timestamp||[];
+    const q=result.indicators?.quote?.[0]||{};
+    const candles=[];
+    for(let i=0;i<timestamps.length;i++){
+      const o=q.open?.[i], h=q.high?.[i], l=q.low?.[i], c=q.close?.[i];
+      if(o==null||h==null||l==null||c==null) continue;
+      candles.push({date:new Date(timestamps[i]*1000), open:o, high:h, low:l, close:c});
+    }
+    if(!candles.length) throw new Error('No valid candles in response');
+    NIFTY_CHART_LOADED=true;
+    if(status) status.style.display='none';
+    renderNiftyChart(candles);
+    const rangeEl=document.getElementById('nifty-chart-range');
+    if(rangeEl && candles.length){
+      const fmt=d=>d.toLocaleDateString('en-IN',{day:'2-digit',month:'short'});
+      rangeEl.textContent=fmt(candles[0].date)+' – '+fmt(candles[candles.length-1].date);
+    }
+  }catch(e){
+    console.warn('Nifty chart failed:', e.message);
+    if(status){
+      status.innerHTML='<div style="text-align:center;padding:0 20px">'+
+        '<div style="font-size:12px;color:#e0562f;margin-bottom:6px">Live chart data unavailable</div>'+
+        '<div style="font-size:10px;color:#999999">The data proxy or Yahoo Finance may be temporarily down. '+
+        '<a href="javascript:void(0)" onclick="retryNiftyChart()" style="color:var(--mc);font-weight:700;text-decoration:underline">Retry</a></div>'+
+      '</div>';
+    }
+  }
+}
+function retryNiftyChart(){
+  NIFTY_CHART_LOADED=false;
+  const status=document.getElementById('nifty-chart-status');
+  if(status){ status.style.display='flex'; status.innerHTML='Loading chart…'; }
+  loadNiftyChart();
+}
+
+function renderNiftyChart(candles){
+  const svg=document.getElementById('nifty-chart-svg');
+  if(!svg) return;
+  svg.innerHTML='';
+  const w=1200, h=280;
+  const n=candles.length;
+  const cw=w/n;
+  const allVals=candles.flatMap(c=>[c.high,c.low]);
+  const maxV=Math.max(...allVals), minV=Math.min(...allVals);
+  const pad=(maxV-minV)*0.08 || 1;
+  const scaleY=v=>h-14-((v-(minV-pad))/((maxV+pad)-(minV-pad)))*(h-28);
+
+  // Gridlines + price labels (4 levels)
+  for(let i=0;i<=3;i++){
+    const val=minV-pad+((maxV+pad)-(minV-pad))*(i/3);
+    const y=scaleY(val);
+    const line=document.createElementNS('http://www.w3.org/2000/svg','line');
+    line.setAttribute('x1',0);line.setAttribute('x2',w);line.setAttribute('y1',y);line.setAttribute('y2',y);
+    line.setAttribute('stroke','rgba(120,75,30,.10)');line.setAttribute('stroke-width','1');
+    svg.appendChild(line);
+    const label=document.createElementNS('http://www.w3.org/2000/svg','text');
+    label.setAttribute('x',4);label.setAttribute('y',y-3);
+    label.setAttribute('font-size','11');label.setAttribute('fill','#999999');
+    label.textContent=Math.round(val).toLocaleString('en-IN');
+    svg.appendChild(label);
+  }
+
+  candles.forEach((c,i)=>{
+    const x=i*cw+cw*0.15;
+    const bw=Math.max(1,cw*0.7);
+    const up=c.close>=c.open;
+    const color=up?'#2f9e5e':'#e0562f';
+    const bodyTop=scaleY(Math.max(c.open,c.close));
+    const bodyBot=scaleY(Math.min(c.open,c.close));
+    const wickX=x+bw/2;
+    const wick=document.createElementNS('http://www.w3.org/2000/svg','line');
+    wick.setAttribute('x1',wickX);wick.setAttribute('x2',wickX);
+    wick.setAttribute('y1',scaleY(c.high));wick.setAttribute('y2',scaleY(c.low));
+    wick.setAttribute('stroke',color);wick.setAttribute('stroke-width','1.2');
+    svg.appendChild(wick);
+    const body=document.createElementNS('http://www.w3.org/2000/svg','rect');
+    body.setAttribute('x',x);body.setAttribute('y',bodyTop);
+    body.setAttribute('width',bw);body.setAttribute('height',Math.max(1.5,bodyBot-bodyTop));
+    body.setAttribute('fill',color);body.setAttribute('rx','0.5');
+    const title=document.createElementNS('http://www.w3.org/2000/svg','title');
+    title.textContent=c.date.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'})+
+      ': O '+c.open.toFixed(0)+' H '+c.high.toFixed(0)+' L '+c.low.toFixed(0)+' C '+c.close.toFixed(0);
+    body.appendChild(title);
+    svg.appendChild(body);
+  });
+}
+
+
 function drawCandlestickBG(){
   const svg = document.getElementById('candle-bg');
   if(!svg) return;
