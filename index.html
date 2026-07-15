@@ -35,6 +35,24 @@ nav{display:flex;gap:2px;flex:1;flex-wrap:wrap}
 
 .up{color:var(--green)}.dn{color:var(--red)}
 
+/* RSS NEWS TICKER */
+.news-ticker{display:flex;align-items:stretch;background:rgba(255,255,255,0.55);backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--bdr);height:32px;overflow:hidden}
+.nt-label{flex-shrink:0;display:flex;align-items:center;padding:0 14px;font-size:11px;font-weight:800;
+  color:#fff;background:var(--mc);letter-spacing:.5px;white-space:nowrap}
+.nt-track{flex:1;overflow:hidden;position:relative;display:flex;align-items:center}
+.nt-strip{display:flex;align-items:center;white-space:nowrap;animation:nt-scroll 90s linear infinite}
+.nt-strip:hover{animation-play-state:paused}
+@keyframes nt-scroll{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+.nt-item{display:inline-flex;align-items:center;gap:8px;padding:0 22px;text-decoration:none;
+  border-right:1px solid rgba(120,75,30,.14);flex-shrink:0}
+.nt-source{font-size:9px;font-weight:800;color:var(--mc);text-transform:uppercase;letter-spacing:.4px;
+  background:rgba(237,125,43,.12);padding:1px 6px;border-radius:4px;flex-shrink:0}
+.nt-title{font-size:11.5px;font-weight:600;color:#1a1a1a}
+.nt-item:hover .nt-title{color:var(--mc);text-decoration:underline}
+@media(max-width:600px){.nt-label{font-size:10px;padding:0 10px}.nt-title{font-size:10.5px}.nt-item{padding:0 14px}}
+
+
 .wrap{max-width:1360px;margin:0 auto;padding:12px 14px}
 .sec{display:none}.sec.on{display:block}
 
@@ -289,6 +307,13 @@ footer a{color:var(--mc)}
   </div>
 </header>
 
+<div class="news-ticker">
+  <span class="nt-label">📰 NEWS</span>
+  <div class="nt-track">
+    <div class="nt-strip" id="news-ticker-strip"><a class="nt-item"><span class="nt-title">Loading headlines…</span></a></div>
+  </div>
+</div>
+
 <div class="wrap">
   <div class="sec on" id="s-dashboard">
     <div class="skel-tcw"><div class="skel-tch"><div class="skel"></div></div>
@@ -513,6 +538,55 @@ const STOCK_TH=`<thead><tr><th>Company</th><th>Price ₹</th><th>Chg</th><th>%Ch
 const MKT_TH4=`<thead><tr><th>Company</th><th>Price ₹</th><th>Change</th><th>% Chg</th></tr></thead>`;
 const MKT_TH3=`<thead><tr><th>Company</th><th>Price ₹</th><th>% Chg</th></tr></thead>`;
 
+/* Shared news parser — used by renderDashboard and the news ticker */
+function computeAllNews(rows, newsRows){
+  newsRows = newsRows || [];
+  if(!newsRows.length) newsRows = rows.filter(r=>(r[1]||'').includes('http')&&r[0]&&r[0].trim());
+  else {
+    newsRows = newsRows
+      .filter(r=>(r[2]||'').includes('http') && r[1] && r[1].trim())
+      .map(r=>[r[1], r[2], r[3]]);
+  }
+  const etTop     = newsRows.slice(0,  5);
+  const etRecent  = newsRows.slice(5,  10);
+  const lmCompany = newsRows.slice(10, 15);
+  const lmMarket  = newsRows.slice(15, 20);
+  const allNews = [
+    ...etTop.map(r=>[...r,'ET Top']),
+    ...etRecent.map(r=>[...r,'Business Std']),
+    ...lmCompany.map(r=>[...r,'The Hindu']),
+    ...lmMarket.map(r=>[...r,'Livemint Mkt'])
+  ].filter(r=>r[0]&&r[1]);
+  allNews.sort((a,b)=>{
+    const da=new Date(a[2]||0), db=new Date(b[2]||0);
+    const ta=isNaN(da)?0:da.getTime(), tb=isNaN(db)?0:db.getTime();
+    return tb-ta;
+  });
+  return allNews;
+}
+
+/* Builds/refreshes the scrolling headline ticker below the header, from the same News sheet data */
+function buildNewsTicker(){
+  const strip=document.getElementById('news-ticker-strip');
+  if(!strip) return;
+  const rows = DATA.dashboard || [];
+  const newsRows = DATA.news || [];
+  if(!rows.length && !newsRows.length) return;
+  const allNews = computeAllNews(rows, newsRows);
+  if(!allNews.length) return;
+  const items = allNews.map(r=>{
+    const title=String(r[0]||'').trim();
+    const url=String(r[1]||'').trim();
+    const source=r[3]||'';
+    return `<a href="${url}" target="_blank" rel="noopener" class="nt-item">
+      <span class="nt-source">${source}</span>
+      <span class="nt-title">${title}</span>
+    </a>`;
+  }).join('');
+  // Duplicate content once for seamless looping
+  strip.innerHTML = items + items;
+}
+
 function renderDashboard(rows, newsRows){
   newsRows = newsRows || [];
   /*
@@ -541,39 +615,14 @@ function renderDashboard(rows, newsRows){
      FII rows: col[0]=date (contains 2026), col[1]=Net FII, col[2]=Net DII
   */
   console.log('DB rows:',rows.length, rows.slice(0,5).map((r,i)=>`[${i}]${r[0]?.substring(0,20)}|${r[1]?.substring(0,20)}|${r[2]?.substring(0,15)}`).join(' || '));
- if(!newsRows.length) newsRows = rows.filter(r=>(r[1]||'').includes('http')&&r[0]&&r[0].trim());
-  else {
-    // News sheet: row1=NEWS FEED header, row2=subheader, row3+ = data
-    // col[0]=section label (or blank), col[1]=headline, col[2]=URL, col[3]=date
-    // Skip header rows (no URL in col[2]), keep only real news rows, remap to [headline, url, date]
-    newsRows = newsRows
-      .filter(r=>(r[2]||'').includes('http') && r[1] && r[1].trim())
-      .map(r=>[r[1], r[2], r[3]]);
-  }
   const idxRows   = rows.filter(r=>r[0]&&r[0].trim()&&r[1]&&!isNaN(parseFloat(String(r[1]).replace(/,/g,'')))&&!(r[0]||'').includes('2026'));
   const fiiDii    = rows.filter(r=>r[0]&&(r[0].includes('2026')||r[0].includes('-06-'))&&r[1]&&!isNaN(parseFloat(String(r[1]).replace(/,/g,''))));
-
-  // 4 sections of 5 news each
-  const etTop     = newsRows.slice(0,  5);
-  const etRecent  = newsRows.slice(5,  10);
-  const lmCompany = newsRows.slice(10, 15);
-  const lmMarket  = newsRows.slice(15, 20);
 
   // Indices: first 8 = Indian
   const indIdx    = idxRows.slice(0, 8);
 
-  // Merge all news sources and sort by date, most recent first
-  const allNews = [
-    ...etTop.map(r=>[...r,'ET Top']),
-    ...etRecent.map(r=>[...r,'Business Std']),
-    ...lmCompany.map(r=>[...r,'The Hindu']),
-    ...lmMarket.map(r=>[...r,'Livemint Mkt'])
-  ].filter(r=>r[0]&&r[1]);
-  allNews.sort((a,b)=>{
-    const da=new Date(a[2]||0), db=new Date(b[2]||0);
-    const ta=isNaN(da)?0:da.getTime(), tb=isNaN(db)?0:db.getTime();
-    return tb-ta;
-  });
+  // Merge all news sources and sort by date, most recent first (shared with news ticker)
+  const allNews = computeAllNews(rows, newsRows);
 
   // News block builder from sheet data
   function newsBlock(title, icon, items, color, elId){
@@ -1748,6 +1797,7 @@ async function loadAll(){
     
   ]);
   if(DATA.dashboard?.length) try{renderDashboard(DATA.dashboard, DATA.news||[]);stampUpdated('dashboard');}catch(e){console.error('Dashboard',e);}
+  try{ buildNewsTicker(); }catch(e){}
   if(DATA.global?.length)    try{renderGlobal(DATA.global);stampUpdated('global');}catch(e){console.error('Global',e);}
   if(DATA.futures?.length)   try{renderFutures(DATA.futures);stampUpdated('futures');}catch(e){console.error('Futures',e);}
   const now=new Date();
@@ -1785,7 +1835,7 @@ async function loadTab(key){
       } else {
         DATA[key]=await fetchSheet(GIDS[key]);
       }
-     if(key==='dashboard'){ renderDashboard(DATA.dashboard||[], DATA.news||[]); stampUpdated('dashboard'); }
+     if(key==='dashboard'){ renderDashboard(DATA.dashboard||[], DATA.news||[]); stampUpdated('dashboard'); try{ buildNewsTicker(); }catch(e){} }
       if(key==='futures'){  renderFutures(DATA.futures||[]); stampUpdated('futures'); }
       if(key==='indian'){   renderIndian(DATA.indian||[]); stampUpdated('indian'); }
       if(key==='market'){   renderMarket(DATA.market||[]); stampUpdated('market'); }
@@ -1820,7 +1870,7 @@ async function refreshAll(){
         } else {
           DATA[k]=await fetchSheet(GIDS[k]);
         }
-        if(k==='dashboard'){ renderDashboard(DATA.dashboard||[], DATA.news||[]); stampUpdated('dashboard'); }
+        if(k==='dashboard'){ renderDashboard(DATA.dashboard||[], DATA.news||[]); stampUpdated('dashboard'); try{ buildNewsTicker(); }catch(e){} }
         if(k==='global'){   renderGlobal(DATA.global||[]); stampUpdated('global'); }
         if(k==='futures'){  renderFutures(DATA.futures||[]); stampUpdated('futures'); }
         if(k==='indian'){   renderIndian(DATA.indian||[]); stampUpdated('indian'); }
