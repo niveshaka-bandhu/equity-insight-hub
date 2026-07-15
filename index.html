@@ -632,21 +632,6 @@ function renderDashboard(rows, newsRows){
       <p style="font-size:10px;color:#999999;margin-top:8px">Enter the exact NSE/BSE symbol (not company name) · Fundamentals via Screener.in, Chart via TradingView · Opens in new tab · Not affiliated with either site</p>
     </div>
 
-    <!-- TECHNICAL SUMMARY WIDGET (Investing.com) -->
-    <div style="background:var(--panel);border:1px solid var(--bdr);border-radius:14px;padding:16px 18px;margin-bottom:14px">
-      <div style="font-size:11px;font-weight:700;color:var(--mc);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">📡 Technical Summary — Global Markets</div>
-      <div style="display:flex;justify-content:center">
-        <iframe src="https://ssltsw.investing.com?lang=56&forex=160,1646,1,2,3,5,9&commodities=8830,8836,8831,8849,8833,8862,8832&indices=23660,166,172,27,179,53094,170&stocks=345,346,347,348,349,350,352&tabs=1,2,3,4"
-          width="317" height="467" style="border:1px solid var(--bdr);border-radius:10px;max-width:100%"></iframe>
-      </div>
-      <div style="font-family:Arial,Helvetica,sans-serif;text-align:center;margin-top:6px">
-        <span style="font-size:10px;color:#6b6b6b">Technical Summary Widget Powered by
-          <a href="https://in.investing.com/" rel="nofollow" target="_blank" style="color:#06529D;font-weight:700;text-decoration:underline">Investing.com India</a>
-        </span>
-      </div>
-      <p style="font-size:10px;color:#999999;margin-top:8px">Note: this widget's index list doesn't include Nifty 50 / Sensex — showing global forex, commodities, indices & select shares instead.</p>
-    </div>
-
     <!-- INDICES -->
     <div class="tcw">
       <div class="tch" style="color:#0d47a1">Indian Indices</div>
@@ -728,6 +713,21 @@ function renderDashboard(rows, newsRows){
         ${prevHtml}
       </div>`;
     })()}
+
+    <!-- TECHNICAL SUMMARY WIDGET (Investing.com) -->
+    <div class="tcw">
+      <div class="tch" style="color:#0d47a1">Technical Summary — Global Markets</div>
+      <div style="padding:14px 18px;display:flex;flex-direction:column;align-items:center;gap:2px">
+        <iframe src="https://ssltsw.investing.com?lang=56&forex=160,1646,1,2,3,5,9&commodities=8830,8836,8831,8849,8833,8862,8832&indices=23660,166,172,27,179,53094,170&stocks=345,346,347,348,349,350,352&tabs=1,2,3,4"
+          width="317" height="467" style="border:none;max-width:100%"></iframe>
+        <div style="font-family:Arial,Helvetica,sans-serif;text-align:center;margin-top:2px">
+          <span style="font-size:10px;color:#6b6b6b">Powered by
+            <a href="https://in.investing.com/" rel="nofollow" target="_blank" style="color:#06529D;font-weight:700;text-decoration:underline">Investing.com India</a>
+          </span>
+        </div>
+        <p style="font-size:10px;color:#999999;text-align:center;padding:0 18px 4px">Doesn't include Nifty 50 / Sensex — shows global forex, commodities, indices & select shares</p>
+      </div>
+    </div>
 
     <!-- NEWS LAST -->
     ${newsBlock('Latest News','📰',allNews,'#c0392b')}
@@ -1585,12 +1585,19 @@ function renderCurrency(rows){
 
   $('s-currency').innerHTML=`
     <div class="stitle">Currencies &amp; Commodities</div>
+    <div class="stitle-sm" style="margin-bottom:10px">MCX Commodities</div>
+    <div class="hm-grid" style="margin-bottom:24px">${commHeatmap}</div>
     <div class="stitle-sm" style="margin-bottom:10px">Global Currencies vs ₹ INR</div>
     <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-bottom:24px">
       ${currCards}
     </div>
-    <div class="stitle-sm" style="margin-bottom:10px">MCX Commodities</div>
-    <div class="hm-grid">${commHeatmap}</div>`;
+    <div class="tcw">
+      <div class="tch" style="color:#0d47a1">Currency Converter</div>
+      <div style="padding:14px 18px;display:flex;flex-direction:column;align-items:center;gap:2px">
+        <iframe height="420" src="https://ssltools.investing.com/currency-converter/?from=29&to=12&force_lang=56&with_powered_by=true"
+          style="border:none;max-width:100%;width:100%"></iframe>
+      </div>
+    </div>`;
 }
 
 /* ══════════════════════════════════════════════
