@@ -663,17 +663,18 @@ function renderDashboard(rows, newsRows){
       <div style="position:relative;z-index:1">
     <div class="stitle">Dashboard</div>
 
-    <!-- NIFTY 50 CANDLESTICK CHART (real data via Yahoo Finance) -->
+    <!-- NIFTY 50 TODAY'S INTRADAY CHART (real data via Yahoo Finance) -->
     <div class="tcw">
-      <div class="tch" style="color:#0d47a1">Nifty 50 — 3 Month Chart
+      <div class="tch" style="color:#0d47a1">Nifty 50 — Today's Chart
         <span id="nifty-chart-range" style="font-size:10px;color:#999999;font-weight:400;margin-left:8px"></span>
       </div>
       <div style="padding:14px 18px">
+        <div id="nifty-chart-summary" style="display:flex;gap:18px;flex-wrap:wrap;margin-bottom:10px;font-size:11px;color:#6b6b6b"></div>
         <div id="nifty-chart-wrap" style="position:relative;height:280px">
           <svg id="nifty-chart-svg" viewBox="0 0 1200 280" preserveAspectRatio="none" style="width:100%;height:100%"></svg>
           <div id="nifty-chart-status" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#999999;font-size:12px">Loading chart…</div>
         </div>
-        <p style="font-size:10px;color:#999999;margin-top:8px">Daily candles · Data via Yahoo Finance (proxied) · For reference only, may lag real-time price by up to a day</p>
+        <p style="font-size:10px;color:#999999;margin-top:8px">5-min intraday · Data via Yahoo Finance (proxied) · May lag real-time by a few minutes; delayed after market close</p>
       </div>
     </div>
 
@@ -3185,7 +3186,7 @@ document.addEventListener('click',function(e){
 
 /* ── ANIMATED CANDLESTICK BACKGROUND (Dashboard hero watermark) ── */
 /* ══════════════════════════════════════════════
-   NIFTY 50 CHART — real daily candles via Yahoo Finance,
+   NIFTY 50 CHART — today's real intraday price path via Yahoo Finance,
    routed through a CORS proxy since GitHub Pages (HTTPS)
    can't fetch query1.finance.yahoo.com directly.
 ══════════════════════════════════════════════ */
@@ -3196,7 +3197,7 @@ async function loadNiftyChart(){
   const svg=document.getElementById('nifty-chart-svg');
   if(!svg) return;
   try{
-    const yahooUrl='https://query1.finance.yahoo.com/v8/finance/chart/%5ENSEI?range=3mo&interval=1d';
+    const yahooUrl='https://query1.finance.yahoo.com/v8/finance/chart/%5ENSEI?range=1d&interval=5m';
     const proxyUrl='https://api.allorigins.win/raw?url='+encodeURIComponent(yahooUrl);
     const res=await fetch(proxyUrl);
     if(!res.ok) throw new Error('HTTP '+res.status);
@@ -3204,21 +3205,43 @@ async function loadNiftyChart(){
     const result=data?.chart?.result?.[0];
     if(!result) throw new Error('No chart data returned');
     const timestamps=result.timestamp||[];
-    const q=result.indicators?.quote?.[0]||{};
-    const candles=[];
+    const closes=result.indicators?.quote?.[0]?.close||[];
+    const meta=result.meta||{};
+    const points=[];
     for(let i=0;i<timestamps.length;i++){
-      const o=q.open?.[i], h=q.high?.[i], l=q.low?.[i], c=q.close?.[i];
-      if(o==null||h==null||l==null||c==null) continue;
-      candles.push({date:new Date(timestamps[i]*1000), open:o, high:h, low:l, close:c});
+      const c=closes[i];
+      if(c==null) continue;
+      points.push({time:new Date(timestamps[i]*1000), price:c});
     }
-    if(!candles.length) throw new Error('No valid candles in response');
+    if(!points.length) throw new Error('No valid data points in response');
     NIFTY_CHART_LOADED=true;
     if(status) status.style.display='none';
-    renderNiftyChart(candles);
+
+    const prevClose=meta.previousClose ?? meta.chartPreviousClose ?? points[0].price;
+    const dayOpen=points[0].price;
+    const dayHigh=Math.max(...points.map(p=>p.price));
+    const dayLow=Math.min(...points.map(p=>p.price));
+    const current=points[points.length-1].price;
+    const change=current-prevClose;
+    const pct=(change/prevClose)*100;
+
+    renderNiftyIntradayChart(points, prevClose);
+
     const rangeEl=document.getElementById('nifty-chart-range');
-    if(rangeEl && candles.length){
-      const fmt=d=>d.toLocaleDateString('en-IN',{day:'2-digit',month:'short'});
-      rangeEl.textContent=fmt(candles[0].date)+' – '+fmt(candles[candles.length-1].date);
+    if(rangeEl) rangeEl.textContent=points[points.length-1].time.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});
+
+    const summaryEl=document.getElementById('nifty-chart-summary');
+    if(summaryEl){
+      const color=change>=0?'var(--green)':'var(--red)';
+      const sign=change>=0?'+':'';
+      summaryEl.innerHTML=
+        '<span><strong style="color:#1a1a1a;font-family:\'Space Grotesk\',sans-serif;font-size:15px">'+current.toFixed(2)+'</strong> '+
+        '<span style="color:'+color+';font-weight:700">'+sign+change.toFixed(2)+' ('+sign+pct.toFixed(2)+'%)</span></span>'+
+        '<span>Open <strong style="color:#1a1a1a">'+dayOpen.toFixed(2)+'</strong></span>'+
+        '<span>High <strong style="color:#1a1a1a">'+dayHigh.toFixed(2)+'</strong></span>'+
+        '<span>Low <strong style="color:#1a1a1a">'+dayLow.toFixed(2)+'</strong></span>'+
+        '<span>Prev Close <strong style="color:#1a1a1a">'+prevClose.toFixed(2)+'</strong></span>'+
+        '<span>As of '+points[points.length-1].time.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'})+' IST</span>';
     }
   }catch(e){
     console.warn('Nifty chart failed:', e.message);
@@ -3238,21 +3261,27 @@ function retryNiftyChart(){
   loadNiftyChart();
 }
 
-function renderNiftyChart(candles){
+function renderNiftyIntradayChart(points, prevClose){
   const svg=document.getElementById('nifty-chart-svg');
   if(!svg) return;
   svg.innerHTML='';
   const w=1200, h=280;
-  const n=candles.length;
-  const cw=w/n;
-  const allVals=candles.flatMap(c=>[c.high,c.low]);
-  const maxV=Math.max(...allVals), minV=Math.min(...allVals);
-  const pad=(maxV-minV)*0.08 || 1;
-  const scaleY=v=>h-14-((v-(minV-pad))/((maxV+pad)-(minV-pad)))*(h-28);
+  const bottomAxisH=22; // reserved for x-axis time labels
+  const n=points.length;
+  const vals=points.map(p=>p.price);
+  const maxV=Math.max(...vals, prevClose), minV=Math.min(...vals, prevClose);
+  const pad=(maxV-minV)*0.12 || 1;
+  const top=maxV+pad, bottom=minV-pad;
+  const scaleX=i=>(i/(n-1))*w;
+  const scaleY=v=>(h-bottomAxisH-8)-((v-bottom)/(top-bottom))*(h-bottomAxisH-22);
+
+  const isUp = points[n-1].price >= prevClose;
+  const lineColor = isUp ? '#2f9e5e' : '#e0562f';
+  const fillColor = isUp ? 'rgba(47,158,94,.12)' : 'rgba(224,86,47,.12)';
 
   // Gridlines + price labels (4 levels)
   for(let i=0;i<=3;i++){
-    const val=minV-pad+((maxV+pad)-(minV-pad))*(i/3);
+    const val=bottom+(top-bottom)*(i/3);
     const y=scaleY(val);
     const line=document.createElementNS('http://www.w3.org/2000/svg','line');
     line.setAttribute('x1',0);line.setAttribute('x2',w);line.setAttribute('y1',y);line.setAttribute('y2',y);
@@ -3261,33 +3290,64 @@ function renderNiftyChart(candles){
     const label=document.createElementNS('http://www.w3.org/2000/svg','text');
     label.setAttribute('x',4);label.setAttribute('y',y-3);
     label.setAttribute('font-size','11');label.setAttribute('fill','#999999');
-    label.textContent=Math.round(val).toLocaleString('en-IN');
+    label.textContent=val.toFixed(0).toLocaleString('en-IN');
     svg.appendChild(label);
   }
 
-  candles.forEach((c,i)=>{
-    const x=i*cw+cw*0.15;
-    const bw=Math.max(1,cw*0.7);
-    const up=c.close>=c.open;
-    const color=up?'#2f9e5e':'#e0562f';
-    const bodyTop=scaleY(Math.max(c.open,c.close));
-    const bodyBot=scaleY(Math.min(c.open,c.close));
-    const wickX=x+bw/2;
-    const wick=document.createElementNS('http://www.w3.org/2000/svg','line');
-    wick.setAttribute('x1',wickX);wick.setAttribute('x2',wickX);
-    wick.setAttribute('y1',scaleY(c.high));wick.setAttribute('y2',scaleY(c.low));
-    wick.setAttribute('stroke',color);wick.setAttribute('stroke-width','1.2');
-    svg.appendChild(wick);
-    const body=document.createElementNS('http://www.w3.org/2000/svg','rect');
-    body.setAttribute('x',x);body.setAttribute('y',bodyTop);
-    body.setAttribute('width',bw);body.setAttribute('height',Math.max(1.5,bodyBot-bodyTop));
-    body.setAttribute('fill',color);body.setAttribute('rx','0.5');
-    const title=document.createElementNS('http://www.w3.org/2000/svg','title');
-    title.textContent=c.date.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'})+
-      ': O '+c.open.toFixed(0)+' H '+c.high.toFixed(0)+' L '+c.low.toFixed(0)+' C '+c.close.toFixed(0);
-    body.appendChild(title);
-    svg.appendChild(body);
+  // X-axis time labels (evenly spaced, ~6 ticks across the session)
+  const tickCount=6;
+  for(let i=0;i<tickCount;i++){
+    const idx=Math.round((i/(tickCount-1))*(n-1));
+    const x=scaleX(idx);
+    const tickLine=document.createElementNS('http://www.w3.org/2000/svg','line');
+    tickLine.setAttribute('x1',x);tickLine.setAttribute('x2',x);
+    tickLine.setAttribute('y1',h-bottomAxisH-8);tickLine.setAttribute('y2',h-bottomAxisH-4);
+    tickLine.setAttribute('stroke','rgba(120,75,30,.25)');tickLine.setAttribute('stroke-width','1');
+    svg.appendChild(tickLine);
+    const label=document.createElementNS('http://www.w3.org/2000/svg','text');
+    const anchor = i===0 ? 'start' : (i===tickCount-1 ? 'end' : 'middle');
+    label.setAttribute('x', i===0?2:(i===tickCount-1?w-2:x));
+    label.setAttribute('y', h-6);
+    label.setAttribute('font-size','11');label.setAttribute('fill','#999999');
+    label.setAttribute('text-anchor', anchor);
+    label.textContent=points[idx].time.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',hour12:true});
+    svg.appendChild(label);
+  }
+
+  // Previous close reference line (dashed)
+  const prevY=scaleY(prevClose);
+  const prevLine=document.createElementNS('http://www.w3.org/2000/svg','line');
+  prevLine.setAttribute('x1',0);prevLine.setAttribute('x2',w);prevLine.setAttribute('y1',prevY);prevLine.setAttribute('y2',prevY);
+  prevLine.setAttribute('stroke','#999999');prevLine.setAttribute('stroke-width','1');prevLine.setAttribute('stroke-dasharray','4,4');
+  svg.appendChild(prevLine);
+
+  // Build line path + area path
+  let linePath='', areaPath='';
+  points.forEach((p,i)=>{
+    const x=scaleX(i), y=scaleY(p.price);
+    linePath += (i===0?'M':'L')+x+','+y+' ';
   });
+  areaPath = 'M'+scaleX(0)+','+scaleY(points[0].price)+' L'+linePath.slice(1)+' L'+w+','+(h-bottomAxisH-8)+' L0,'+(h-bottomAxisH-8)+' Z';
+
+  const area=document.createElementNS('http://www.w3.org/2000/svg','path');
+  area.setAttribute('d',areaPath);
+  area.setAttribute('fill',fillColor);
+  svg.appendChild(area);
+
+  const line=document.createElementNS('http://www.w3.org/2000/svg','path');
+  line.setAttribute('d',linePath.trim());
+  line.setAttribute('fill','none');
+  line.setAttribute('stroke',lineColor);
+  line.setAttribute('stroke-width','2');
+  line.setAttribute('stroke-linejoin','round');
+  svg.appendChild(line);
+
+  // Hover dot + invisible hit area with tooltip via <title> per small segment (SVG has no native hover events without JS listeners)
+  const dot=document.createElementNS('http://www.w3.org/2000/svg','circle');
+  const lastX=scaleX(n-1), lastY=scaleY(points[n-1].price);
+  dot.setAttribute('cx',lastX);dot.setAttribute('cy',lastY);dot.setAttribute('r','4');
+  dot.setAttribute('fill',lineColor);dot.setAttribute('stroke','#fff');dot.setAttribute('stroke-width','1.5');
+  svg.appendChild(dot);
 }
 
 
