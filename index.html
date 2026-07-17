@@ -663,21 +663,6 @@ function renderDashboard(rows, newsRows){
       <div style="position:relative;z-index:1">
     <div class="stitle">Dashboard</div>
 
-    <!-- NIFTY 50 TODAY'S INTRADAY CHART (real data via Yahoo Finance) -->
-    <div class="tcw">
-      <div class="tch" style="color:#0d47a1">Nifty 50 — Today's Chart
-        <span id="nifty-chart-range" style="font-size:10px;color:#999999;font-weight:400;margin-left:8px"></span>
-      </div>
-      <div style="padding:14px 18px">
-        <div id="nifty-chart-summary" style="display:flex;gap:18px;flex-wrap:wrap;margin-bottom:10px;font-size:11px;color:#6b6b6b"></div>
-        <div id="nifty-chart-wrap" style="position:relative;height:280px">
-          <svg id="nifty-chart-svg" viewBox="0 0 1200 280" preserveAspectRatio="none" style="width:100%;height:100%"></svg>
-          <div id="nifty-chart-status" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#999999;font-size:12px">Loading chart…</div>
-        </div>
-        <p style="font-size:10px;color:#999999;margin-top:8px">5-min intraday · Data via Yahoo Finance (proxied) · May lag real-time by a few minutes; delayed after market close</p>
-      </div>
-    </div>
-
     <!-- STOCK LOOKUP SEARCH BAR -->
     <div style="background:var(--panel);border:1px solid var(--bdr);border-radius:14px;padding:16px 18px;margin-bottom:14px">
       <div style="font-size:11px;font-weight:700;color:var(--mc);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">🔍 Stock Lookup</div>
@@ -777,6 +762,21 @@ function renderDashboard(rows, newsRows){
         ${prevHtml}
       </div>`;
     })()}
+
+    <!-- NIFTY 50 TODAY'S INTRADAY CHART (real data via Yahoo Finance) -->
+    <div class="tcw">
+      <div class="tch" style="color:#0d47a1">Nifty 50 — Today's Chart
+        <span id="nifty-chart-range" style="font-size:10px;color:#999999;font-weight:400;margin-left:8px"></span>
+      </div>
+      <div style="padding:14px 18px">
+        <div id="nifty-chart-summary" style="display:flex;gap:18px;flex-wrap:wrap;margin-bottom:10px;font-size:11px;color:#6b6b6b"></div>
+        <div id="nifty-chart-wrap" style="position:relative;height:280px">
+          <svg id="nifty-chart-svg" viewBox="0 0 1200 280" preserveAspectRatio="none" style="width:100%;height:100%"></svg>
+          <div id="nifty-chart-status" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#999999;font-size:12px">Loading chart…</div>
+        </div>
+        <p style="font-size:10px;color:#999999;margin-top:8px">5-min intraday · Data via Yahoo Finance (proxied) · May lag real-time by a few minutes; delayed after market close</p>
+      </div>
+    </div>
 
     <!-- TECHNICAL SUMMARY WIDGET (Investing.com) -->
     <div class="tcw">
@@ -1653,15 +1653,8 @@ function renderCurrency(rows){
     <div class="stitle-sm" style="margin-bottom:10px">MCX Commodities</div>
     <div class="hm-grid" style="margin-bottom:24px">${commHeatmap}</div>
     <div class="stitle-sm" style="margin-bottom:10px">Global Currencies vs ₹ INR</div>
-    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-bottom:24px">
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px">
       ${currCards}
-    </div>
-    <div class="tcw">
-      <div class="tch" style="color:#0d47a1">Currency Converter</div>
-      <div style="padding:14px 18px;display:flex;flex-direction:column;align-items:center;gap:2px">
-        <iframe height="420" src="https://ssltools.investing.com/currency-converter/?from=29&to=12&force_lang=56&with_powered_by=true"
-          style="border:none;max-width:100%;width:100%"></iframe>
-      </div>
     </div>`;
 }
 
@@ -3265,7 +3258,12 @@ function renderNiftyIntradayChart(points, prevClose){
   const svg=document.getElementById('nifty-chart-svg');
   if(!svg) return;
   svg.innerHTML='';
-  const w=1200, h=280;
+  // Size viewBox to the SVG's actual rendered pixel dimensions so preserveAspectRatio="none"
+  // never distorts/squishes text — coordinate space matches on-screen pixels 1:1.
+  const rect=svg.getBoundingClientRect();
+  const w=Math.max(300, Math.round(rect.width)) || 1200;
+  const h=Math.max(150, Math.round(rect.height)) || 280;
+  svg.setAttribute('viewBox','0 0 '+w+' '+h);
   const bottomAxisH=22; // reserved for x-axis time labels
   const n=points.length;
   const vals=points.map(p=>p.price);
