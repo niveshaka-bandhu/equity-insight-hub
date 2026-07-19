@@ -1778,6 +1778,11 @@ function showCorpTab(key, btn, color){
 const DATA={};
 async function loadAll(){
   const btn=$('rbtn');
+  // Kick off the Nifty chart FETCH immediately (DOM-independent), in parallel with everything
+  // else below — the chart DOM doesn't exist yet at this point (skeleton hasn't cleared), so we
+  // must call the fetch-only function here; the actual render happens later via loadNiftyChart()
+  // once renderDashboard() has created the real elements.
+  try{ startNiftyFetch(); }catch(e){}
   // Load Dashboard, Global and Futures in parallel on start
   await Promise.allSettled([
     fetchSheet(GIDS.dashboard).then(d=>{DATA.dashboard=d;}).catch(e=>console.warn('dashboard',e.message)),
@@ -3182,35 +3187,83 @@ document.addEventListener('click',function(e){
    NIFTY 50 CHART — today's real intraday price path via Yahoo Finance,
    routed through a CORS proxy since GitHub Pages (HTTPS)
    can't fetch query1.finance.yahoo.com directly.
+   Fetch starts immediately at page load (DOM-independent) so
+   the network round-trip overlaps with everything else loading,
+   instead of only starting after the Dashboard skeleton clears.
 ══════════════════════════════════════════════ */
 let NIFTY_CHART_LOADED=false;
+let NIFTY_DATA_PROMISE=null;
+const NIFTY_CACHE_KEY='nb_nifty_intraday_cache';
+const NIFTY_CACHE_TTL=2*60*1000; // 2 minutes — intraday data goes stale fast anyway
+
+/* Pure fetch — no DOM access, safe to call before the chart's HTML exists.
+   Races two CORS proxies so a slow/down one doesn't block the whole thing. */
+async function fetchNiftyRaw(){
+  // Serve from session cache if fresh enough (instant on repeat visits within the session)
+  try{
+    const cached=sessionStorage.getItem(NIFTY_CACHE_KEY);
+    if(cached){
+      const parsed=JSON.parse(cached);
+      if(Date.now()-parsed.ts < NIFTY_CACHE_TTL){
+        return {points:parsed.points.map(p=>({time:new Date(p.time),price:p.price})), prevClose:parsed.prevClose};
+      }
+    }
+  }catch(e){}
+
+  const yahooUrl='https://query1.finance.yahoo.com/v8/finance/chart/%5ENSEI?range=1d&interval=5m';
+  const proxies=[
+    'https://api.allorigins.win/raw?url='+encodeURIComponent(yahooUrl),
+    'https://corsproxy.io/?url='+encodeURIComponent(yahooUrl)
+  ];
+  const attempts=proxies.map(url=>fetch(url).then(res=>{
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    return res.json();
+  }));
+  const data=await Promise.any(attempts);
+
+  const result=data?.chart?.result?.[0];
+  if(!result) throw new Error('No chart data returned');
+  const timestamps=result.timestamp||[];
+  const closes=result.indicators?.quote?.[0]?.close||[];
+  const meta=result.meta||{};
+  const points=[];
+  for(let i=0;i<timestamps.length;i++){
+    const c=closes[i];
+    if(c==null) continue;
+    points.push({time:new Date(timestamps[i]*1000), price:c});
+  }
+  if(!points.length) throw new Error('No valid data points in response');
+  const prevClose=meta.previousClose ?? meta.chartPreviousClose ?? points[0].price;
+
+  try{
+    sessionStorage.setItem(NIFTY_CACHE_KEY, JSON.stringify({
+      ts:Date.now(), prevClose,
+      points:points.map(p=>({time:p.time.getTime(),price:p.price}))
+    }));
+  }catch(e){}
+
+  return {points, prevClose};
+}
+
+/* Kicks off the fetch immediately (called at the very top of loadAll, before any DOM exists).
+   Safe to call multiple times — reuses the same in-flight/resolved promise. */
+function startNiftyFetch(){
+  if(!NIFTY_DATA_PROMISE) NIFTY_DATA_PROMISE=fetchNiftyRaw();
+  return NIFTY_DATA_PROMISE;
+}
+
+/* Renders into the chart's DOM once it exists — awaits whatever fetch is already in flight
+   rather than starting a fresh one, so by the time this runs the data is often already there. */
 async function loadNiftyChart(){
   if(NIFTY_CHART_LOADED) return;
   const status=document.getElementById('nifty-chart-status');
   const svg=document.getElementById('nifty-chart-svg');
   if(!svg) return;
   try{
-    const yahooUrl='https://query1.finance.yahoo.com/v8/finance/chart/%5ENSEI?range=1d&interval=5m';
-    const proxyUrl='https://api.allorigins.win/raw?url='+encodeURIComponent(yahooUrl);
-    const res=await fetch(proxyUrl);
-    if(!res.ok) throw new Error('HTTP '+res.status);
-    const data=await res.json();
-    const result=data?.chart?.result?.[0];
-    if(!result) throw new Error('No chart data returned');
-    const timestamps=result.timestamp||[];
-    const closes=result.indicators?.quote?.[0]?.close||[];
-    const meta=result.meta||{};
-    const points=[];
-    for(let i=0;i<timestamps.length;i++){
-      const c=closes[i];
-      if(c==null) continue;
-      points.push({time:new Date(timestamps[i]*1000), price:c});
-    }
-    if(!points.length) throw new Error('No valid data points in response');
+    const {points, prevClose}=await startNiftyFetch();
     NIFTY_CHART_LOADED=true;
     if(status) status.style.display='none';
 
-    const prevClose=meta.previousClose ?? meta.chartPreviousClose ?? points[0].price;
     const dayOpen=points[0].price;
     const dayHigh=Math.max(...points.map(p=>p.price));
     const dayLow=Math.min(...points.map(p=>p.price));
@@ -3249,6 +3302,8 @@ async function loadNiftyChart(){
 }
 function retryNiftyChart(){
   NIFTY_CHART_LOADED=false;
+  NIFTY_DATA_PROMISE=null;
+  try{ sessionStorage.removeItem(NIFTY_CACHE_KEY); }catch(e){}
   const status=document.getElementById('nifty-chart-status');
   if(status){ status.style.display='flex'; status.innerHTML='Loading chart…'; }
   loadNiftyChart();
