@@ -3191,8 +3191,8 @@ document.addEventListener('click',function(e){
    the network round-trip overlaps with everything else loading,
    instead of only starting after the Dashboard skeleton clears.
 ══════════════════════════════════════════════ */
-let NIFTY_CHART_LOADED=false;
 let NIFTY_DATA_PROMISE=null;
+let NIFTY_DATA_TS=0;
 const NIFTY_CACHE_KEY='nb_nifty_intraday_cache';
 const NIFTY_CACHE_TTL=2*60*1000; // 2 minutes — intraday data goes stale fast anyway
 
@@ -3245,23 +3245,28 @@ async function fetchNiftyRaw(){
   return {points, prevClose};
 }
 
-/* Kicks off the fetch immediately (called at the very top of loadAll, before any DOM exists).
-   Safe to call multiple times — reuses the same in-flight/resolved promise. */
+/* Kicks off the fetch (called at the very top of loadAll, before any DOM exists).
+   Reuses the in-flight/resolved promise only while it's still within the cache TTL —
+   otherwise starts a fresh fetch, so the 5-min auto-refresh actually pulls new data
+   instead of reusing the very first fetch forever. */
 function startNiftyFetch(){
-  if(!NIFTY_DATA_PROMISE) NIFTY_DATA_PROMISE=fetchNiftyRaw();
+  const stale = !NIFTY_DATA_PROMISE || (Date.now()-NIFTY_DATA_TS > NIFTY_CACHE_TTL);
+  if(stale){
+    NIFTY_DATA_TS=Date.now();
+    NIFTY_DATA_PROMISE=fetchNiftyRaw();
+  }
   return NIFTY_DATA_PROMISE;
 }
 
-/* Renders into the chart's DOM once it exists — awaits whatever fetch is already in flight
-   rather than starting a fresh one, so by the time this runs the data is often already there. */
+/* Renders into the chart's DOM. Dashboard's HTML (including this chart's elements) gets
+   fully recreated on every refresh cycle, so this must always re-render — never skip based
+   on "already loaded once", or the freshly-recreated (empty) DOM is left stuck on "Loading". */
 async function loadNiftyChart(){
-  if(NIFTY_CHART_LOADED) return;
   const status=document.getElementById('nifty-chart-status');
   const svg=document.getElementById('nifty-chart-svg');
   if(!svg) return;
   try{
     const {points, prevClose}=await startNiftyFetch();
-    NIFTY_CHART_LOADED=true;
     if(status) status.style.display='none';
 
     const dayOpen=points[0].price;
@@ -3292,6 +3297,7 @@ async function loadNiftyChart(){
   }catch(e){
     console.warn('Nifty chart failed:', e.message);
     if(status){
+      status.style.display='flex';
       status.innerHTML='<div style="text-align:center;padding:0 20px">'+
         '<div style="font-size:12px;color:#e0562f;margin-bottom:6px">Live chart data unavailable</div>'+
         '<div style="font-size:10px;color:#999999">The data proxy or Yahoo Finance may be temporarily down. '+
@@ -3301,8 +3307,8 @@ async function loadNiftyChart(){
   }
 }
 function retryNiftyChart(){
-  NIFTY_CHART_LOADED=false;
   NIFTY_DATA_PROMISE=null;
+  NIFTY_DATA_TS=0;
   try{ sessionStorage.removeItem(NIFTY_CACHE_KEY); }catch(e){}
   const status=document.getElementById('nifty-chart-status');
   if(status){ status.style.display='flex'; status.innerHTML='Loading chart…'; }
