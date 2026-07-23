@@ -1442,8 +1442,10 @@ function renderIPO(rows){
     String(r[0]||'').toLowerCase().includes('expert'));
   const subsStart    = findIdx('IPO Subscription Status');
 
+  const isNotSME = r => !/sme/i.test(r[1]||'');
   const listed = rows.slice(1, gmpStart > 0 ? gmpStart : 22)
-                     .filter(r => r[0]&&r[0].trim()&&r[0]!=='Company Name');
+                     .filter(r => r[0]&&r[0].trim()&&r[0]!=='Company Name')
+                     .filter(isNotSME);
   const gmpEnd = rows.findIndex((r,i) => i > gmpStart && clean(r[0])==='company' && String(r[1]||'').toLowerCase().includes('issue date'));
   const gmp    = gmpStart > 0
                ? rows.slice(gmpStart+2, gmpEnd > 0 ? gmpEnd : gmpStart+15)
@@ -1457,6 +1459,7 @@ function renderIPO(rows){
   const subs = subsStart > 0
              ? rows.slice(subsStart+2)
                    .filter(r => r[0]&&r[0].trim()&&clean(r[0])!=='ipo')
+                   .filter(isNotSME)
              : [];
   const datesHeaderIdx = rows.findIndex(r =>
     clean(r[0])==='company' && String(r[1]||'').toLowerCase().includes('issue date'));
@@ -1579,10 +1582,10 @@ function renderIPO(rows){
 
   $('s-ipo').innerHTML=`
     <div class="stitle">IPO Corner</div>
-    ${panel('📈','Recently Listed IPOs','Performance since listing date',listed.length,'#1a7a4a',listedBody)}
+    ${panel('📈','Recently Listed IPOs','Performance since listing date · Mainboard only',listed.length,'#1a7a4a',listedBody)}
     ${panel('📊','Grey Market Premium','Unofficial pre-listing market prices',gmp.length,'#0d47a1',gmpBody)}
     ${panel('🎓','Expert\'s Advice','Analyst recommendations',experts.length,'#e07b00',expertsBody)}
-    ${panel('📋','Subscription Status','Live subscription data',subs.length,'#6a1b9a',subsBody)}
+    ${panel('📋','Subscription Status','Live subscription data · Mainboard only',subs.length,'#6a1b9a',subsBody)}
     ${panel('📅','Issue Dates','Upcoming & open IPO dates',dates.length,'#555555',datesBody)}
   `;
 }
