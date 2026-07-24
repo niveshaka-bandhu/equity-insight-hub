@@ -701,7 +701,7 @@ function renderDashboard(rows, newsRows){
           style="padding:10px 18px;border:1px solid var(--mc);border-radius:9px;background:#fff;color:var(--mc);
             font-weight:700;font-size:13px;cursor:pointer;flex-shrink:0;white-space:nowrap">📈 TradingView</button>
       </div>
-      <p style="font-size:10px;color:#999999;margin-top:8px">Type a ticker or company name — e.g. "Tata" shows every Tata group stock · Fundamentals via Screener.in, Chart via TradingView · Opens in new tab · Not affiliated with either site</p>
+      <p id="equity-status" style="font-size:10px;color:#999999;margin-top:8px">Loading ticker list…</p>
     </div>
 
     <!-- INDICES -->
@@ -1840,6 +1840,17 @@ function parseEquityList(rows){
     .filter(r=>r[0]&&String(r[0]).trim())
     .map(r=>({symbol:clean(r[0]).toUpperCase(), name:clean(r[1]||'')}));
 }
+function setEquityStatus(){
+  const el=document.getElementById('equity-status');
+  if(!el) return;
+  if(EQUITY_LIST.length===0){
+    el.textContent='⚠ 0 tickers found — the Equity sheet tab was reached but has no data rows in A2/B2 onward.';
+    el.style.color='var(--red)';
+  } else {
+    el.textContent=EQUITY_LIST.length+' tickers loaded · Type a ticker or company name to search';
+    el.style.color='#999999';
+  }
+}
 
 async function loadAll(){
   const btn=$('rbtn');
@@ -1862,7 +1873,15 @@ async function loadAll(){
       }catch(e2){console.warn('ipo gviz fallback failed',e2.message);}
     }),
     fetchIPOTypes().then(d=>{DATA.ipoTypes=d;}).catch(e=>console.warn('ipoTypes',e.message)),
-    fetchSheetCSV(GIDS.equity).then(d=>{EQUITY_LIST=parseEquityList(d);}).catch(e=>console.warn('equity',e.message)),
+    fetchSheetCSV(GIDS.equity).then(d=>{
+      EQUITY_LIST=parseEquityList(d);
+      console.log('[Equity] Loaded',EQUITY_LIST.length,'tickers. First 3:',EQUITY_LIST.slice(0,3));
+      setEquityStatus();
+    }).catch(e=>{
+      console.warn('equity',e.message);
+      const el=document.getElementById('equity-status');
+      if(el){ el.textContent='⚠ Couldn\'t load ticker list — check the Equity sheet gid/sharing. See console for details.'; el.style.color='var(--red)'; }
+    }),
     fetchSheet2(CORP_GIDS.today).then(d=>{DATA['corp_today']=d;}).catch(e=>console.warn('corp_today',e.message)),
     // Fetch market data for Dashboard widget but don't mark as LOADED so Movers tab still loads+renders properly
     fetchSheet(GIDS.market).then(d=>{
@@ -1928,7 +1947,15 @@ async function loadTab(key){
 async function refreshAll(){
   // Refresh all already-loaded tabs
   const btn=$('rbtn'); if(btn){btn.textContent='⟳ Loading…'; btn.disabled=true;}
-  fetchSheetCSV(GIDS.equity).then(d=>{EQUITY_LIST=parseEquityList(d);}).catch(e=>console.warn('equity refresh',e.message));
+  fetchSheetCSV(GIDS.equity).then(d=>{
+    EQUITY_LIST=parseEquityList(d);
+    console.log('[Equity] Refreshed',EQUITY_LIST.length,'tickers.');
+    setEquityStatus();
+  }).catch(e=>{
+    console.warn('equity refresh',e.message);
+    const el=document.getElementById('equity-status');
+    if(el){ el.textContent='⚠ Couldn\'t load ticker list — check the Equity sheet gid/sharing. See console for details.'; el.style.color='var(--red)'; }
+  });
   const keys=Object.keys(LOADED);
   await Promise.allSettled(keys.map(async k=>{
     try{
@@ -3790,7 +3817,12 @@ function renderStockSuggestions(){
   if(!input||!box) return;
   const q=input.value.trim().toLowerCase();
   _stockSugIdx=-1;
-  if(!q||!EQUITY_LIST.length){ box.style.display='none'; box.innerHTML=''; return; }
+  if(!q){ box.style.display='none'; box.innerHTML=''; return; }
+  if(!EQUITY_LIST.length){
+    box.innerHTML='<div style="padding:10px 14px;font-size:12px;color:#999999">No ticker data loaded yet — check the Equity sheet.</div>';
+    box.style.display='block';
+    return;
+  }
   const results=EQUITY_LIST
     .map(e=>{
       const sym=e.symbol.toLowerCase(), nm=e.name.toLowerCase();
