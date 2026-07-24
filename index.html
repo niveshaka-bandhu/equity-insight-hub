@@ -245,6 +245,14 @@ footer a{color:var(--mc)}
   box-shadow:0 0 0 0 rgba(47,158,94,.6);animation:pulse 2s infinite;margin-right:6px;vertical-align:middle}
 @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(47,158,94,.55)}70%{box-shadow:0 0 0 7px rgba(47,158,94,0)}100%{box-shadow:0 0 0 0 rgba(47,158,94,0)}}
 
+/* Search result jump-to highlight (background flash — works on table rows too, unlike box-shadow) */
+.search-hit-highlight{animation:searchHitFlash 2.2s ease-out}
+@keyframes searchHitFlash{
+  0%{background-color:rgba(237,125,43,.45)}
+  60%{background-color:rgba(237,125,43,.28)}
+  100%{background-color:rgba(237,125,43,0)}
+}
+
 /* HEATMAP */
 .hm-section{margin-bottom:26px}
 .hm-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px;flex-wrap:wrap;gap:8px}
@@ -506,6 +514,14 @@ setInterval(()=>{
 },30000);
 const f=v=>String(v||'').trim()||'—';
 const clean=v=>String(v||'').replace(/\*/g,'').trim();
+function slugify(s){ return String(s||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'')||'x'; }
+/* ── Live content search index (rebuilt whenever a tab re-renders) ── */
+let SEARCH_LIVE=[];
+function clearSearchTab(tab){ SEARCH_LIVE=SEARCH_LIVE.filter(e=>e.tab!==tab); }
+function pushSearch(tab, type, label, sub, elId){
+  if(!label||label==='—') return;
+  SEARCH_LIVE.push({tab, type, label, sub:sub||'', elId});
+}
 function ic(v){
   const s=String(v||'').replace(/,/g,'').replace(/\*/g,'').replace(/^--/,'-').trim();
   if(!s||s==='—'||s==='-') return '';
@@ -1317,7 +1333,7 @@ function renderMarket(rows){
   try{ if(typeof updateMoodBadge==='function') updateMoodBadge(); }catch(e){}
 
   // Variation 2 card builder
-  const v2Card = (r, pos, i) => {
+  const v2Card = (r, pos, i, elId) => {
     // r = [name, price, change, pct]
     const price = f(r[1]);
     const chg   = r[3] ? f(r[2]) : ''; // only show change if pct is separate col
@@ -1329,7 +1345,7 @@ function renderMarket(rows){
     const color = actualPos?'var(--green)':'var(--red)';
     const bg    = actualPos?'rgba(47,158,94,.06)':'rgba(224,86,47,.06)';
     const bc    = actualPos?'rgba(47,158,94,.18)':'rgba(224,86,47,.18)';
-    return `<div style="background:${bg};border:1px solid ${bc};border-radius:10px;
+    return `<div${elId?` id="${elId}"`:''} style="background:${bg};border:1px solid ${bc};border-radius:10px;
       padding:11px 14px;display:flex;align-items:center;gap:12px;transition:.15s"
       onmouseover="this.style.transform='translateX(2px)'"
       onmouseout="this.style.transform=''">
@@ -1347,8 +1363,19 @@ function renderMarket(rows){
   };
 
   const section = (title, gainers, losers, is3col) => {
-    const gCards = gainers.map((r,i) => v2Card(is3col?[r[0],r[1],r[2],null]:r, true, i)).join('');
-    const lCards = losers.map((r,i)  => v2Card(is3col?[r[0],r[1],r[2],null]:r, false, i)).join('');
+    const slug=slugify(title);
+    const gCards = gainers.map((r,i) => {
+      const elId=`si-mv-${slug}-g-${i}`;
+      const row=is3col?[r[0],r[1],r[2],null]:r;
+      pushSearch('market','Stock',r[0], title+' · Gainer · '+f(row[3]||row[2]), elId);
+      return v2Card(row, true, i, elId);
+    }).join('');
+    const lCards = losers.map((r,i)  => {
+      const elId=`si-mv-${slug}-l-${i}`;
+      const row=is3col?[r[0],r[1],r[2],null]:r;
+      pushSearch('market','Stock',r[0], title+' · Loser · '+f(row[3]||row[2]), elId);
+      return v2Card(row, false, i, elId);
+    }).join('');
     return `<div style="margin-bottom:20px">
       <div style="font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:600;
         color:#1a1a1a;margin-bottom:10px;display:flex;align-items:center;gap:10px">
@@ -1378,6 +1405,7 @@ function renderMarket(rows){
   const bankG = bank.filter(r=>parseFloat(String(r[3]||'0').replace(/[^0-9.-]/g,''))>0);
   const bankL = bank.filter(r=>parseFloat(String(r[3]||'0').replace(/[^0-9.-]/g,''))<0);
 
+  clearSearchTab('market');
   $('s-market').innerHTML=`
     <div class="stitle">Movers — NSE &amp; BSE</div>
 
@@ -1497,7 +1525,10 @@ function renderIPO(rows){
   const listedBody = `<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse">
     <thead><tr>${['Company','Type','Listed','Issue ₹','Subs','List Open','List Close','List Gain','LTP ₹','Today','Size']
       .map(h=>`<th style="font-size:10px;font-weight:700;color:#6b6b6b;padding:7px 10px;border-bottom:1px solid var(--bdr);text-align:left;white-space:nowrap">${h}</th>`).join('')}</tr></thead>
-    <tbody>${listed.map(r=>`<tr style="border-bottom:1px solid rgba(120,75,30,.20)">
+    <tbody>${listed.map((r,i)=>{
+      const elId=`si-ipo-listed-${i}`;
+      pushSearch('ipo','IPO · Listed',r[0],'Listed '+f(r[2])+' · List gain '+f(r[7]),elId);
+      return `<tr id="${elId}" style="border-bottom:1px solid rgba(120,75,30,.20)">
       <td style="padding:8px 10px;font-size:12px"><strong>${f(r[0])}</strong></td>
       <td style="padding:8px 10px">${tbadge(r[1])}</td>
       <td style="padding:8px 10px;font-size:12px;color:#6b6b6b">${f(r[2])}</td>
@@ -1509,17 +1540,19 @@ function renderIPO(rows){
       <td style="padding:8px 10px;font-size:12px;font-family:'Space Grotesk',sans-serif">${f(r[8])}</td>
       <td style="padding:8px 10px;font-size:12px;font-weight:700" class="${ic(r[9])}">${f(r[9])}</td>
       <td style="padding:8px 10px;font-size:12px;color:#6b6b6b">${f(r[10])}</td>
-    </tr>`).join('')}</tbody>
+    </tr>`;}).join('')}</tbody>
   </table></div>`;
 
   // GMP — tinted cards grid
   const gmpBody = `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:8px">
-    ${gmp.map(r=>{
+    ${gmp.map((r,i)=>{
       const pos=!String(r[1]||'').trim().startsWith('-')&&parseFloat(String(r[1]).replace(/[^\d.-]/g,''))>0;
       const color=pos?'var(--green)':'var(--red)';
       const bg=pos?'rgba(47,158,94,.07)':'rgba(224,86,47,.07)';
       const bc=pos?'rgba(47,158,94,.2)':'rgba(224,86,47,.2)';
-      return `<div style="border:1px solid ${bc};background:${bg};border-radius:10px;padding:12px 14px">
+      const elId=`si-ipo-gmp-${i}`;
+      pushSearch('ipo','IPO · GMP',r[0],'GMP '+st(r[1])+' · Est. listing '+st(r[4]),elId);
+      return `<div id="${elId}" style="border:1px solid ${bc};background:${bg};border-radius:10px;padding:12px 14px">
         <div style="font-size:12px;font-weight:700;color:#1a1a1a;margin-bottom:4px;
           white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${st(r[0])}</div>
         <div style="margin-bottom:8px">${tbadge(r[6]||'Mainboard')}</div>
@@ -1544,8 +1577,11 @@ function renderIPO(rows){
 
   // Expert's Advice — badge cards
   const expertsBody = `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px">
-    ${experts.map(r=>`
-      <div style="border:1px solid var(--bdr);border-radius:10px;padding:12px 14px;background:rgba(255,255,255,.55)">
+    ${experts.map((r,i)=>{
+      const elId=`si-ipo-expert-${i}`;
+      pushSearch('ipo','IPO · Expert Advice',r[0],'Analyst view',elId);
+      return `
+      <div id="${elId}" style="border:1px solid var(--bdr);border-radius:10px;padding:12px 14px;background:rgba(255,255,255,.55)">
         <div style="font-size:12px;font-weight:700;color:#1a1a1a;margin-bottom:8px">${f(r[0])}</div>
         <div style="display:flex;gap:5px;flex-wrap:wrap">
           ${f(r[1])!=='—'?`<span style="font-size:10px;font-weight:700;padding:3px 8px;border-radius:6px;background:rgba(47,158,94,.12);color:var(--green)">Apply ${f(r[1])}</span>`:''}
@@ -1553,15 +1589,17 @@ function renderIPO(rows){
           ${f(r[4])!=='—'?`<span style="font-size:10px;font-weight:700;padding:3px 8px;border-radius:6px;background:rgba(224,86,47,.12);color:var(--red)">Avoid ${f(r[4])}</span>`:''}
           ${f(r[5])!=='—'?`<span style="font-size:10px;font-weight:700;padding:3px 8px;border-radius:6px;background:rgba(85,85,85,.09);color:#555">Not Rated ${f(r[5])}</span>`:''}
         </div>
-      </div>`).join('')}
+      </div>`;}).join('')}
   </div>`;
 
   // Subscription — table
   const subsBody = `<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse">
     <thead><tr>${['IPO','Type','Closing Date','QIB (×)','NII (×)','Retail (×)','Total (×)','Updated']
       .map(h=>`<th style="font-size:10px;font-weight:700;color:#6b6b6b;padding:7px 10px;border-bottom:1px solid var(--bdr);text-align:left;white-space:nowrap">${h}</th>`).join('')}</tr></thead>
-    <tbody>${subs.map(r=>{
-      return `<tr style="border-bottom:1px solid rgba(120,75,30,.20)">
+    <tbody>${subs.map((r,i)=>{
+      const elId=`si-ipo-subs-${i}`;
+      pushSearch('ipo','IPO · Subscription',r[0],'Total subscription '+f(r[6])+'×',elId);
+      return `<tr id="${elId}" style="border-bottom:1px solid rgba(120,75,30,.20)">
         <td style="padding:8px 10px;font-size:12px"><strong>${f(r[0])}</strong></td>
         <td style="padding:8px 10px">${tbadge(r[1])}</td>
         <td style="padding:8px 10px;font-size:12px;color:#6b6b6b">${f(r[2])}</td>
@@ -1573,13 +1611,17 @@ function renderIPO(rows){
 
   // Issue Dates — card grid
   const datesBody = `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px">
-    ${dates.map(d=>`
-      <div style="background:rgba(255,255,255,.55);border:1px solid var(--bdr);border-radius:10px;
+    ${dates.map((d,i)=>{
+      const elId=`si-ipo-dates-${i}`;
+      pushSearch('ipo','IPO · Issue Date',d,'',elId);
+      return `
+      <div id="${elId}" style="background:rgba(255,255,255,.55);border:1px solid var(--bdr);border-radius:10px;
         padding:11px 14px;font-size:12px;font-weight:600;color:#1a1a1a">
         📌 ${d}
-      </div>`).join('')}
+      </div>`;}).join('')}
   </div>`;
 
+  clearSearchTab('ipo');
   $('s-ipo').innerHTML=`
     <div class="stitle">IPO Corner</div>
     ${panel('📈','Recently Listed IPOs','Performance since listing date · Mainboard only',listed.length,'#1a7a4a',listedBody)}
@@ -1708,12 +1750,14 @@ function renderCorporate(){
     </div>`;
 
   const todayBody=todayData.length
-    ?`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:8px">${todayData.map(r=>{
+    ?`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:8px">${todayData.map((r,i)=>{
         const action=f(r[1]);const isDv=action.toLowerCase().includes('div');
         const color=isDv?'var(--green)':'#0d47a1';
         const bg=isDv?'rgba(47,158,94,.07)':'rgba(13,71,161,.07)';
         const bc=isDv?'rgba(47,158,94,.2)':'rgba(13,71,161,.2)';
-        return `<div style="border:1px solid ${bc};background:${bg};border-radius:10px;padding:12px 14px">
+        const elId=`si-corp-today-${i}`;
+        pushSearch('corporate','Corporate Action · Today',r[0],action,elId);
+        return `<div id="${elId}" style="border:1px solid ${bc};background:${bg};border-radius:10px;padding:12px 14px">
           <div style="font-size:12px;font-weight:700;color:#1a1a1a;margin-bottom:6px">${f(r[0])}</div>
           <div style="margin-bottom:8px"><span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:6px;background:${bg};color:${color};border:1px solid ${bc}">${action}</span></div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;font-size:10px">
@@ -1725,11 +1769,13 @@ function renderCorporate(){
         </div>`;}).join('')}</div>`
     :'<div style="text-align:center;padding:24px;color:#6b6b6b;font-size:13px">No corporate actions today</div>';
 
-  const makeCards=(cards,valueLabel,valueColor)=>{
+  const makeCards=(cards,valueLabel,valueColor,idPrefix)=>{
     if(!cards.length)return'<div style="text-align:center;padding:24px;color:#6b6b6b;font-size:13px">No data available</div>';
-    return`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:8px">${cards.map(c=>{
+    return`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:8px">${cards.map((c,i)=>{
       const pp=c.pct.includes('+');const pc=pp?'var(--green)':'var(--red)';const pb=pp?'rgba(47,158,94,.1)':'rgba(224,86,47,.1)';
-      return`<div style="background:var(--panel);border:1px solid var(--bdr);border-radius:10px;padding:13px 15px;position:relative;overflow:hidden">
+      const elId=`si-corp-${idPrefix}-${i}`;
+      pushSearch('corporate','Corporate Action · '+valueLabel.replace(/[^A-Za-z ]/g,'').trim(),c.company,valueLabel.replace(/&#8377;/,'₹')+' '+c.value,elId);
+      return`<div id="${elId}" style="background:var(--panel);border:1px solid var(--bdr);border-radius:10px;padding:13px 15px;position:relative;overflow:hidden">
         <div style="position:absolute;top:0;left:0;bottom:0;width:4px;background:${valueColor};border-radius:10px 0 0 10px"></div>
         <div style="padding-left:8px">
           <div style="font-size:12px;font-weight:700;color:#1a1a1a;margin-bottom:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${c.company}</div>
@@ -1748,13 +1794,14 @@ function renderCorporate(){
       </div>`;}).join('')}</div>`;
   };
 
+  clearSearchTab('corporate');
   $('s-corporate').innerHTML=
     '<div class="stitle">Corporate Actions</div>'+
     '<div style="font-size:10px;color:#6b6b6b;margin-bottom:14px">Source: Niveshaka-bandhu Corporate Actions Sheet &middot; Auto-refreshes every 5 min</div>'+
     panel("Today's Events",'Corporate actions effective today',todayData.length,'#555555',todayBody)+
-    panel('Dividends','Upcoming dividend declarations',divData.length,'#1a7a4a',makeCards(divData,'Dividend &#8377;','var(--green)'))+
-    panel('Bonus Issues','Bonus share allotments',bonusData.length,'#0d47a1',makeCards(bonusData,'Bonus Ratio','#0d47a1'))+
-    panel('Stock Splits','Share split announcements',splitData.length,'#e07b00',makeCards(splitData,'Split Ratio','var(--mc)'));
+    panel('Dividends','Upcoming dividend declarations',divData.length,'#1a7a4a',makeCards(divData,'Dividend &#8377;','var(--green)','div'))+
+    panel('Bonus Issues','Bonus share allotments',bonusData.length,'#0d47a1',makeCards(bonusData,'Bonus Ratio','#0d47a1','bonus'))+
+    panel('Stock Splits','Share split announcements',splitData.length,'#e07b00',makeCards(splitData,'Split Ratio','var(--mc)','split'));
 }
 
 
@@ -1938,7 +1985,7 @@ function renderCalculators(){
     </div>`;
 
   const calcCard = (title, subtitle, inputsHtml, resultsHtml) => `
-    <div style="background:var(--panel);border:1px solid var(--bdr);border-radius:14px;margin-bottom:14px;overflow:hidden">
+    <div id="calc-${slugify(title)}" data-calc-title="${title}" style="background:var(--panel);border:1px solid var(--bdr);border-radius:14px;margin-bottom:14px;overflow:hidden">
       <div style="padding:14px 18px;border-bottom:1px solid var(--bdr)">
         <div style="font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:700;color:#1a1a1a">${title}</div>
         <div style="font-size:10px;color:#6b6b6b;margin-top:1px">${subtitle}</div>
@@ -2034,7 +2081,7 @@ function renderCalculators(){
       <div style="font-size:10px;color:#999999">Long-term corpus building and drawdown</div>
     </div>
     <!-- ═══ RETIREMENT CORPUS CALCULATOR (multi-scenario) ═══ -->
-    <div style="background:var(--panel);border:1px solid var(--bdr);border-radius:14px;margin-bottom:14px;overflow:hidden">
+    <div id="calc-retirement-corpus-calculator" data-calc-title="Retirement Corpus Calculator" style="background:var(--panel);border:1px solid var(--bdr);border-radius:14px;margin-bottom:14px;overflow:hidden">
       <div style="padding:14px 18px;border-bottom:1px solid var(--bdr)">
         <div style="font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:700;color:#1a1a1a">Retirement Corpus Calculator</div>
         <div style="font-size:10px;color:#6b6b6b;margin-top:1px">See your corpus at different return rates — and what it's worth after inflation</div>
@@ -2268,7 +2315,7 @@ function renderCalculators(){
     )}
 
     <!-- ═══ INCOME TAX CALCULATOR (OLD VS NEW REGIME) ═══ -->
-    <div style="background:var(--panel);border:1px solid var(--bdr);border-radius:14px;margin-bottom:14px;overflow:hidden">
+    <div id="calc-income-tax-calculator" data-calc-title="Income Tax Calculator (Old vs New Regime)" style="background:var(--panel);border:1px solid var(--bdr);border-radius:14px;margin-bottom:14px;overflow:hidden">
       <div style="padding:14px 18px;border-bottom:1px solid var(--bdr)">
         <div style="font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:700;color:#1a1a1a">Income Tax Calculator — Old vs New Regime</div>
         <div style="font-size:10px;color:#6b6b6b;margin-top:1px">FY 2026-27 (AY 2027-28) slabs — compare your tax under both regimes</div>
@@ -2369,7 +2416,7 @@ function renderCalculators(){
       <div style="font-size:10px;color:#999999">Major life & lifestyle cost comparisons</div>
     </div>
     <!-- ═══ EV vs ICE TOTAL COST OF OWNERSHIP CALCULATOR ═══ -->
-    <div style="background:var(--panel);border:1px solid var(--bdr);border-radius:14px;margin-bottom:14px;overflow:hidden">
+    <div id="calc-ev-vs-ice-total-cost-of-ownership" data-calc-title="EV vs ICE — Total Cost of Ownership" style="background:var(--panel);border:1px solid var(--bdr);border-radius:14px;margin-bottom:14px;overflow:hidden">
       <div style="padding:14px 18px;border-bottom:1px solid var(--bdr)">
         <div style="font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:700;color:#1a1a1a">EV vs ICE — Total Cost of Ownership</div>
         <div style="font-size:10px;color:#6b6b6b;margin-top:1px">Compare electric vs petrol/diesel vehicle cost including loan interest and resale</div>
@@ -2435,7 +2482,7 @@ function renderCalculators(){
     </div>
 
     <!-- ═══ RENT VS BUY CALCULATOR ═══ -->
-    <div style="background:var(--panel);border:1px solid var(--bdr);border-radius:14px;margin-bottom:14px;overflow:hidden">
+    <div id="calc-rent-vs-buy-calculator" data-calc-title="Rent vs Buy Calculator" style="background:var(--panel);border:1px solid var(--bdr);border-radius:14px;margin-bottom:14px;overflow:hidden">
       <div style="padding:14px 18px;border-bottom:1px solid var(--bdr)">
         <div style="font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:700;color:#1a1a1a">Rent vs Buy Calculator</div>
         <div style="font-size:10px;color:#6b6b6b;margin-top:1px">Should you rent and invest the difference, or buy a home?</div>
@@ -2485,6 +2532,11 @@ function renderCalculators(){
       Actual figures may vary based on brokerage, STT, cess, surcharge, and current tax rules.
     </p>
   `;
+  // Auto-index every calculator card (both calcCard-built and custom blocks) for search
+  clearSearchTab('calculators');
+  document.querySelectorAll('#s-calculators [data-calc-title]').forEach(el=>{
+    pushSearch('calculators','Calculator', el.getAttribute('data-calc-title'), 'Financial Calculator', el.id);
+  });
   // Set default for CG period dropdown and run once
   calcRun();
 }
@@ -3590,7 +3642,7 @@ function drawCandlestickBG(){
   });
 }
 
-/* ── SMART SEARCH (Ctrl+K / press "/") ── */
+/* ── SMART SEARCH (Ctrl+K / press "/") — searches live page content, not just tab names ── */
 const SEARCH_INDEX=[
   {key:'dashboard',label:'Dashboard',kw:'home overview summary chart tradingview live nifty candlestick technical analysis stock lookup'},
   {key:'global',label:'Global Indices',kw:'nikkei dow nasdaq hang seng kospi ftse dax cac world'},
@@ -3600,8 +3652,17 @@ const SEARCH_INDEX=[
   {key:'ipo',label:'IPO Corner',kw:'gmp grey market premium listed subscription expert issue dates ipo'},
   {key:'currency',label:'Currencies & Commodities',kw:'usd eur gbp mcx gold silver crude currency'},
   {key:'corporate',label:'Corporate Actions',kw:'dividend bonus split today events'},
-  {key:'calculators',label:'Calculators',kw:'sip lumpsum emi reverse emi cagr fd rd ppf step-up inflation capital gains tax xirr swp systematic withdrawal retirement corpus pay off vs invest loan prepay ev ice electric vehicle total cost of ownership intrinsic value fair value future value graham formula pe valuation nps national pension rule of 72 114 home loan affordability real rate of return post tax comparator rent vs buy house calculator'},
+  {key:'calculators',label:'Calculators',kw:'sip lumpsum emi reverse emi cagr fd rd ppf step-up inflation capital gains tax xirr swp systematic withdrawal retirement corpus pay off vs invest loan prepay ev ice electric vehicle total cost of ownership intrinsic value fair value future value graham formula pe valuation nps national pension rule of 72 114 home loan affordability real rate of return post tax comparator rent vs buy house calculator scss senior citizen ctc salary in-hand income tax hra exemption goal based'},
 ];
+const TYPE_COLOR={
+  'Page':'#6b6b6b','Stock':'#0d47a1','Calculator':'var(--mc)'
+};
+function typeColor(type){
+  if(TYPE_COLOR[type]) return TYPE_COLOR[type];
+  if(type.startsWith('IPO')) return '#6a1b9a';
+  if(type.startsWith('Corporate')) return 'var(--green)';
+  return '#6b6b6b';
+}
 function openSearch(){
   let modal=document.getElementById('smart-search-modal');
   if(!modal){
@@ -3610,14 +3671,14 @@ function openSearch(){
     modal.style.cssText='position:fixed;inset:0;z-index:10000;background:rgba(91,70,54,.35);'+
       'backdrop-filter:blur(4px);display:flex;align-items:flex-start;justify-content:center;padding-top:12vh';
     modal.innerHTML='<div style="background:#ffffff;border:1px solid var(--bdr);border-radius:16px;'+
-      'width:min(520px,90vw);box-shadow:0 20px 60px rgba(120,75,30,.3);overflow:hidden">'+
+      'width:min(560px,92vw);box-shadow:0 20px 60px rgba(120,75,30,.3);overflow:hidden">'+
       '<div style="padding:14px 18px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;gap:10px">'+
       '<span style="color:#6b6b6b">Search</span>'+
-      '<input id="smart-search-input" placeholder="Search pages... (IPO, GMP, Nifty, Dividends...)" '+
+      '<input id="smart-search-input" placeholder="Search IPOs, stocks, dividends, calculators..." '+
       'style="flex:1;border:none;outline:none;background:transparent;font-size:14px;color:#1a1a1a;font-family:Inter,sans-serif">'+
       '<span style="font-size:10px;color:#999999;border:1px solid var(--bdr);border-radius:5px;padding:2px 6px">ESC</span>'+
       '</div>'+
-      '<div id="smart-search-results" style="max-height:50vh;overflow-y:auto;padding:6px"></div>'+
+      '<div id="smart-search-results" style="max-height:56vh;overflow-y:auto;padding:6px"></div>'+
       '</div>';
     document.body.appendChild(modal);
     modal.addEventListener('click',e=>{ if(e.target===modal) closeSearch(); });
@@ -3640,19 +3701,69 @@ function closeSearch(){
 }
 function renderSearchResults(){
   const q=(document.getElementById('smart-search-input').value||'').toLowerCase().trim();
-  const results=SEARCH_INDEX.filter(item=>!q||item.label.toLowerCase().includes(q)||item.kw.includes(q));
+
+  const pageItems = SEARCH_INDEX.map(item=>({tab:item.key,type:'Page',label:item.label,sub:'',elId:null,kw:item.kw}));
+  const allItems = pageItems.concat(SEARCH_LIVE.map(item=>({...item,kw:(item.label+' '+item.sub).toLowerCase()})));
+
+  let results;
+  if(!q){
+    results = pageItems; // empty query: show tab list only, not the full live index
+  } else {
+    results = allItems
+      .map(item=>{
+        const label=item.label.toLowerCase();
+        let score=99;
+        if(label===q) score=0;
+        else if(label.startsWith(q)) score=1;
+        else if(label.includes(q)) score=2;
+        else if((item.sub||'').toLowerCase().includes(q)) score=3;
+        else if(item.kw.includes(q)) score=4;
+        return {item,score};
+      })
+      .filter(x=>x.score<99)
+      .sort((a,b)=>a.score-b.score || a.item.label.localeCompare(b.item.label))
+      .slice(0,40)
+      .map(x=>x.item);
+  }
+
   const box=document.getElementById('smart-search-results');
-  box.innerHTML=results.length?results.map(r=>
-    '<div class="ss-result" onclick="jumpToTab(\''+r.key+'\')" '+
-    'style="padding:11px 14px;border-radius:10px;cursor:pointer;font-size:13px;font-weight:600;color:#1a1a1a;transition:.15s" '+
-    'onmouseover="this.style.background=\'rgba(237,125,43,.10)\'" onmouseout="this.style.background=\'\'">'+r.label+'</div>'
-  ).join(''):'<div style="padding:14px;color:#6b6b6b;font-size:12px;text-align:center">No matches</div>';
+  box.innerHTML=results.length?results.map(r=>{
+    const color=typeColor(r.type);
+    return '<div class="ss-result" onclick="jumpToTab(\''+r.tab+'\',\''+(r.elId||'')+'\')" '+
+    'style="padding:10px 14px;border-radius:10px;cursor:pointer;transition:.15s;display:flex;align-items:center;gap:10px" '+
+    'onmouseover="this.style.background=\'rgba(237,125,43,.10)\'" onmouseout="this.style.background=\'\'">'+
+    '<span style="flex:1;min-width:0">'+
+      '<div style="font-size:13px;font-weight:600;color:#1a1a1a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+r.label+'</div>'+
+      (r.sub?'<div style="font-size:10px;color:#999999;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+r.sub+'</div>':'')+
+    '</span>'+
+    '<span style="flex-shrink:0;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.3px;padding:3px 7px;border-radius:6px;background:'+color+'18;color:'+color+'">'+r.type+'</span>'+
+    '</div>';
+  }).join(''):'<div style="padding:14px;color:#6b6b6b;font-size:12px;text-align:center">No matches</div>';
 }
-function jumpToTab(key){
+function jumpToTab(key,elId){
   closeSearch();
   const btn=document.querySelector('[onclick*="showTab(\''+key+'\'"]');
   if(btn) showTab(key,btn);
+  if(!elId) return;
+  // Content may still be lazy-loading; retry briefly until the element appears, then scroll + highlight it
+  let tries=0;
+  const tryScroll=()=>{
+    const el=document.getElementById(elId);
+    if(el){
+      el.scrollIntoView({behavior:'smooth',block:'center'});
+      el.classList.add('search-hit-highlight');
+      setTimeout(()=>el.classList.remove('search-hit-highlight'),2200);
+    } else if(tries<20){
+      tries++; setTimeout(tryScroll,150);
+    }
+  };
+  setTimeout(tryScroll,250);
 }
+/* Background warm-load so search covers stocks/IPOs/dividends/calculators before the user visits those tabs */
+function warmSearchTabs(){
+  ['market','ipo','corporate','calculators'].forEach(k=>{ try{ loadTab(k); }catch(e){} });
+}
+setTimeout(warmSearchTabs, 1200);
 
 /* Stock Lookup — deep-links to Screener.in for the entered symbol (no live scraping, just navigation) */
 function openStockLookup(){
