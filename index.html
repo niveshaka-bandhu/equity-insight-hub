@@ -1953,22 +1953,6 @@ function renderCalculators(){
     <div class="stitle">Financial Calculators</div>
 
     <div style="display:flex;align-items:center;gap:10px;margin:22px 0 12px">
-      <div style="font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:800;color:#00838f;text-transform:uppercase;letter-spacing:.6px">IPO Tools</div>
-      <div style="flex:1;height:1px;background:var(--bdr)"></div>
-      <div style="font-size:10px;color:#999999">Estimate your allotment odds</div>
-    </div>
-    <!-- ═══ IPO ALLOTMENT PROBABILITY CALCULATOR ═══ -->
-    ${calcCard('IPO Allotment Probability Calculator','Estimate your odds of getting shares in an oversubscribed retail category',
-      inp('ipo-lots','Total Lots Available (Retail Category)','10,000',10000)+
-      inp('ipo-apps','Total Applications Received (Retail)','45,000',45000)+
-      inp('ipo-yourlots','Lots You Applied For','1',1),
-      resultRow('Retail Subscription','ipo-subx','var(--mc)')+
-      resultRow('Base Probability (per lot)','ipo-baseprob')+
-      resultRow('Your Estimated Allotment Chance','ipo-yourprob','var(--green)')+
-      `<p style="font-size:10px;color:#999999;margin-top:8px">SEBI's computerised lottery gives every applicant roughly equal odds when the retail category is oversubscribed. Applying for more lots slightly improves your odds but doesn't guarantee more shares. Rough estimate only — actual allotment depends on the registrar's exact methodology.</p>`
-    )}
-
-    <div style="display:flex;align-items:center;gap:10px;margin:22px 0 12px">
       <div style="font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:800;color:var(--mc);text-transform:uppercase;letter-spacing:.6px">Growth & Investment Planning</div>
       <div style="flex:1;height:1px;background:var(--bdr)"></div>
       <div style="font-size:10px;color:#999999">Grow a lumpsum or recurring investment</div>
@@ -2193,36 +2177,23 @@ function renderCalculators(){
       resultRow('Maturity Value','ppf-total','var(--mc)')
     )}
 
+    <!-- ═══ SCSS CALCULATOR ═══ -->
+    ${calcCard('Senior Citizen Savings Scheme (SCSS) Calculator','Quarterly payout on your SCSS deposit — 8.2% p.a. (Jul-Sep 2026 quarter)',
+      inp('scss-amt','Deposit Amount (₹, max 30L)','15,00,000',1500000)+
+      inp('scss-rate','Interest Rate (% p.a.)','8.2',8.2,'0.1')+
+      inp('scss-yrs','Tenure (Years)','5',5),
+      resultRow('Quarterly Interest Payout','scss-quarterly','var(--mc)')+
+      resultRow('Annual Interest Income','scss-annual')+
+      resultRow('Total Interest Over Tenure','scss-totalint','var(--green)')+
+      resultRow('Principal + Interest Received','scss-maturity')+
+      `<p style="font-size:10px;color:#999999;margin-top:8px">Open to individuals 60+ (or 55+ for certain retirees). Interest is paid out quarterly, not compounded. Max deposit ₹30 lakh; 5-year tenure, extendable by 3 years. Interest is taxable and qualifies for Section 80C deduction (Old Regime).</p>`
+    )}
+
     <div style="display:flex;align-items:center;gap:10px;margin:22px 0 12px">
       <div style="font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:800;color:var(--mc);text-transform:uppercase;letter-spacing:.6px">Stock Valuation & Analysis</div>
       <div style="flex:1;height:1px;background:var(--bdr)"></div>
       <div style="font-size:10px;color:#999999">Estimate what a stock may be worth</div>
     </div>
-    <!-- ═══ STOCK AVERAGE CALCULATOR ═══ -->
-    <div style="background:var(--panel);border:1px solid var(--bdr);border-radius:14px;margin-bottom:14px;overflow:hidden">
-      <div style="padding:14px 18px;border-bottom:1px solid var(--bdr)">
-        <div style="font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:700;color:#1a1a1a">Stock Average Calculator</div>
-        <div style="font-size:10px;color:#6b6b6b;margin-top:1px">Average cost across multiple buys</div>
-      </div>
-      <div style="padding:16px 18px">
-        <div id="avg-rows" style="margin-bottom:10px">
-          <div class="avg-row" style="display:grid;grid-template-columns:1fr 1fr auto;gap:8px;margin-bottom:8px;align-items:end">
-            <div><label style="font-size:10px;font-weight:700;color:#6b6b6b;text-transform:uppercase">Price ₹</label>
-              <input type="number" class="avg-price" oninput="calcRun()" placeholder="e.g. 100" style="width:100%;padding:7px 9px;border:1px solid var(--bdr);border-radius:8px;font-size:13px;font-family:'Space Grotesk',sans-serif"></div>
-            <div><label style="font-size:10px;font-weight:700;color:#6b6b6b;text-transform:uppercase">Quantity</label>
-              <input type="number" class="avg-qty" oninput="calcRun()" placeholder="e.g. 10" style="width:100%;padding:7px 9px;border:1px solid var(--bdr);border-radius:8px;font-size:13px;font-family:'Space Grotesk',sans-serif"></div>
-            <button onclick="removeAvgRow(this)" style="padding:7px 10px;border:1px solid var(--bdr);border-radius:8px;background:#fff;color:var(--red);cursor:pointer;font-size:12px">✕</button>
-          </div>
-        </div>
-        <button onclick="addAvgRow()" style="padding:6px 14px;border:1px solid var(--bdr);border-radius:8px;background:#fff;color:var(--mc);font-weight:700;font-size:12px;cursor:pointer;margin-bottom:14px">+ Add Buy</button>
-        <div style="border-top:1px solid var(--bdr);padding-top:10px">
-          ${resultRow('Total Quantity','avg-totqty')}
-          ${resultRow('Total Invested','avg-totinv')}
-          ${resultRow('Average Price','avg-result','var(--mc)')}
-        </div>
-      </div>
-    </div>
-
     <!-- ═══ XIRR CALCULATOR ═══ -->
     <div style="background:var(--panel);border:1px solid var(--bdr);border-radius:14px;margin-bottom:14px;overflow:hidden">
       <div style="padding:14px 18px;border-bottom:1px solid var(--bdr)">
@@ -2282,6 +2253,20 @@ function renderCalculators(){
       <div style="flex:1;height:1px;background:var(--bdr)"></div>
       <div style="font-size:10px;color:#999999">Understand real returns and tax impact</div>
     </div>
+    <!-- ═══ SALARY / CTC → IN-HAND PAY CALCULATOR ═══ -->
+    ${calcCard('Salary/CTC \u2192 In-Hand Pay Calculator','Estimate your monthly take-home from your annual CTC',
+      inp('ctc-amt','Annual CTC (₹)','10,00,000',1000000)+
+      inp('ctc-basicpct','Basic Salary (% of CTC)','40',40)+
+      inp('ctc-pt','Professional Tax (Annual, ₹)','2,400',2400),
+      resultRow('Basic Salary (Annual)','ctc-basic')+
+      resultRow('Employer PF Contribution','ctc-employerpf')+
+      resultRow('Gross Salary (Annual)','ctc-gross')+
+      resultRow('Total Deductions (PF+PT+Tax)','ctc-deductions','var(--red)')+
+      resultRow('Net Take-Home (Annual)','ctc-annual')+
+      resultRow('In-Hand Monthly Salary','ctc-monthly','var(--green)')+
+      `<p style="font-size:10px;color:#999999;margin-top:8px">Assumes Basic is a fixed % of CTC, 12% employer + 12% employee PF on Basic, New Regime tax with ₹75,000 standard deduction. Actual CTC structures vary (gratuity, bonus payout timing, PF ceiling, HRA) — use as a rough estimate only.</p>`
+    )}
+
     <!-- ═══ INCOME TAX CALCULATOR (OLD VS NEW REGIME) ═══ -->
     <div style="background:var(--panel);border:1px solid var(--bdr);border-radius:14px;margin-bottom:14px;overflow:hidden">
       <div style="padding:14px 18px;border-bottom:1px solid var(--bdr)">
@@ -2530,24 +2515,6 @@ function taxOldRegime(ti){
   return tax;
 }
 
-function addAvgRow(){
-  const wrap=$('avg-rows');
-  const row=document.createElement('div');
-  row.className='avg-row';
-  row.style.cssText='display:grid;grid-template-columns:1fr 1fr auto;gap:8px;margin-bottom:8px;align-items:end';
-  row.innerHTML=`
-    <div><label style="font-size:10px;font-weight:700;color:#6b6b6b;text-transform:uppercase">Price ₹</label>
-      <input type="number" class="avg-price" oninput="calcRun()" placeholder="e.g. 100" style="width:100%;padding:7px 9px;border:1px solid var(--bdr);border-radius:8px;font-size:13px;font-family:'Space Grotesk',sans-serif"></div>
-    <div><label style="font-size:10px;font-weight:700;color:#6b6b6b;text-transform:uppercase">Quantity</label>
-      <input type="number" class="avg-qty" oninput="calcRun()" placeholder="e.g. 10" style="width:100%;padding:7px 9px;border:1px solid var(--bdr);border-radius:8px;font-size:13px;font-family:'Space Grotesk',sans-serif"></div>
-    <button onclick="removeAvgRow(this)" style="padding:7px 10px;border:1px solid var(--bdr);border-radius:8px;background:#fff;color:var(--red);cursor:pointer;font-size:12px">✕</button>`;
-  wrap.appendChild(row);
-}
-function removeAvgRow(btn){
-  const wrap=$('avg-rows');
-  if(wrap.children.length>1){ btn.closest('.avg-row').remove(); calcRun(); }
-}
-
 function addXirrRow(){
   const wrap=$('xirr-rows');
   const row=document.createElement('div');
@@ -2597,17 +2564,6 @@ function calcRun(){
     setTxt('sip-invested', fmtINR(invested));
     setTxt('sip-returns', fmtINR(fv-invested));
     setTxt('sip-total', fmtINR(fv));
-  }
-
-  // IPO Allotment Probability
-  const ipoLots=gv('ipo-lots'), ipoApps=gv('ipo-apps'), ipoYourLots=gv('ipo-yourlots')||1;
-  if(ipoLots&&ipoApps){
-    const subX = ipoApps/ipoLots;
-    const baseProb = Math.min(1, ipoLots/ipoApps);
-    const yourProb = subX<=1 ? 1 : Math.min(1, 1-Math.pow(1-baseProb, ipoYourLots));
-    setTxt('ipo-subx', subX.toFixed(2)+'x');
-    setTxt('ipo-baseprob', (baseProb*100).toFixed(1)+'%');
-    setTxt('ipo-yourprob', (yourProb*100).toFixed(1)+'%');
   }
 
   // Goal-Based SIP — required monthly SIP to hit a target corpus
@@ -2663,21 +2619,6 @@ function calcRun(){
     setTxt('cagr-result', cagr.toFixed(2)+'%');
   }
 
-  // Stock Average
-  const prices=document.querySelectorAll('.avg-price');
-  const qtys=document.querySelectorAll('.avg-qty');
-  let totQty=0, totInv=0;
-  prices.forEach((p,i)=>{
-    const price=parseFloat(p.value)||0;
-    const qty=parseFloat(qtys[i]?.value)||0;
-    totQty+=qty; totInv+=price*qty;
-  });
-  if(totQty>0){
-    setTxt('avg-totqty', totQty.toLocaleString('en-IN'));
-    setTxt('avg-totinv', fmtINR(totInv));
-    setTxt('avg-result', fmtINR(totInv/totQty));
-  }
-
   // Capital Gains Tax
   const gBuy=gv('cg-buy'), gSell=gv('cg-sell'), gQty=gv('cg-qty');
   const periodEl=$('cg-period');
@@ -2695,6 +2636,25 @@ function calcRun(){
     setTxt('cg-taxable', fmtINR(taxable));
     setTxt('cg-tax', fmtINR(tax));
     setTxt('cg-net', fmtINR(gain-tax));
+  }
+
+  // Salary/CTC → In-Hand Pay Calculator
+  const ctcAmt=gv('ctc-amt'), ctcBasicPct=gv('ctc-basicpct')/100, ctcPT=gv('ctc-pt');
+  if(ctcAmt&&ctcBasicPct){
+    const basic = ctcAmt*ctcBasicPct;
+    const employerPF = basic*0.12;
+    const employeePF = basic*0.12;
+    const grossSalary = Math.max(0, ctcAmt-employerPF);
+    const taxableIncome = Math.max(0, grossSalary-75000);
+    const incomeTax = taxNewRegime(taxableIncome)*1.04;
+    const totalDeductions = employeePF+ctcPT+incomeTax;
+    const netAnnual = Math.max(0, grossSalary-totalDeductions);
+    setTxt('ctc-basic', fmtINR(basic));
+    setTxt('ctc-employerpf', fmtINR(employerPF));
+    setTxt('ctc-gross', fmtINR(grossSalary));
+    setTxt('ctc-deductions', fmtINR(totalDeductions));
+    setTxt('ctc-annual', fmtINR(netAnnual));
+    setTxt('ctc-monthly', fmtINR(netAnnual/12));
   }
 
   // Income Tax Calculator — Old vs New Regime (FY 2026-27)
@@ -2791,6 +2751,19 @@ function calcRun(){
     setTxt('ppf-invested', fmtINR(invested));
     setTxt('ppf-interest', fmtINR(fv-invested));
     setTxt('ppf-total', fmtINR(fv));
+  }
+
+  // SCSS Calculator (quarterly payout, not compounded)
+  const scssAmt=gv('scss-amt'), scssRate=gv('scss-rate')/100, scssYrs=gv('scss-yrs');
+  if(scssAmt&&scssRate&&scssYrs){
+    const quarterlyPayout = scssAmt*scssRate/4;
+    const annualPayout = quarterlyPayout*4;
+    const totalInterest = annualPayout*scssYrs;
+    const maturityValue = scssAmt+totalInterest;
+    setTxt('scss-quarterly', fmtINR(quarterlyPayout));
+    setTxt('scss-annual', fmtINR(annualPayout));
+    setTxt('scss-totalint', fmtINR(totalInterest));
+    setTxt('scss-maturity', fmtINR(maturityValue));
   }
 
   // Inflation Calculator
