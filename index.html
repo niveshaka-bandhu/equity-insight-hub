@@ -1953,6 +1953,22 @@ function renderCalculators(){
     <div class="stitle">Financial Calculators</div>
 
     <div style="display:flex;align-items:center;gap:10px;margin:22px 0 12px">
+      <div style="font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:800;color:#00838f;text-transform:uppercase;letter-spacing:.6px">IPO Tools</div>
+      <div style="flex:1;height:1px;background:var(--bdr)"></div>
+      <div style="font-size:10px;color:#999999">Estimate your allotment odds</div>
+    </div>
+    <!-- ═══ IPO ALLOTMENT PROBABILITY CALCULATOR ═══ -->
+    ${calcCard('IPO Allotment Probability Calculator','Estimate your odds of getting shares in an oversubscribed retail category',
+      inp('ipo-lots','Total Lots Available (Retail Category)','10,000',10000)+
+      inp('ipo-apps','Total Applications Received (Retail)','45,000',45000)+
+      inp('ipo-yourlots','Lots You Applied For','1',1),
+      resultRow('Retail Subscription','ipo-subx','var(--mc)')+
+      resultRow('Base Probability (per lot)','ipo-baseprob')+
+      resultRow('Your Estimated Allotment Chance','ipo-yourprob','var(--green)')+
+      `<p style="font-size:10px;color:#999999;margin-top:8px">SEBI's computerised lottery gives every applicant roughly equal odds when the retail category is oversubscribed. Applying for more lots slightly improves your odds but doesn't guarantee more shares. Rough estimate only — actual allotment depends on the registrar's exact methodology.</p>`
+    )}
+
+    <div style="display:flex;align-items:center;gap:10px;margin:22px 0 12px">
       <div style="font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:800;color:var(--mc);text-transform:uppercase;letter-spacing:.6px">Growth & Investment Planning</div>
       <div style="flex:1;height:1px;background:var(--bdr)"></div>
       <div style="font-size:10px;color:#999999">Grow a lumpsum or recurring investment</div>
@@ -1976,6 +1992,18 @@ function renderCalculators(){
       resultRow('Invested Amount','sup-invested')+
       resultRow('Estimated Returns','sup-returns','var(--green)')+
       resultRow('Total Value','sup-total','var(--mc)')
+    )}
+
+    <!-- ═══ GOAL-BASED SIP CALCULATOR ═══ -->
+    ${calcCard('Goal-Based SIP Calculator','How much to invest monthly to reach a target corpus',
+      inp('goal-target','Target Corpus (₹)','50,00,000',5000000)+
+      inp('goal-existing','Current Savings Already Invested (₹)','0',0)+
+      inp('goal-ret','Expected Return (% p.a.)','12',12,'0.1')+
+      inp('goal-yrs','Time Period (Years)','10',10),
+      resultRow('Future Value of Current Savings','goal-existingfv')+
+      resultRow('Required Monthly SIP','goal-sip','var(--mc)')+
+      resultRow('Total You\u2019ll Invest','goal-invested')+
+      resultRow('Total Corpus at Target Date','goal-total','var(--green)')
     )}
 
     <!-- ═══ LUMPSUM CALCULATOR ═══ -->
@@ -2254,6 +2282,51 @@ function renderCalculators(){
       <div style="flex:1;height:1px;background:var(--bdr)"></div>
       <div style="font-size:10px;color:#999999">Understand real returns and tax impact</div>
     </div>
+    <!-- ═══ INCOME TAX CALCULATOR (OLD VS NEW REGIME) ═══ -->
+    <div style="background:var(--panel);border:1px solid var(--bdr);border-radius:14px;margin-bottom:14px;overflow:hidden">
+      <div style="padding:14px 18px;border-bottom:1px solid var(--bdr)">
+        <div style="font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:700;color:#1a1a1a">Income Tax Calculator — Old vs New Regime</div>
+        <div style="font-size:10px;color:#6b6b6b;margin-top:1px">FY 2026-27 (AY 2027-28) slabs — compare your tax under both regimes</div>
+      </div>
+      <div style="padding:16px 18px">
+        ${evInp('itx-income','Gross Annual Income (₹)','12,00,000')}
+        ${evInp('itx-deductions','Deductions — 80C, 80D, HRA, Home Loan Interest, etc. — Old Regime only (₹)','1,50,000')}
+        <div style="margin-top:14px;border-top:1px solid var(--bdr);padding-top:12px">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+            <div style="background:rgba(120,75,30,.05);border-radius:10px;padding:12px 14px">
+              <div style="font-size:9px;color:#6b6b6b;text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px">New Regime Tax</div>
+              <div id="itx-new-tax" style="font-family:'Space Grotesk',sans-serif;font-size:19px;font-weight:700;color:#1a1a1a">—</div>
+              <div style="font-size:9px;color:#999999;margin-top:4px">Taxable income: <span id="itx-new-taxable">—</span></div>
+            </div>
+            <div style="background:rgba(237,125,43,.08);border-radius:10px;padding:12px 14px">
+              <div style="font-size:9px;color:#6b6b6b;text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px">Old Regime Tax</div>
+              <div id="itx-old-tax" style="font-family:'Space Grotesk',sans-serif;font-size:19px;font-weight:700;color:var(--mc)">—</div>
+              <div style="font-size:9px;color:#999999;margin-top:4px">Taxable income: <span id="itx-old-taxable">—</span></div>
+            </div>
+          </div>
+        </div>
+        <div id="itx-verdict" style="margin-top:12px;padding:10px 14px;border-radius:10px;font-size:13px;font-weight:700;text-align:center"></div>
+        <p style="font-size:10px;color:#999999;margin-top:10px">New regime: ₹75,000 standard deduction, full rebate up to ₹12L taxable income. Old regime: ₹50,000 standard deduction + your entered deductions, full rebate up to ₹5L taxable income. Both include 4% cess. Excludes surcharge (applicable above ₹50L income) and marginal relief — for guidance only, not tax advice.</p>
+      </div>
+    </div>
+
+    <!-- ═══ HRA EXEMPTION CALCULATOR ═══ -->
+    ${calcCard('HRA Exemption Calculator','How much of your HRA is tax-exempt (Old Regime only)',
+      inp('hra-basic','Basic + DA (Annual, ₹)','6,00,000',600000)+
+      inp('hra-received','HRA Received (Annual, ₹)','3,00,000',300000)+
+      inp('hra-rent','Rent Paid (Annual, ₹)','2,40,000',240000)+
+      `<div style="margin-bottom:10px">
+        <label style="font-size:11px;font-weight:700;color:#6b6b6b;text-transform:uppercase;letter-spacing:.4px;display:block;margin-bottom:4px">City Type</label>
+        <select id="hra-city" onchange="calcRun()" style="width:100%;padding:8px 10px;border:1px solid var(--bdr);border-radius:8px;font-size:13px;font-family:'Space Grotesk',sans-serif;background:#fff">
+          <option value="metro">Metro (Delhi, Mumbai, Kolkata, Chennai) — 50%</option>
+          <option value="nonmetro">Non-Metro — 40%</option>
+        </select>
+      </div>`,
+      resultRow('HRA Exemption (Tax-Free)','hra-exempt','var(--green)')+
+      resultRow('Taxable HRA','hra-taxable','var(--red)')+
+      `<p style="font-size:10px;color:#999999;margin-top:8px">Exemption = least of: HRA received, rent paid − 10% of Basic+DA, or 50%/40% of Basic+DA. Only available under the Old Tax Regime.</p>`
+    )}
+
     <!-- ═══ CAPITAL GAINS TAX (EQUITY) ═══ -->
     ${calcCard('Capital Gains Tax — Equity (India)','Simplified STCG/LTCG estimate for listed shares/equity MF',
       inp('cg-buy','Buy Price (₹)','100',100)+
@@ -2439,6 +2512,24 @@ function fmtINR(n){
 function gv(id){ const el=$(id); return el? parseFloat(el.value)||0 : 0; }
 function setTxt(id,val){ const el=$(id); if(el) el.textContent=val; }
 
+/* Income tax slabs — FY 2026-27 (AY 2027-28), unchanged from FY 2025-26 per Union Budget 2026 */
+function taxNewRegime(ti){
+  if(ti<=0) return 0;
+  const brackets=[[0,400000,0],[400000,800000,0.05],[800000,1200000,0.10],[1200000,1600000,0.15],[1600000,2000000,0.20],[2000000,2400000,0.25],[2400000,Infinity,0.30]];
+  let tax=0;
+  brackets.forEach(([lo,hi,rate])=>{ if(ti>lo) tax+=(Math.min(ti,hi)-lo)*rate; });
+  if(ti<=1200000) tax=0; // Section 87A full rebate
+  return tax;
+}
+function taxOldRegime(ti){
+  if(ti<=0) return 0;
+  const brackets=[[0,250000,0],[250000,500000,0.05],[500000,1000000,0.20],[1000000,Infinity,0.30]];
+  let tax=0;
+  brackets.forEach(([lo,hi,rate])=>{ if(ti>lo) tax+=(Math.min(ti,hi)-lo)*rate; });
+  if(ti<=500000) tax=0; // Section 87A full rebate
+  return tax;
+}
+
 function addAvgRow(){
   const wrap=$('avg-rows');
   const row=document.createElement('div');
@@ -2506,6 +2597,33 @@ function calcRun(){
     setTxt('sip-invested', fmtINR(invested));
     setTxt('sip-returns', fmtINR(fv-invested));
     setTxt('sip-total', fmtINR(fv));
+  }
+
+  // IPO Allotment Probability
+  const ipoLots=gv('ipo-lots'), ipoApps=gv('ipo-apps'), ipoYourLots=gv('ipo-yourlots')||1;
+  if(ipoLots&&ipoApps){
+    const subX = ipoApps/ipoLots;
+    const baseProb = Math.min(1, ipoLots/ipoApps);
+    const yourProb = subX<=1 ? 1 : Math.min(1, 1-Math.pow(1-baseProb, ipoYourLots));
+    setTxt('ipo-subx', subX.toFixed(2)+'x');
+    setTxt('ipo-baseprob', (baseProb*100).toFixed(1)+'%');
+    setTxt('ipo-yourprob', (yourProb*100).toFixed(1)+'%');
+  }
+
+  // Goal-Based SIP — required monthly SIP to hit a target corpus
+  const goalTarget=gv('goal-target'), goalExisting=gv('goal-existing'),
+        goalRMonthly=gv('goal-ret')/100/12, goalRAnnual=gv('goal-ret')/100,
+        goalY=gv('goal-yrs'), goalYM=goalY*12;
+  if(goalTarget&&goalRMonthly&&goalYM){
+    const existingFV = goalExisting * Math.pow(1+goalRAnnual, goalY);
+    const remainingTarget = Math.max(0, goalTarget-existingFV);
+    const sipFactor = ((Math.pow(1+goalRMonthly,goalYM)-1)/goalRMonthly)*(1+goalRMonthly);
+    const requiredSip = remainingTarget/sipFactor;
+    const invested = requiredSip*goalYM;
+    setTxt('goal-existingfv', fmtINR(existingFV));
+    setTxt('goal-sip', fmtINR(requiredSip));
+    setTxt('goal-invested', fmtINR(invested));
+    setTxt('goal-total', fmtINR(goalTarget));
   }
 
   // Lumpsum
@@ -2577,6 +2695,45 @@ function calcRun(){
     setTxt('cg-taxable', fmtINR(taxable));
     setTxt('cg-tax', fmtINR(tax));
     setTxt('cg-net', fmtINR(gain-tax));
+  }
+
+  // Income Tax Calculator — Old vs New Regime (FY 2026-27)
+  const itxIncome=gv('itx-income'), itxDeductions=gv('itx-deductions');
+  if(itxIncome){
+    const newTaxable=Math.max(0, itxIncome-75000);
+    const oldTaxable=Math.max(0, itxIncome-50000-itxDeductions);
+    const newTax=taxNewRegime(newTaxable)*1.04;
+    const oldTax=taxOldRegime(oldTaxable)*1.04;
+    setTxt('itx-new-taxable', fmtINR(newTaxable));
+    setTxt('itx-old-taxable', fmtINR(oldTaxable));
+    setTxt('itx-new-tax', fmtINR(newTax));
+    setTxt('itx-old-tax', fmtINR(oldTax));
+    const itxVerdict=$('itx-verdict');
+    if(itxVerdict){
+      const diff=oldTax-newTax;
+      if(Math.abs(diff)<500){
+        itxVerdict.textContent='⚖️ Verdict: Both regimes result in nearly the same tax';
+        itxVerdict.style.background='rgba(237,125,43,.10)'; itxVerdict.style.color='var(--mc)';
+      } else if(diff>0){
+        itxVerdict.textContent='✅ Verdict: New Regime saves you '+fmtINR(diff)+' in tax';
+        itxVerdict.style.background='rgba(47,158,94,.10)'; itxVerdict.style.color='var(--green)';
+      } else {
+        itxVerdict.textContent='✅ Verdict: Old Regime saves you '+fmtINR(-diff)+' in tax';
+        itxVerdict.style.background='rgba(47,158,94,.10)'; itxVerdict.style.color='var(--green)';
+      }
+    }
+  }
+
+  // HRA Exemption Calculator
+  const hraBasic=gv('hra-basic'), hraReceived=gv('hra-received'), hraRent=gv('hra-rent'), hraCityEl=$('hra-city');
+  if(hraBasic&&hraReceived&&hraCityEl){
+    const pct = hraCityEl.value==='metro' ? 0.5 : 0.4;
+    const cond1=hraReceived;
+    const cond2=Math.max(0, hraRent-0.10*hraBasic);
+    const cond3=hraBasic*pct;
+    const exempt=Math.max(0, Math.min(cond1,cond2,cond3));
+    setTxt('hra-exempt', fmtINR(exempt));
+    setTxt('hra-taxable', fmtINR(Math.max(0,hraReceived-exempt)));
   }
 
   // Step-up SIP
@@ -3322,12 +3479,15 @@ function renderNiftyIntradayChart(points, prevClose){
   const svg=document.getElementById('nifty-chart-svg');
   if(!svg) return;
   svg.innerHTML='';
-  // Size viewBox to the SVG's actual rendered pixel dimensions so preserveAspectRatio="none"
-  // never distorts/squishes text — coordinate space matches on-screen pixels 1:1.
-  const rect=svg.getBoundingClientRect();
-  const w=Math.max(300, Math.round(rect.width)) || 1200;
-  const h=Math.max(150, Math.round(rect.height)) || 280;
+  // Fixed logical coordinate system (independent of the SVG's on-screen pixel size).
+  // Using getBoundingClientRect() here was unreliable — if the SVG hadn't finished
+  // laying out yet, the rect came back tiny (falling back to 300x150) while the
+  // element was actually rendered much wider, so preserveAspectRatio="none" stretched
+  // everything (including text) up to several times its intended size, causing the
+  // huge, overlapping axis labels.
+  const w=1000, h=280;
   svg.setAttribute('viewBox','0 0 '+w+' '+h);
+  svg.setAttribute('preserveAspectRatio','none');
   const bottomAxisH=22; // reserved for x-axis time labels
   const n=points.length;
   const vals=points.map(p=>p.price);
@@ -3372,7 +3532,7 @@ function renderNiftyIntradayChart(points, prevClose){
     label.setAttribute('y', h-6);
     label.setAttribute('font-size','11');label.setAttribute('fill','#999999');
     label.setAttribute('text-anchor', anchor);
-    label.textContent=points[idx].time.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',hour12:true});
+    label.textContent=points[idx].time.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',hour12:false});
     svg.appendChild(label);
   }
 
