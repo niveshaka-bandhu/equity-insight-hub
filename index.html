@@ -1835,6 +1835,7 @@ function showCorpTab(key, btn, color){
 const DATA={};
 /* Ticker/company-name master list — from the user-maintained "Equity" sheet tab (col A: Symbol, col B: Name) */
 let EQUITY_LIST=[];
+let EQUITY_FETCH_DONE=false;
 function parseEquityList(rows){
   return (rows||[]).slice(1) // row 1 is the header (Symbol, Name)
     .filter(r=>r[0]&&String(r[0]).trim())
@@ -1873,12 +1874,14 @@ async function loadAll(){
       }catch(e2){console.warn('ipo gviz fallback failed',e2.message);}
     }),
     fetchIPOTypes().then(d=>{DATA.ipoTypes=d;}).catch(e=>console.warn('ipoTypes',e.message)),
-    fetchSheetCSV(GIDS.equity).then(d=>{
+    fetchSheet(GIDS.equity).then(d=>{
       EQUITY_LIST=parseEquityList(d);
+      EQUITY_FETCH_DONE=true;
       console.log('[Equity] Loaded',EQUITY_LIST.length,'tickers. First 3:',EQUITY_LIST.slice(0,3));
       setEquityStatus();
     }).catch(e=>{
       console.warn('equity',e.message);
+      EQUITY_FETCH_DONE=true;
       const el=document.getElementById('equity-status');
       if(el){ el.textContent='⚠ Couldn\'t load ticker list — check the Equity sheet gid/sharing. See console for details.'; el.style.color='var(--red)'; }
     }),
@@ -1891,11 +1894,11 @@ async function loadAll(){
       DATA._nseAdv=(d[30]||[])[8]||'—'; DATA._nseDec=(d[31]||[])[8]||'—';
       try{ if(typeof updateMoodBadge==='function') updateMoodBadge(); }catch(e){}
       // Re-render dashboard movers widget now that market data is available
-      if(DATA.dashboard?.length) try{renderDashboard(DATA.dashboard, DATA.news||[]);stampUpdated('dashboard');}catch(e){}
+      if(DATA.dashboard?.length) try{renderDashboard(DATA.dashboard, DATA.news||[]);stampUpdated('dashboard');if(EQUITY_FETCH_DONE)setEquityStatus();}catch(e){}
     }).catch(e=>console.warn('market',e.message)),
     
   ]);
-  if(DATA.dashboard?.length) try{renderDashboard(DATA.dashboard, DATA.news||[]);stampUpdated('dashboard');}catch(e){console.error('Dashboard',e);}
+  if(DATA.dashboard?.length) try{renderDashboard(DATA.dashboard, DATA.news||[]);stampUpdated('dashboard');if(EQUITY_FETCH_DONE)setEquityStatus();}catch(e){console.error('Dashboard',e);}
   try{ buildNewsTicker(); }catch(e){}
   if(DATA.global?.length)    try{renderGlobal(DATA.global);stampUpdated('global');}catch(e){console.error('Global',e);}
   if(DATA.futures?.length)   try{renderFutures(DATA.futures);stampUpdated('futures');}catch(e){console.error('Futures',e);}
@@ -1934,7 +1937,7 @@ async function loadTab(key){
       } else {
         DATA[key]=await fetchSheet(GIDS[key]);
       }
-     if(key==='dashboard'){ renderDashboard(DATA.dashboard||[], DATA.news||[]); stampUpdated('dashboard'); try{ buildNewsTicker(); }catch(e){} }
+     if(key==='dashboard'){ renderDashboard(DATA.dashboard||[], DATA.news||[]); stampUpdated('dashboard'); if(EQUITY_FETCH_DONE)setEquityStatus(); try{ buildNewsTicker(); }catch(e){} }
       if(key==='futures'){  renderFutures(DATA.futures||[]); stampUpdated('futures'); }
       if(key==='indian'){   renderIndian(DATA.indian||[]); stampUpdated('indian'); }
       if(key==='market'){   renderMarket(DATA.market||[]); stampUpdated('market'); }
@@ -1947,12 +1950,14 @@ async function loadTab(key){
 async function refreshAll(){
   // Refresh all already-loaded tabs
   const btn=$('rbtn'); if(btn){btn.textContent='⟳ Loading…'; btn.disabled=true;}
-  fetchSheetCSV(GIDS.equity).then(d=>{
+  fetchSheet(GIDS.equity).then(d=>{
     EQUITY_LIST=parseEquityList(d);
+    EQUITY_FETCH_DONE=true;
     console.log('[Equity] Refreshed',EQUITY_LIST.length,'tickers.');
     setEquityStatus();
   }).catch(e=>{
     console.warn('equity refresh',e.message);
+    EQUITY_FETCH_DONE=true;
     const el=document.getElementById('equity-status');
     if(el){ el.textContent='⚠ Couldn\'t load ticker list — check the Equity sheet gid/sharing. See console for details.'; el.style.color='var(--red)'; }
   });
@@ -1978,7 +1983,7 @@ async function refreshAll(){
         } else {
           DATA[k]=await fetchSheet(GIDS[k]);
         }
-        if(k==='dashboard'){ renderDashboard(DATA.dashboard||[], DATA.news||[]); stampUpdated('dashboard'); try{ buildNewsTicker(); }catch(e){} }
+        if(k==='dashboard'){ renderDashboard(DATA.dashboard||[], DATA.news||[]); stampUpdated('dashboard'); if(EQUITY_FETCH_DONE)setEquityStatus(); try{ buildNewsTicker(); }catch(e){} }
         if(k==='global'){   renderGlobal(DATA.global||[]); stampUpdated('global'); }
         if(k==='futures'){  renderFutures(DATA.futures||[]); stampUpdated('futures'); }
         if(k==='indian'){   renderIndian(DATA.indian||[]); stampUpdated('indian'); }
