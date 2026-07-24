@@ -406,7 +406,7 @@ footer a{color:var(--mc)}
 
 <script>
 const SID='1xoUJqge0b4SQmZSRLZyoBBcokXrUrFVt8fBFoef28NQ';
-const GIDS={dashboard:236316251,news:194974677,global:572014590,futures:2063758158,indian:139113774,market:1259430707,ipo:536891537,ipo2:536891537,currency:1847303228};
+const GIDS={dashboard:236316251,news:194974677,global:572014590,futures:2063758158,indian:139113774,market:1259430707,ipo:536891537,ipo2:536891537,currency:1847303228,equity:2048547148};
 const SID2='1_7_7lctIPNdHjUd3wNp0hu6xMjqhG3Tw0fNJO_fxWJg';
 const CORP_GIDS={today:203302293,dividends:1718274952,bonus:1235071159,splits:1616300885};
 
@@ -683,10 +683,17 @@ function renderDashboard(rows, newsRows){
     <div style="background:var(--panel);border:1px solid var(--bdr);border-radius:14px;padding:16px 18px;margin-bottom:14px">
       <div style="font-size:11px;font-weight:700;color:var(--mc);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">🔍 Stock Lookup</div>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <input id="stock-lookup-input" type="text" placeholder="e.g. RELIANCE, TCS, INFY, HDFCBANK..."
-          onkeydown="if(event.key==='Enter') openStockLookup()"
-          style="flex:1;min-width:200px;padding:10px 14px;border:1px solid var(--bdr);border-radius:9px;
-            font-size:14px;font-family:'Space Grotesk',sans-serif;color:#1a1a1a;background:#fff">
+        <div style="position:relative;flex:1;min-width:200px">
+          <input id="stock-lookup-input" type="text" placeholder="e.g. RELIANCE, TCS, Tata Motors, Infosys..." autocomplete="off"
+            oninput="renderStockSuggestions()"
+            onfocus="renderStockSuggestions()"
+            onkeydown="stockLookupKeydown(event)"
+            style="width:100%;padding:10px 14px;border:1px solid var(--bdr);border-radius:9px;
+              font-size:14px;font-family:'Space Grotesk',sans-serif;color:#1a1a1a;background:#fff">
+          <div id="stock-lookup-suggestions" style="display:none;position:absolute;top:calc(100% + 4px);left:0;right:0;
+            z-index:50;background:#fff;border:1px solid var(--bdr);border-radius:10px;
+            box-shadow:0 12px 30px rgba(120,75,30,.18);max-height:260px;overflow-y:auto"></div>
+        </div>
         <button onclick="openStockLookup()"
           style="padding:10px 18px;border:none;border-radius:9px;background:var(--mc);color:#fff;
             font-weight:700;font-size:13px;cursor:pointer;flex-shrink:0;white-space:nowrap">📊 Fundamentals</button>
@@ -694,7 +701,7 @@ function renderDashboard(rows, newsRows){
           style="padding:10px 18px;border:1px solid var(--mc);border-radius:9px;background:#fff;color:var(--mc);
             font-weight:700;font-size:13px;cursor:pointer;flex-shrink:0;white-space:nowrap">📈 TradingView</button>
       </div>
-      <p style="font-size:10px;color:#999999;margin-top:8px">Enter the exact NSE/BSE symbol (not company name) · Fundamentals via Screener.in, Chart via TradingView · Opens in new tab · Not affiliated with either site</p>
+      <p style="font-size:10px;color:#999999;margin-top:8px">Type a ticker or company name — e.g. "Tata" shows every Tata group stock · Fundamentals via Screener.in, Chart via TradingView · Opens in new tab · Not affiliated with either site</p>
     </div>
 
     <!-- INDICES -->
@@ -1826,6 +1833,14 @@ function showCorpTab(key, btn, color){
 /* ── TICKER ── */
 /* ── LOAD ALL ── */
 const DATA={};
+/* Ticker/company-name master list — from the user-maintained "Equity" sheet tab (col A: Symbol, col B: Name) */
+let EQUITY_LIST=[];
+function parseEquityList(rows){
+  return (rows||[]).slice(1) // row 1 is the header (Symbol, Name)
+    .filter(r=>r[0]&&String(r[0]).trim())
+    .map(r=>({symbol:clean(r[0]).toUpperCase(), name:clean(r[1]||'')}));
+}
+
 async function loadAll(){
   const btn=$('rbtn');
   // Kick off the Nifty chart FETCH immediately (DOM-independent), in parallel with everything
@@ -1847,6 +1862,7 @@ async function loadAll(){
       }catch(e2){console.warn('ipo gviz fallback failed',e2.message);}
     }),
     fetchIPOTypes().then(d=>{DATA.ipoTypes=d;}).catch(e=>console.warn('ipoTypes',e.message)),
+    fetchSheetCSV(GIDS.equity).then(d=>{EQUITY_LIST=parseEquityList(d);}).catch(e=>console.warn('equity',e.message)),
     fetchSheet2(CORP_GIDS.today).then(d=>{DATA['corp_today']=d;}).catch(e=>console.warn('corp_today',e.message)),
     // Fetch market data for Dashboard widget but don't mark as LOADED so Movers tab still loads+renders properly
     fetchSheet(GIDS.market).then(d=>{
@@ -1912,6 +1928,7 @@ async function loadTab(key){
 async function refreshAll(){
   // Refresh all already-loaded tabs
   const btn=$('rbtn'); if(btn){btn.textContent='⟳ Loading…'; btn.disabled=true;}
+  fetchSheetCSV(GIDS.equity).then(d=>{EQUITY_LIST=parseEquityList(d);}).catch(e=>console.warn('equity refresh',e.message));
   const keys=Object.keys(LOADED);
   await Promise.allSettled(keys.map(async k=>{
     try{
@@ -3764,6 +3781,78 @@ function warmSearchTabs(){
   ['market','ipo','corporate','calculators'].forEach(k=>{ try{ loadTab(k); }catch(e){} });
 }
 setTimeout(warmSearchTabs, 1200);
+
+/* Stock Lookup autocomplete — matches against ticker OR company name from the Equity sheet */
+let _stockSugIdx=-1;
+function renderStockSuggestions(){
+  const input=document.getElementById('stock-lookup-input');
+  const box=document.getElementById('stock-lookup-suggestions');
+  if(!input||!box) return;
+  const q=input.value.trim().toLowerCase();
+  _stockSugIdx=-1;
+  if(!q||!EQUITY_LIST.length){ box.style.display='none'; box.innerHTML=''; return; }
+  const results=EQUITY_LIST
+    .map(e=>{
+      const sym=e.symbol.toLowerCase(), nm=e.name.toLowerCase();
+      let score=99;
+      if(sym===q||nm===q) score=0;
+      else if(sym.startsWith(q)) score=1;
+      else if(nm.startsWith(q)) score=2;
+      else if(nm.split(/\s+/).some(w=>w.startsWith(q))) score=3; // matches "Tata" inside "Tata Motors Ltd"
+      else if(sym.includes(q)) score=4;
+      else if(nm.includes(q)) score=5;
+      return {e,score};
+    })
+    .filter(x=>x.score<99)
+    .sort((a,b)=>a.score-b.score || a.e.symbol.localeCompare(b.e.symbol))
+    .slice(0,10)
+    .map(x=>x.e);
+  if(!results.length){ box.style.display='none'; box.innerHTML=''; return; }
+  box.innerHTML=results.map((e,i)=>
+    `<div class="sl-sug" data-i="${i}" data-sym="${e.symbol}" onclick="selectStockSuggestion('${e.symbol.replace(/'/g,"\\'")}')"
+      style="padding:9px 14px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:13px"
+      onmouseover="this.style.background='rgba(237,125,43,.10)'" onmouseout="this.style.background=''">
+      <span style="color:#1a1a1a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${e.name||e.symbol}</span>
+      <span style="flex-shrink:0;font-family:'Space Grotesk',sans-serif;font-weight:700;color:var(--mc);font-size:11px">${e.symbol}</span>
+    </div>`
+  ).join('');
+  box.style.display='block';
+}
+function selectStockSuggestion(symbol){
+  const input=document.getElementById('stock-lookup-input');
+  input.value=symbol;
+  hideStockSuggestions();
+  input.focus();
+}
+function hideStockSuggestions(){
+  const box=document.getElementById('stock-lookup-suggestions');
+  if(box){ box.style.display='none'; box.innerHTML=''; }
+  _stockSugIdx=-1;
+}
+function stockLookupKeydown(event){
+  const box=document.getElementById('stock-lookup-suggestions');
+  const items=box?box.querySelectorAll('.sl-sug'):[];
+  if(event.key==='ArrowDown'&&items.length){
+    event.preventDefault(); _stockSugIdx=Math.min(_stockSugIdx+1,items.length-1); highlightSug(items);
+  } else if(event.key==='ArrowUp'&&items.length){
+    event.preventDefault(); _stockSugIdx=Math.max(_stockSugIdx-1,0); highlightSug(items);
+  } else if(event.key==='Enter'){
+    if(_stockSugIdx>=0&&items[_stockSugIdx]){ selectStockSuggestion(items[_stockSugIdx].getAttribute('data-sym')); }
+    else { hideStockSuggestions(); openStockLookup(); }
+  } else if(event.key==='Escape'){
+    hideStockSuggestions();
+  }
+}
+function highlightSug(items){
+  items.forEach((el,i)=>{ el.style.background = i===_stockSugIdx?'rgba(237,125,43,.16)':''; });
+  if(items[_stockSugIdx]) items[_stockSugIdx].scrollIntoView({block:'nearest'});
+}
+document.addEventListener('click',e=>{
+  const wrap=document.getElementById('stock-lookup-input');
+  const box=document.getElementById('stock-lookup-suggestions');
+  if(!wrap||!box) return;
+  if(!wrap.contains(e.target)&&!box.contains(e.target)) hideStockSuggestions();
+});
 
 /* Stock Lookup — deep-links to Screener.in for the entered symbol (no live scraping, just navigation) */
 function openStockLookup(){
