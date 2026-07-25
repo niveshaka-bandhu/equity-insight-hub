@@ -1068,43 +1068,6 @@ function renderGlobal(rows){
 
   $('s-global').innerHTML=`
     <div style="position:relative;min-height:400px">
-      <!-- Light world map watermark -->
-      <div style="position:absolute;inset:0;opacity:0.055;pointer-events:none;overflow:hidden;border-radius:12px">
-        <svg viewBox="0 0 1000 500" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%">
-          <!-- North America -->
-          <path d="M80,60 L160,55 L200,80 L210,120 L190,160 L170,200 L140,230 L110,220 L90,190 L70,160 L60,120 L70,90 Z" fill="#3a2d7f"/>
-          <path d="M140,230 L170,240 L180,270 L160,300 L130,290 L110,260 L120,240 Z" fill="#3a2d7f"/>
-          <!-- Greenland -->
-          <path d="M200,30 L240,25 L250,50 L230,70 L205,65 Z" fill="#3a2d7f"/>
-          <!-- South America -->
-          <path d="M170,280 L210,270 L230,300 L225,350 L210,390 L190,420 L165,410 L150,370 L148,330 L155,300 Z" fill="#3a2d7f"/>
-          <!-- Europe -->
-          <path d="M420,60 L470,55 L490,75 L480,100 L460,110 L440,105 L420,90 Z" fill="#3a2d7f"/>
-          <path d="M430,110 L465,108 L470,130 L450,140 L425,135 Z" fill="#3a2d7f"/>
-          <!-- Scandinavia -->
-          <path d="M455,30 L475,25 L480,50 L465,60 L450,55 Z" fill="#3a2d7f"/>
-          <path d="M475,28 L490,25 L495,45 L480,52 Z" fill="#3a2d7f"/>
-          <!-- UK -->
-          <path d="M400,65 L415,62 L418,80 L405,82 Z" fill="#3a2d7f"/>
-          <!-- Africa -->
-          <path d="M430,150 L490,145 L510,175 L515,220 L510,270 L495,310 L475,340 L450,345 L425,320 L415,280 L412,230 L418,185 Z" fill="#3a2d7f"/>
-          <!-- Russia/Asia North -->
-          <path d="M490,40 L650,30 L720,55 L730,90 L700,100 L650,95 L580,90 L510,85 L490,70 Z" fill="#3a2d7f"/>
-          <!-- Middle East -->
-          <path d="M510,150 L560,145 L575,170 L565,195 L535,200 L510,185 Z" fill="#3a2d7f"/>
-          <!-- India -->
-          <path d="M590,160 L625,158 L635,185 L625,215 L605,230 L585,215 L578,190 Z" fill="#3a2d7f"/>
-          <!-- China/SE Asia -->
-          <path d="M640,100 L720,95 L740,120 L735,155 L710,170 L680,165 L655,150 L640,130 Z" fill="#3a2d7f"/>
-          <path d="M695,170 L730,168 L740,195 L720,210 L695,200 Z" fill="#3a2d7f"/>
-          <!-- Japan -->
-          <path d="M760,100 L775,95 L780,115 L765,120 Z" fill="#3a2d7f"/>
-          <!-- Australia -->
-          <path d="M720,280 L800,270 L830,295 L835,340 L815,370 L775,375 L740,355 L720,320 L715,295 Z" fill="#3a2d7f"/>
-          <!-- New Zealand -->
-          <path d="M845,330 L858,325 L862,350 L848,358 Z" fill="#3a2d7f"/>
-        </svg>
-      </div>
       <div class="stitle">Global Indices</div>
       <div class="stitle-sm">India</div>
       <div class="igrid">${indiaWithNifty.map(mkCard).join('')}</div>
@@ -1559,22 +1522,32 @@ function renderIPO(rows){
   // Listed — compact table
   const listedBody = `<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse">
     <thead><tr>${['Company','Type','Listed','Issue ₹','Subs','List Open','List Close','List Gain','LTP ₹','Today','Size']
-      .map(h=>`<th style="font-size:10px;font-weight:700;color:#6b6b6b;padding:7px 10px;border-bottom:1px solid var(--bdr);text-align:left;white-space:nowrap">${h}</th>`).join('')}</tr></thead>
+      .map((h,i)=>`<th style="font-size:10px;font-weight:700;color:#6b6b6b;padding:7px 10px;border-bottom:1px solid var(--bdr);text-align:${i===0?'left':'center'};white-space:nowrap">${h}</th>`).join('')}</tr></thead>
     <tbody>${listed.map((r,i)=>{
       const elId=`si-ipo-listed-${i}`;
-      pushSearch('ipo','IPO · Listed',r[0],'Listed '+f(r[2])+' · List gain '+f(r[7]),elId);
+      // "List Gain" (col 7) sometimes comes through blank from the sheet — fall back to computing it
+      // from LTP vs Issue Price (cols 8 and 3) rather than showing nothing.
+      let listGain=f(r[7]);
+      if(listGain==='—'){
+        const issuePrice=parseFloat(String(r[3]||'').replace(/[^0-9.-]/g,''));
+        const ltp=parseFloat(String(r[8]||'').replace(/[^0-9.-]/g,''));
+        if(!isNaN(issuePrice)&&issuePrice>0&&!isNaN(ltp)){
+          listGain=(((ltp-issuePrice)/issuePrice)*100).toFixed(2)+'%';
+        }
+      }
+      pushSearch('ipo','IPO · Listed',r[0],'Listed '+f(r[2])+' · List gain '+listGain,elId);
       return `<tr id="${elId}" style="border-bottom:1px solid rgba(58,45,127,.20)">
-      <td style="padding:8px 10px;font-size:12px"><strong>${f(r[0])}</strong></td>
-      <td style="padding:8px 10px">${tbadge(r[1])}</td>
-      <td style="padding:8px 10px;font-size:12px;color:#6b6b6b">${f(r[2])}</td>
-      <td style="padding:8px 10px;font-size:12px;font-family:'Space Grotesk',sans-serif">${f(r[3])}</td>
-      <td style="padding:8px 10px;font-size:12px">${f(r[4])}</td>
-      <td style="padding:8px 10px;font-size:12px">${f(r[5])}</td>
-      <td style="padding:8px 10px;font-size:12px">${f(r[6])}</td>
-      <td style="padding:8px 10px;font-size:12px;font-weight:700" class="${ic(r[7])}">${f(r[7])}</td>
-      <td style="padding:8px 10px;font-size:12px;font-family:'Space Grotesk',sans-serif">${f(r[8])}</td>
-      <td style="padding:8px 10px;font-size:12px;font-weight:700" class="${ic(r[9])}">${f(r[9])}</td>
-      <td style="padding:8px 10px;font-size:12px;color:#6b6b6b">${f(r[10])}</td>
+      <td style="padding:8px 10px;font-size:12px;text-align:left"><strong>${f(r[0])}</strong></td>
+      <td style="padding:8px 10px;text-align:center">${tbadge(r[1])}</td>
+      <td style="padding:8px 10px;font-size:12px;color:#6b6b6b;text-align:center">${f(r[2])}</td>
+      <td style="padding:8px 10px;font-size:12px;font-family:'Space Grotesk',sans-serif;text-align:center">${f(r[3])}</td>
+      <td style="padding:8px 10px;font-size:12px;text-align:center">${f(r[4])}</td>
+      <td style="padding:8px 10px;font-size:12px;text-align:center">${f(r[5])}</td>
+      <td style="padding:8px 10px;font-size:12px;text-align:center">${f(r[6])}</td>
+      <td style="padding:8px 10px;font-size:12px;font-weight:700;text-align:center" class="${ic(listGain)}">${listGain}</td>
+      <td style="padding:8px 10px;font-size:12px;font-family:'Space Grotesk',sans-serif;text-align:center">${f(r[8])}</td>
+      <td style="padding:8px 10px;font-size:12px;font-weight:700;text-align:center" class="${ic(r[9])}">${f(r[9])}</td>
+      <td style="padding:8px 10px;font-size:12px;color:#6b6b6b;text-align:center">${f(r[10])}</td>
     </tr>`;}).join('')}</tbody>
   </table></div>`;
 
@@ -1630,16 +1603,16 @@ function renderIPO(rows){
   // Subscription — table
   const subsBody = `<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse">
     <thead><tr>${['IPO','Type','Closing Date','QIB (×)','NII (×)','Retail (×)','Total (×)','Updated']
-      .map(h=>`<th style="font-size:10px;font-weight:700;color:#6b6b6b;padding:7px 10px;border-bottom:1px solid var(--bdr);text-align:left;white-space:nowrap">${h}</th>`).join('')}</tr></thead>
+      .map((h,i)=>`<th style="font-size:10px;font-weight:700;color:#6b6b6b;padding:7px 10px;border-bottom:1px solid var(--bdr);text-align:${i===0?'left':'center'};white-space:nowrap">${h}</th>`).join('')}</tr></thead>
     <tbody>${subs.map((r,i)=>{
       const elId=`si-ipo-subs-${i}`;
       pushSearch('ipo','IPO · Subscription',r[0],'Total subscription '+f(r[6])+'×',elId);
       return `<tr id="${elId}" style="border-bottom:1px solid rgba(58,45,127,.20)">
-        <td style="padding:8px 10px;font-size:12px"><strong>${f(r[0])}</strong></td>
-        <td style="padding:8px 10px">${tbadge(r[1])}</td>
-        <td style="padding:8px 10px;font-size:12px;color:#6b6b6b">${f(r[2])}</td>
-        ${[3,4,5,6].map(i=>{const v=parseFloat(r[i]);const cl=isNaN(v)?'':v>=10?'color:var(--green);font-weight:700':v>=1?'':'color:var(--red)';return`<td style="padding:8px 10px;font-size:12px;font-family:'Space Grotesk',sans-serif;text-align:right;${cl}">${f(r[i])}</td>`;}).join('')}
-        <td style="padding:8px 10px;font-size:11px;color:#999999">${f(r[7])}</td>
+        <td style="padding:8px 10px;font-size:12px;text-align:left"><strong>${f(r[0])}</strong></td>
+        <td style="padding:8px 10px;text-align:center">${tbadge(r[1])}</td>
+        <td style="padding:8px 10px;font-size:12px;color:#6b6b6b;text-align:center">${f(r[2])}</td>
+        ${[3,4,5,6].map(i=>{const v=parseFloat(r[i]);const cl=isNaN(v)?'':v>=10?'color:var(--green);font-weight:700':v>=1?'':'color:var(--red)';return`<td style="padding:8px 10px;font-size:12px;font-family:'Space Grotesk',sans-serif;text-align:center;${cl}">${f(r[i])}</td>`;}).join('')}
+        <td style="padding:8px 10px;font-size:11px;color:#999999;text-align:center">${f(r[7])}</td>
       </tr>`;
     }).join('')}</tbody>
   </table></div>`;
