@@ -41,7 +41,7 @@ nav{display:flex;gap:2px;flex:1;flex-wrap:wrap}
 .nt-label{flex-shrink:0;display:flex;align-items:center;padding:0 14px;font-size:11px;font-weight:800;
   color:#fff;background:var(--mc);letter-spacing:.5px;white-space:nowrap}
 .nt-track{flex:1;overflow:hidden;position:relative;display:flex;align-items:center}
-.nt-strip{display:flex;align-items:center;white-space:nowrap;animation:nt-scroll 90s linear infinite}
+.nt-strip{display:flex;align-items:center;white-space:nowrap;animation:nt-scroll 150s linear infinite}
 .nt-strip:hover{animation-play-state:paused}
 @keyframes nt-scroll{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
 .nt-item{display:inline-flex;align-items:center;gap:8px;padding:0 22px;text-decoration:none;
@@ -601,6 +601,15 @@ function buildNewsTicker(){
   }).join('');
   // Duplicate content once for seamless looping
   strip.innerHTML = items + items;
+  // Scroll speed was a fixed 90s regardless of how many headlines there were — with lots of
+  // items that meant scrolling a huge distance in the same time, making it fly by unreadably fast.
+  // Instead, set duration from actual content width so the speed (px/sec) stays constant and readable.
+  requestAnimationFrame(()=>{
+    const oneCopyWidth = strip.scrollWidth / 2;
+    const pxPerSecond = 40; // comfortable reading pace
+    const duration = Math.max(40, Math.round(oneCopyWidth / pxPerSecond));
+    strip.style.animationDuration = duration + 's';
+  });
 }
 
 function renderDashboard(rows, newsRows){
@@ -3619,13 +3628,28 @@ function renderNiftyIntradayChart(points, prevClose, rangeKey){
   const vals=points.map(p=>p.price);
   const includePrevClose = rangeKey==='1d';
   const maxV=Math.max(...vals, includePrevClose?prevClose:-Infinity), minV=Math.min(...vals, includePrevClose?prevClose:Infinity);
-  const pad=(maxV-minV)*0.12 || 1;
-  const top=maxV+pad, bottom=minV-pad;
+
+  // "Nice" rounded axis bounds (e.g. 23,500 / 23,600 / 23,700...) instead of raw fractional values
+  function niceNum(range, round){
+    if(!isFinite(range) || range<=0) return 1;
+    const exp=Math.floor(Math.log10(range));
+    const frac=range/Math.pow(10,exp);
+    let nf;
+    if(round){ nf = frac<1.5?1 : frac<3?2 : frac<7?5 : 10; }
+    else     { nf = frac<=1?1 : frac<=2?2 : frac<=5?5 : 10; }
+    return nf*Math.pow(10,exp);
+  }
+  const rawRange=(maxV-minV)||1;
+  const step=niceNum(rawRange/4, true);
+  let top=Math.ceil((maxV+rawRange*0.1)/step)*step;
+  let bottom=Math.floor((minV-rawRange*0.1)/step)*step;
+  if(top===bottom){ top+=step; bottom-=step; }
+
   const scaleX=i=>(i/(n-1))*w;
   const scaleY=v=>(h-bottomAxisH-8)-((v-bottom)/(top-bottom))*(h-bottomAxisH-22);
 
   const isUp = points[n-1].price >= (includePrevClose?prevClose:points[0].price);
-  const lineColor = isUp ? '#2f9e5e' : '#e0562f';
+  const lineColor = isUp ? '#1f8a4c' : '#e91f2b'; // matches current --green / --red theme vars
   const gradId = 'niftyFillGrad';
 
   // Gradient fill defs — always a neutral blue wash (matches reference design), independent of up/down.
@@ -3648,9 +3672,8 @@ function renderNiftyIntradayChart(points, prevClose, rangeKey){
   svg.appendChild(defs);
   const fillColor='url(#'+gradId+')';
 
-  // Gridlines + price labels (4 levels)
-  for(let i=0;i<=3;i++){
-    const val=bottom+(top-bottom)*(i/3);
+  // Gridlines + price labels — stepped at the "nice" round interval computed above
+  for(let val=bottom; val<=top+1e-6; val+=step){
     const y=scaleY(val);
     const line=document.createElementNS('http://www.w3.org/2000/svg','line');
     line.setAttribute('x1',0);line.setAttribute('x2',w);line.setAttribute('y1',y);line.setAttribute('y2',y);
@@ -3660,14 +3683,29 @@ function renderNiftyIntradayChart(points, prevClose, rangeKey){
     label.setAttribute('x',4);label.setAttribute('y',y-3);
     label.setAttribute('font-size','13');label.setAttribute('font-family','Arial,Helvetica,sans-serif');
     label.setAttribute('font-weight','500');label.setAttribute('fill','#1a1a1a');
-    label.textContent=val.toFixed(0).toLocaleString('en-IN');
+    label.textContent=Math.round(val).toLocaleString('en-IN');
     svg.appendChild(label);
   }
 
-  // X-axis labels (evenly spaced, ~6 ticks). Times for 1D, dates for multi-day ranges.
-  const tickCount=6;
-  for(let i=0;i<tickCount;i++){
-    const idx=Math.round((i/(tickCount-1))*(n-1));
+  // X-axis ticks. 1D: snapped to clean clock hours (09:00, 10:00...) like the reference,
+  // not evenly-spaced-by-index (which produced odd times like 10:30/11:45).
+  // Multi-day ranges: evenly spaced across the available dates.
+  let tickIdxs=[];
+  if(rangeKey==='1d'){
+    const first=points[0].time, last=points[n-1].time;
+    let t=new Date(first); t.setMinutes(0,0,0); if(t<first) t.setHours(t.getHours()+1);
+    const hourTimes=[];
+    while(t<=last){ hourTimes.push(new Date(t)); t=new Date(t.getTime()+3600000); }
+    tickIdxs = hourTimes.map(ht=>{
+      let best=0, bestDiff=Infinity;
+      for(let i=0;i<n;i++){ const d=Math.abs(points[i].time-ht); if(d<bestDiff){bestDiff=d;best=i;} }
+      return best;
+    });
+  } else {
+    const tickCount=6;
+    for(let i=0;i<tickCount;i++) tickIdxs.push(Math.round((i/(tickCount-1))*(n-1)));
+  }
+  tickIdxs.forEach(idx=>{
     const x=scaleX(idx);
     const tickLine=document.createElementNS('http://www.w3.org/2000/svg','line');
     tickLine.setAttribute('x1',x);tickLine.setAttribute('x2',x);
@@ -3675,8 +3713,8 @@ function renderNiftyIntradayChart(points, prevClose, rangeKey){
     tickLine.setAttribute('stroke','rgba(58,45,127,.25)');tickLine.setAttribute('stroke-width','1');
     svg.appendChild(tickLine);
     const label=document.createElementNS('http://www.w3.org/2000/svg','text');
-    const anchor = i===0 ? 'start' : (i===tickCount-1 ? 'end' : 'middle');
-    label.setAttribute('x', i===0?2:(i===tickCount-1?w-2:x));
+    const anchor = x<40 ? 'start' : (x>w-40 ? 'end' : 'middle');
+    label.setAttribute('x', anchor==='start'?2:(anchor==='end'?w-2:x));
     label.setAttribute('y', h-6);
     label.setAttribute('font-size','13');label.setAttribute('font-family','Arial,Helvetica,sans-serif');
     label.setAttribute('font-weight','500');label.setAttribute('fill','#1a1a1a');
@@ -3685,7 +3723,7 @@ function renderNiftyIntradayChart(points, prevClose, rangeKey){
       ? points[idx].time.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',hour12:false})
       : points[idx].time.toLocaleDateString('en-IN',{day:'2-digit',month:'short'});
     svg.appendChild(label);
-  }
+  });
 
   // Previous close reference line — solid black, only meaningful for the 1D view
   if(includePrevClose){
@@ -3717,12 +3755,82 @@ function renderNiftyIntradayChart(points, prevClose, rangeKey){
   line.setAttribute('stroke-linejoin','round');
   svg.appendChild(line);
 
-  // Hover dot at the latest point
+  // Static dot at the latest point
   const dot=document.createElementNS('http://www.w3.org/2000/svg','circle');
   const lastX=scaleX(n-1), lastY=scaleY(points[n-1].price);
   dot.setAttribute('cx',lastX);dot.setAttribute('cy',lastY);dot.setAttribute('r','4');
   dot.setAttribute('fill',lineColor);dot.setAttribute('stroke','#fff');dot.setAttribute('stroke-width','1.5');
   svg.appendChild(dot);
+
+  /* ── Hover crosshair + tooltip (matches the reference's hover behavior) ── */
+  const svgNS='http://www.w3.org/2000/svg';
+  const crossLine=document.createElementNS(svgNS,'line');
+  crossLine.setAttribute('y1',0); crossLine.setAttribute('y2',h-bottomAxisH-8);
+  crossLine.setAttribute('stroke','#999999'); crossLine.setAttribute('stroke-width','1'); crossLine.setAttribute('stroke-dasharray','3,3');
+  crossLine.style.display='none';
+  svg.appendChild(crossLine);
+
+  const hoverDot=document.createElementNS(svgNS,'circle');
+  hoverDot.setAttribute('r','5'); hoverDot.setAttribute('fill',lineColor);
+  hoverDot.setAttribute('stroke','#fff'); hoverDot.setAttribute('stroke-width','2');
+  hoverDot.style.display='none';
+  svg.appendChild(hoverDot);
+
+  const wrap=svg.parentElement;
+  let tooltip = wrap.querySelector('.nifty-tooltip');
+  if(!tooltip){
+    tooltip=document.createElement('div');
+    tooltip.className='nifty-tooltip';
+    wrap.appendChild(tooltip);
+  }
+  tooltip.style.cssText='position:absolute;pointer-events:none;display:none;background:#fff;'+
+    'border:1px solid var(--bdr);border-radius:10px;box-shadow:0 8px 24px rgba(58,45,127,.20);'+
+    'padding:9px 13px;font-family:Inter,sans-serif;z-index:20;min-width:172px';
+
+  const baselineForPct = includePrevClose ? prevClose : points[0].price;
+  function handleHoverMove(clientX){
+    const rect=svg.getBoundingClientRect();
+    if(!rect.width) return;
+    let ratioX=(clientX-rect.left)/rect.width;
+    ratioX=Math.max(0,Math.min(1,ratioX));
+    const idx=Math.round(ratioX*(n-1));
+    const p=points[idx];
+    const x=scaleX(idx), y=scaleY(p.price);
+
+    crossLine.setAttribute('x1',x); crossLine.setAttribute('x2',x); crossLine.style.display='block';
+    hoverDot.setAttribute('cx',x); hoverDot.setAttribute('cy',y); hoverDot.style.display='block';
+
+    const chg=p.price-baselineForPct;
+    const pct=(chg/baselineForPct)*100;
+    const chgColor=chg>=0?'#1f8a4c':'#e91f2b';
+    const sign=chg>=0?'+':'';
+    const dateStr=p.time.toLocaleDateString('en-IN',{weekday:'long',day:'2-digit',month:'short'});
+    const timeStr=rangeKey==='1d' ? p.time.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false}) : '';
+    tooltip.innerHTML=
+      '<div style="display:flex;align-items:center;gap:6px;font-size:11px;font-weight:700;color:#6b6b6b;margin-bottom:4px">'+
+        '<span style="width:8px;height:8px;border-radius:50%;background:'+lineColor+';display:inline-block"></span>NIFTY 50</div>'+
+      '<div style="font-family:\'Space Grotesk\',sans-serif;font-size:17px;font-weight:700;color:#1a1a1a">'+p.price.toFixed(2)+
+        ' <span style="font-size:12px;color:'+chgColor+'">'+sign+chg.toFixed(2)+' ('+sign+pct.toFixed(2)+'%)</span></div>'+
+      '<div style="font-size:10px;color:#6b6b6b;margin-top:3px">'+dateStr+(timeStr?' | '+timeStr:'')+'</div>';
+
+    const wrapRect=wrap.getBoundingClientRect();
+    const px=(x/w)*wrapRect.width, py=(y/h)*wrapRect.height;
+    const tw=190, th=64;
+    let left=px+14, top2=py-10;
+    if(left+tw>wrapRect.width) left=px-tw-14;
+    if(top2<0) top2=4;
+    if(top2+th>wrapRect.height) top2=wrapRect.height-th-4;
+    tooltip.style.left=left+'px'; tooltip.style.top=top2+'px'; tooltip.style.display='block';
+  }
+  function handleHoverLeave(){
+    crossLine.style.display='none'; hoverDot.style.display='none'; tooltip.style.display='none';
+  }
+  // Assigning via onXXX (not addEventListener) so re-rendering (e.g. switching 1D/1M/3M) replaces
+  // the previous handler instead of stacking a new one on top of it every time.
+  wrap.onmousemove=e=>handleHoverMove(e.clientX);
+  wrap.onmouseleave=handleHoverLeave;
+  wrap.ontouchmove=e=>{ if(e.touches&&e.touches[0]) handleHoverMove(e.touches[0].clientX); };
+  wrap.ontouchend=handleHoverLeave;
 }
 
 
