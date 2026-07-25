@@ -788,8 +788,27 @@ function renderDashboard(rows, newsRows){
 
     <!-- NIFTY 50 TODAY'S INTRADAY CHART (real data via Yahoo Finance) -->
     <div class="tcw">
-      <div class="tch" style="color:#0d47a1">Nifty 50 — Today's Chart
-        <span id="nifty-chart-range" style="font-size:10px;color:#999999;font-weight:400;margin-left:8px"></span>
+      <div class="tch" style="color:#0d47a1">
+        <span>Nifty 50 — Today's Chart
+          <span id="nifty-chart-range" style="font-size:10px;color:#999999;font-weight:400;margin-left:8px"></span>
+        </span>
+        <span style="display:flex;align-items:center;gap:6px">
+          <span style="display:flex;gap:3px;background:rgba(120,75,30,.05);border-radius:8px;padding:3px">
+            ${Object.entries({'1d':'1D','1m':'1M','3m':'3M','6m':'6M','1y':'1Y'}).map(([k,label])=>
+              `<button class="nifty-range-btn" data-range="${k}" onclick="setNiftyRange('${k}')"
+                style="border:none;border-radius:6px;padding:5px 11px;font-size:11px;font-weight:700;cursor:pointer;
+                  font-family:'Space Grotesk',sans-serif;transition:.15s;
+                  background:${k===NIFTY_RANGE?'#1a1a3d':'transparent'};color:${k===NIFTY_RANGE?'#ffffff':'#6b6b6b'}">${label}</button>`
+            ).join('')}
+          </span>
+          <span style="display:flex;gap:3px;margin-left:2px" title="Green = up, Red = down">
+            <span style="width:9px;height:9px;border-radius:2px;background:var(--red);display:inline-block"></span>
+            <span style="width:9px;height:9px;border-radius:2px;background:var(--green);display:inline-block"></span>
+          </span>
+          <button onclick="window.open('https://www.tradingview.com/chart/?symbol=NSE%3ANIFTY','_blank','noopener')"
+            title="Open full chart on TradingView"
+            style="border:none;background:transparent;cursor:pointer;color:#6b6b6b;font-size:15px;padding:2px 4px;line-height:1">☰</button>
+        </span>
       </div>
       <div style="padding:14px 18px">
         <div id="nifty-chart-summary" style="display:flex;gap:18px;flex-wrap:wrap;margin-bottom:10px;font-size:11px;color:#6b6b6b"></div>
@@ -797,7 +816,7 @@ function renderDashboard(rows, newsRows){
           <svg id="nifty-chart-svg" viewBox="0 0 1200 280" preserveAspectRatio="none" style="width:100%;height:100%"></svg>
           <div id="nifty-chart-status" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#999999;font-size:12px">Loading chart…</div>
         </div>
-        <p style="font-size:10px;color:#999999;margin-top:8px">5-min intraday · Data via Yahoo Finance (proxied) · May lag real-time by a few minutes; delayed after market close</p>
+        <p id="nifty-chart-note" style="font-size:10px;color:#999999;margin-top:8px">5-min intraday · Data via Yahoo Finance (proxied) · May lag real-time by a few minutes; delayed after market close</p>
       </div>
     </div>
 
@@ -3425,17 +3444,26 @@ document.addEventListener('click',function(e){
    the network round-trip overlaps with everything else loading,
    instead of only starting after the Dashboard skeleton clears.
 ══════════════════════════════════════════════ */
-let NIFTY_DATA_PROMISE=null;
-let NIFTY_DATA_TS=0;
-const NIFTY_CACHE_KEY='nb_nifty_intraday_cache';
-const NIFTY_CACHE_TTL=2*60*1000; // 2 minutes — intraday data goes stale fast anyway
+let NIFTY_DATA_CACHE={}; // keyed by range, e.g. '1d' -> {promise, ts}
+const NIFTY_CACHE_KEY_PREFIX='nb_nifty_chart_cache_';
+const NIFTY_CACHE_TTL=2*60*1000; // 2 minutes for intraday; longer ranges are refetched just as often but change little
+let NIFTY_RANGE='1d';
+const NIFTY_RANGE_CONFIG={
+  '1d':{range:'1d', interval:'5m', label:'1D'},
+  '1m':{range:'1mo',interval:'1d', label:'1M'},
+  '3m':{range:'3mo',interval:'1d', label:'3M'},
+  '6m':{range:'6mo',interval:'1d', label:'6M'},
+  '1y':{range:'1y', interval:'1wk',label:'1Y'}
+};
 
 /* Pure fetch — no DOM access, safe to call before the chart's HTML exists.
    Races two CORS proxies so a slow/down one doesn't block the whole thing. */
-async function fetchNiftyRaw(){
+async function fetchNiftyRaw(rangeKey){
+  const cfg=NIFTY_RANGE_CONFIG[rangeKey]||NIFTY_RANGE_CONFIG['1d'];
+  const cacheKey=NIFTY_CACHE_KEY_PREFIX+rangeKey;
   // Serve from session cache if fresh enough (instant on repeat visits within the session)
   try{
-    const cached=sessionStorage.getItem(NIFTY_CACHE_KEY);
+    const cached=sessionStorage.getItem(cacheKey);
     if(cached){
       const parsed=JSON.parse(cached);
       if(Date.now()-parsed.ts < NIFTY_CACHE_TTL){
@@ -3444,7 +3472,7 @@ async function fetchNiftyRaw(){
     }
   }catch(e){}
 
-  const yahooUrl='https://query1.finance.yahoo.com/v8/finance/chart/%5ENSEI?range=1d&interval=5m';
+  const yahooUrl='https://query1.finance.yahoo.com/v8/finance/chart/%5ENSEI?range='+cfg.range+'&interval='+cfg.interval;
   const proxies=[
     'https://api.allorigins.win/raw?url='+encodeURIComponent(yahooUrl),
     'https://corsproxy.io/?url='+encodeURIComponent(yahooUrl)
@@ -3470,7 +3498,7 @@ async function fetchNiftyRaw(){
   const prevClose=meta.previousClose ?? meta.chartPreviousClose ?? points[0].price;
 
   try{
-    sessionStorage.setItem(NIFTY_CACHE_KEY, JSON.stringify({
+    sessionStorage.setItem(cacheKey, JSON.stringify({
       ts:Date.now(), prevClose,
       points:points.map(p=>({time:p.time.getTime(),price:p.price}))
     }));
@@ -3479,17 +3507,18 @@ async function fetchNiftyRaw(){
   return {points, prevClose};
 }
 
-/* Kicks off the fetch (called at the very top of loadAll, before any DOM exists).
+/* Kicks off the fetch (called at the very top of loadAll, before any DOM exists, for the default 1D range).
    Reuses the in-flight/resolved promise only while it's still within the cache TTL —
    otherwise starts a fresh fetch, so the 5-min auto-refresh actually pulls new data
    instead of reusing the very first fetch forever. */
-function startNiftyFetch(){
-  const stale = !NIFTY_DATA_PROMISE || (Date.now()-NIFTY_DATA_TS > NIFTY_CACHE_TTL);
+function startNiftyFetch(rangeKey){
+  rangeKey = rangeKey || NIFTY_RANGE;
+  const entry=NIFTY_DATA_CACHE[rangeKey];
+  const stale = !entry || (Date.now()-entry.ts > NIFTY_CACHE_TTL);
   if(stale){
-    NIFTY_DATA_TS=Date.now();
-    NIFTY_DATA_PROMISE=fetchNiftyRaw();
+    NIFTY_DATA_CACHE[rangeKey]={ts:Date.now(), promise:fetchNiftyRaw(rangeKey)};
   }
-  return NIFTY_DATA_PROMISE;
+  return NIFTY_DATA_CACHE[rangeKey].promise;
 }
 
 /* Renders into the chart's DOM. Dashboard's HTML (including this chart's elements) gets
@@ -3500,7 +3529,7 @@ async function loadNiftyChart(){
   const svg=document.getElementById('nifty-chart-svg');
   if(!svg) return;
   try{
-    const {points, prevClose}=await startNiftyFetch();
+    const {points, prevClose}=await startNiftyFetch(NIFTY_RANGE);
     if(status) status.style.display='none';
 
     const dayOpen=points[0].price;
@@ -3510,7 +3539,13 @@ async function loadNiftyChart(){
     const change=current-prevClose;
     const pct=(change/prevClose)*100;
 
-    renderNiftyIntradayChart(points, prevClose);
+    renderNiftyIntradayChart(points, prevClose, NIFTY_RANGE);
+
+    const noteEl=document.getElementById('nifty-chart-note');
+    if(noteEl){
+      const noteMap={'1d':'5-min intraday','1m':'Daily closes, 1 month','3m':'Daily closes, 3 months','6m':'Daily closes, 6 months','1y':'Weekly closes, 1 year'};
+      noteEl.textContent=(noteMap[NIFTY_RANGE]||'')+' · Data via Yahoo Finance (proxied) · May lag real-time by a few minutes; delayed after market close';
+    }
 
     const rangeEl=document.getElementById('nifty-chart-range');
     if(rangeEl) rangeEl.textContent=points[points.length-1].time.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});
@@ -3519,14 +3554,17 @@ async function loadNiftyChart(){
     if(summaryEl){
       const color=change>=0?'var(--green)':'var(--red)';
       const sign=change>=0?'+':'';
+      const asOfLabel = NIFTY_RANGE==='1d'
+        ? 'As of '+points[points.length-1].time.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'})+' IST'
+        : 'As of '+points[points.length-1].time.toLocaleDateString('en-IN',{day:'2-digit',month:'short'});
       summaryEl.innerHTML=
         '<span><strong style="color:#1a1a1a;font-family:\'Space Grotesk\',sans-serif;font-size:15px">'+current.toFixed(2)+'</strong> '+
         '<span style="color:'+color+';font-weight:700">'+sign+change.toFixed(2)+' ('+sign+pct.toFixed(2)+'%)</span></span>'+
         '<span>Open <strong style="color:#1a1a1a">'+dayOpen.toFixed(2)+'</strong></span>'+
         '<span>High <strong style="color:#1a1a1a">'+dayHigh.toFixed(2)+'</strong></span>'+
         '<span>Low <strong style="color:#1a1a1a">'+dayLow.toFixed(2)+'</strong></span>'+
-        '<span>Prev Close <strong style="color:#1a1a1a">'+prevClose.toFixed(2)+'</strong></span>'+
-        '<span>As of '+points[points.length-1].time.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'})+' IST</span>';
+        (NIFTY_RANGE==='1d'?'<span>Prev Close <strong style="color:#1a1a1a">'+prevClose.toFixed(2)+'</strong></span>':'')+
+        '<span>'+asOfLabel+'</span>';
     }
   }catch(e){
     console.warn('Nifty chart failed:', e.message);
@@ -3541,15 +3579,29 @@ async function loadNiftyChart(){
   }
 }
 function retryNiftyChart(){
-  NIFTY_DATA_PROMISE=null;
-  NIFTY_DATA_TS=0;
-  try{ sessionStorage.removeItem(NIFTY_CACHE_KEY); }catch(e){}
+  NIFTY_DATA_CACHE={};
+  try{
+    Object.keys(NIFTY_RANGE_CONFIG).forEach(k=>sessionStorage.removeItem(NIFTY_CACHE_KEY_PREFIX+k));
+  }catch(e){}
+  const status=document.getElementById('nifty-chart-status');
+  if(status){ status.style.display='flex'; status.innerHTML='Loading chart…'; }
+  loadNiftyChart();
+}
+function setNiftyRange(rangeKey){
+  if(!NIFTY_RANGE_CONFIG[rangeKey] || rangeKey===NIFTY_RANGE) return;
+  NIFTY_RANGE=rangeKey;
+  document.querySelectorAll('.nifty-range-btn').forEach(btn=>{
+    const active = btn.getAttribute('data-range')===rangeKey;
+    btn.style.background = active ? '#1a1a3d' : 'rgba(120,75,30,.06)';
+    btn.style.color = active ? '#ffffff' : '#6b6b6b';
+  });
   const status=document.getElementById('nifty-chart-status');
   if(status){ status.style.display='flex'; status.innerHTML='Loading chart…'; }
   loadNiftyChart();
 }
 
-function renderNiftyIntradayChart(points, prevClose){
+function renderNiftyIntradayChart(points, prevClose, rangeKey){
+  rangeKey = rangeKey || '1d';
   const svg=document.getElementById('nifty-chart-svg');
   if(!svg) return;
   svg.innerHTML='';
@@ -3565,15 +3617,35 @@ function renderNiftyIntradayChart(points, prevClose){
   const bottomAxisH=22; // reserved for x-axis time labels
   const n=points.length;
   const vals=points.map(p=>p.price);
-  const maxV=Math.max(...vals, prevClose), minV=Math.min(...vals, prevClose);
+  const includePrevClose = rangeKey==='1d';
+  const maxV=Math.max(...vals, includePrevClose?prevClose:-Infinity), minV=Math.min(...vals, includePrevClose?prevClose:Infinity);
   const pad=(maxV-minV)*0.12 || 1;
   const top=maxV+pad, bottom=minV-pad;
   const scaleX=i=>(i/(n-1))*w;
   const scaleY=v=>(h-bottomAxisH-8)-((v-bottom)/(top-bottom))*(h-bottomAxisH-22);
 
-  const isUp = points[n-1].price >= prevClose;
+  const isUp = points[n-1].price >= (includePrevClose?prevClose:points[0].price);
   const lineColor = isUp ? '#2f9e5e' : '#e0562f';
-  const fillColor = isUp ? 'rgba(47,158,94,.12)' : 'rgba(224,86,47,.12)';
+  const gradId = 'niftyFillGrad';
+
+  // Gradient fill defs — solid-ish near the line, fading to transparent at the baseline
+  const defs=document.createElementNS('http://www.w3.org/2000/svg','defs');
+  const grad=document.createElementNS('http://www.w3.org/2000/svg','linearGradient');
+  grad.setAttribute('id',gradId);
+  grad.setAttribute('x1','0');grad.setAttribute('y1','0');grad.setAttribute('x2','0');grad.setAttribute('y2','1');
+  const stops=[
+    [0,   isUp?'rgba(47,158,94,.38)':'rgba(224,86,47,.38)'],
+    [0.55,isUp?'rgba(47,158,94,.14)':'rgba(224,86,47,.14)'],
+    [1,   isUp?'rgba(47,158,94,0)'  :'rgba(224,86,47,0)']
+  ];
+  stops.forEach(([off,col])=>{
+    const s=document.createElementNS('http://www.w3.org/2000/svg','stop');
+    s.setAttribute('offset',(off*100)+'%'); s.setAttribute('stop-color',col);
+    grad.appendChild(s);
+  });
+  defs.appendChild(grad);
+  svg.appendChild(defs);
+  const fillColor='url(#'+gradId+')';
 
   // Gridlines + price labels (4 levels)
   for(let i=0;i<=3;i++){
@@ -3590,7 +3662,7 @@ function renderNiftyIntradayChart(points, prevClose){
     svg.appendChild(label);
   }
 
-  // X-axis time labels (evenly spaced, ~6 ticks across the session)
+  // X-axis labels (evenly spaced, ~6 ticks). Times for 1D, dates for multi-day ranges.
   const tickCount=6;
   for(let i=0;i<tickCount;i++){
     const idx=Math.round((i/(tickCount-1))*(n-1));
@@ -3606,24 +3678,28 @@ function renderNiftyIntradayChart(points, prevClose){
     label.setAttribute('y', h-6);
     label.setAttribute('font-size','11');label.setAttribute('fill','#999999');
     label.setAttribute('text-anchor', anchor);
-    label.textContent=points[idx].time.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',hour12:false});
+    label.textContent = rangeKey==='1d'
+      ? points[idx].time.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',hour12:false})
+      : points[idx].time.toLocaleDateString('en-IN',{day:'2-digit',month:'short'});
     svg.appendChild(label);
   }
 
-  // Previous close reference line (dashed)
-  const prevY=scaleY(prevClose);
-  const prevLine=document.createElementNS('http://www.w3.org/2000/svg','line');
-  prevLine.setAttribute('x1',0);prevLine.setAttribute('x2',w);prevLine.setAttribute('y1',prevY);prevLine.setAttribute('y2',prevY);
-  prevLine.setAttribute('stroke','#999999');prevLine.setAttribute('stroke-width','1');prevLine.setAttribute('stroke-dasharray','4,4');
-  svg.appendChild(prevLine);
+  // Previous close reference line — solid, only meaningful for the 1D view
+  if(includePrevClose){
+    const prevY=scaleY(prevClose);
+    const prevLine=document.createElementNS('http://www.w3.org/2000/svg','line');
+    prevLine.setAttribute('x1',0);prevLine.setAttribute('x2',w);prevLine.setAttribute('y1',prevY);prevLine.setAttribute('y2',prevY);
+    prevLine.setAttribute('stroke','#1a1a1a');prevLine.setAttribute('stroke-width','1.4');
+    svg.appendChild(prevLine);
+  }
 
   // Build line path + area path
-  let linePath='', areaPath='';
+  let linePath='';
   points.forEach((p,i)=>{
     const x=scaleX(i), y=scaleY(p.price);
     linePath += (i===0?'M':'L')+x+','+y+' ';
   });
-  areaPath = 'M'+scaleX(0)+','+scaleY(points[0].price)+' L'+linePath.slice(1)+' L'+w+','+(h-bottomAxisH-8)+' L0,'+(h-bottomAxisH-8)+' Z';
+  const areaPath = 'M'+scaleX(0)+','+scaleY(points[0].price)+' L'+linePath.slice(1)+' L'+w+','+(h-bottomAxisH-8)+' L0,'+(h-bottomAxisH-8)+' Z';
 
   const area=document.createElementNS('http://www.w3.org/2000/svg','path');
   area.setAttribute('d',areaPath);
@@ -3638,7 +3714,7 @@ function renderNiftyIntradayChart(points, prevClose){
   line.setAttribute('stroke-linejoin','round');
   svg.appendChild(line);
 
-  // Hover dot + invisible hit area with tooltip via <title> per small segment (SVG has no native hover events without JS listeners)
+  // Hover dot at the latest point
   const dot=document.createElementNS('http://www.w3.org/2000/svg','circle');
   const lastX=scaleX(n-1), lastY=scaleY(points[n-1].price);
   dot.setAttribute('cx',lastX);dot.setAttribute('cy',lastY);dot.setAttribute('r','4');
