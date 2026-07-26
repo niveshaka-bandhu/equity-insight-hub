@@ -4,7 +4,15 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Niveshaka-bandhu — Investor's Friend</title>
-<link rel="icon" type="image/png" href="icon.png">
+<link rel="icon" type="image/png" href="logo.png">
+<link rel="manifest" href="manifest.json"/>
+<meta name="theme-color" content="#3a2d7f"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="Niveshaka-bandhu"/>
+<link rel="apple-touch-icon" href="logo.png"/>
+<link rel="apple-touch-startup-image" href="splash.png"/>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
 <style>
@@ -291,6 +299,11 @@ footer a{color:var(--mc)}
       background:rgba(255,255,255,.4)">
       🔍 <span style="font-size:10px;color:#999999;border:1px solid var(--bdr);border-radius:4px;padding:0 4px">Ctrl K</span>
     </span>
+    <button id="pwa-install-btn" onclick="installPWA()" style="display:none;cursor:pointer;align-items:center;gap:5px;
+      font-size:11px;font-weight:700;color:#fff;border:none;border-radius:8px;padding:4px 10px;
+      background:var(--mc);font-family:'Inter',sans-serif">
+      📲 Install App
+    </button>
   </span>
 </div>
 <header>
@@ -3280,6 +3293,54 @@ function showInv(id,btn){
   document.querySelectorAll('.itb').forEach(b=>b.classList.remove('on'));
   $(id).classList.add('on'); btn.classList.add('on');
 }
+
+/* ── PWA: install prompt + service worker registration ── */
+let _deferredInstallPrompt=null;
+
+function pwaAlreadyStandalone(){
+  return window.matchMedia && window.matchMedia('(display-mode: standalone)').matches
+      || window.navigator.standalone === true; // iOS Safari's own flag
+}
+
+window.addEventListener('beforeinstallprompt', (e)=>{
+  // Chrome/Edge/Android fire this when the app is installable. Stop the browser's
+  // default mini-infobar and hold onto the event so our own button can trigger it later.
+  e.preventDefault();
+  _deferredInstallPrompt=e;
+  const btn=document.getElementById('pwa-install-btn');
+  if(btn && !pwaAlreadyStandalone()) btn.style.display='flex';
+});
+
+function installPWA(){
+  if(!_deferredInstallPrompt) return;
+  const btn=document.getElementById('pwa-install-btn');
+  _deferredInstallPrompt.prompt();
+  _deferredInstallPrompt.userChoice.finally(()=>{
+    _deferredInstallPrompt=null;
+    if(btn) btn.style.display='none';
+  });
+}
+
+window.addEventListener('appinstalled', ()=>{
+  const btn=document.getElementById('pwa-install-btn');
+  if(btn) btn.style.display='none';
+  _deferredInstallPrompt=null;
+});
+
+// If already running as an installed app (standalone), never show the button.
+// Note: iOS Safari never fires beforeinstallprompt at all — it only supports the
+// user manually doing Share -> Add to Home Screen. That's a platform limitation,
+// not something this button can work around.
+if(pwaAlreadyStandalone()){
+  const btn=document.getElementById('pwa-install-btn');
+  if(btn) btn.style.display='none';
+}
+
+window.addEventListener('load', ()=>{
+  if('serviceWorker' in navigator){
+    navigator.serviceWorker.register('sw.js').catch(e=>console.warn('SW registration failed:', e.message));
+  }
+});
 
 loadAll();
 setInterval(loadAll,5*60*1000);
