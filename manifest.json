@@ -1,0 +1,17 @@
+{
+  "name": "Niveshaka-bandhu — Investor's Friend",
+  "short_name": "Niveshaka-bandhu",
+  "start_url": ".",
+  "scope": ".",
+  "display": "standalone",
+  "orientation": "portrait",
+  "theme_color": "#3a2d7f",
+  "background_color": "#ffffff",
+  "icons": [
+    {
+      "src": "logo.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
