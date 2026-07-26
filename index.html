@@ -316,7 +316,7 @@ footer a{color:var(--mc)}
 </header>
 
 <div class="news-ticker">
-  <span class="nt-label">📰 NEWS</span>
+  <span class="nt-label">📊 MARKET</span>
   <div class="nt-track">
     <div class="nt-strip" id="news-ticker-strip"><a class="nt-item"><span class="nt-title">Loading headlines…</span></a></div>
   </div>
@@ -566,12 +566,11 @@ function computeAllNews(rows, newsRows){
   return allNews;
 }
 
-/* Builds/refreshes the scrolling ticker below the header: index quotes + top movers + top 3 news */
+/* Builds/refreshes the scrolling ticker below the header: index quotes + top movers (news removed per request) */
 function buildNewsTicker(){
   const strip=document.getElementById('news-ticker-strip');
   if(!strip) return;
   const dashRows = DATA.dashboard || [];
-  const newsRows = DATA.news || [];
 
   function quoteChip(name,price,chg,pct){
     if(!price) return '';
@@ -606,18 +605,6 @@ function buildNewsTicker(){
     .map(r=>[r[1],r[2],r[3],r[4]]);
   Lg(0,5).slice(0,5).forEach(r=>items.push(quoteChip(r[0],r[1],r[2],r[3])));
   Lg(6,12).slice(0,5).forEach(r=>items.push(quoteChip(r[0],r[1],r[2],r[3])));
-
-  // Top 3 news headlines only
-  const allNews = computeAllNews(dashRows, newsRows).slice(0,3);
-  allNews.forEach(r=>{
-    const title=String(r[0]||'').trim();
-    const url=String(r[1]||'').trim();
-    const source=r[3]||'';
-    items.push(`<a href="${url}" target="_blank" rel="noopener" class="nt-item">
-      <span class="nt-source">${source}</span>
-      <span class="nt-title">${title}</span>
-    </a>`);
-  });
 
   if(!items.length) return;
   const html=items.join('');
