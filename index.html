@@ -3004,7 +3004,7 @@ function calcRun(){
   // EV vs ICE Total Cost of Ownership
   const eviKm=gv('evi-km'), eviOwn=gv('evi-own'), eviTenure=gv('evi-tenure'),
         eviLoanRate=gv('evi-loanrate')/100/12, eviDown=gv('evi-down')/100;
-  if(eviKm&&eviOwn&&eviTenure){
+  if(eviKm&&eviOwn){
     const totalKm = eviKm*12*eviOwn;
     const nMonths = eviTenure*12;
 
