@@ -3302,6 +3302,12 @@ function pwaAlreadyStandalone(){
       || window.navigator.standalone === true; // iOS Safari's own flag
 }
 
+function isIOSDevice(){
+  // Covers iPhone/iPad/iPod, plus iPadOS 13+ which reports as "MacIntel" but has touch support
+  return /iPad|iPhone|iPod/.test(navigator.userAgent)
+      || (navigator.platform==='MacIntel' && navigator.maxTouchPoints>1);
+}
+
 window.addEventListener('beforeinstallprompt', (e)=>{
   // Chrome/Edge/Android fire this when the app is installable. Stop the browser's
   // default mini-infobar and hold onto the event so our own button can trigger it later.
@@ -3312,13 +3318,52 @@ window.addEventListener('beforeinstallprompt', (e)=>{
 });
 
 function installPWA(){
-  if(!_deferredInstallPrompt) return;
-  const btn=document.getElementById('pwa-install-btn');
-  _deferredInstallPrompt.prompt();
-  _deferredInstallPrompt.userChoice.finally(()=>{
-    _deferredInstallPrompt=null;
-    if(btn) btn.style.display='none';
-  });
+  // Path 1: Chrome/Edge/Android — native install prompt is available
+  if(_deferredInstallPrompt){
+    const btn=document.getElementById('pwa-install-btn');
+    _deferredInstallPrompt.prompt();
+    _deferredInstallPrompt.userChoice.finally(()=>{
+      _deferredInstallPrompt=null;
+      if(btn) btn.style.display='none';
+    });
+    return;
+  }
+  // Path 2: iOS Safari — there is no install API at all, so show manual steps instead
+  if(isIOSDevice()){
+    showIOSInstallInstructions();
+  }
+}
+
+function showIOSInstallInstructions(){
+  let modal=document.getElementById('ios-install-modal');
+  if(!modal){
+    modal=document.createElement('div');
+    modal.id='ios-install-modal';
+    modal.style.cssText='position:fixed;inset:0;z-index:10000;background:rgba(58,45,127,.35);'+
+      'backdrop-filter:blur(4px);display:flex;align-items:flex-end;justify-content:center';
+    modal.innerHTML='<div style="background:#fff;border-radius:18px 18px 0 0;width:min(420px,100%);'+
+      'padding:22px 22px 26px;box-shadow:0 -10px 40px rgba(58,45,127,.25)">'+
+      '<div style="font-family:\'Space Grotesk\',sans-serif;font-size:15px;font-weight:700;color:#1a1a1a;margin-bottom:4px">Add to Home Screen</div>'+
+      '<div style="font-size:12px;color:#6b6b6b;margin-bottom:16px">iOS doesn\'t allow apps to install themselves — just three quick taps in Safari:</div>'+
+      '<div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">'+
+        '<span style="flex-shrink:0;width:26px;height:26px;border-radius:50%;background:var(--mc);color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center">1</span>'+
+        '<span style="font-size:13px;color:#1a1a1a">Tap the <strong>Share</strong> icon <span style="font-size:15px">⬆️</span> in Safari\'s toolbar</span>'+
+      '</div>'+
+      '<div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">'+
+        '<span style="flex-shrink:0;width:26px;height:26px;border-radius:50%;background:var(--mc);color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center">2</span>'+
+        '<span style="font-size:13px;color:#1a1a1a">Scroll down and tap <strong>Add to Home Screen</strong></span>'+
+      '</div>'+
+      '<div style="display:flex;align-items:center;gap:12px;margin-bottom:20px">'+
+        '<span style="flex-shrink:0;width:26px;height:26px;border-radius:50%;background:var(--mc);color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center">3</span>'+
+        '<span style="font-size:13px;color:#1a1a1a">Tap <strong>Add</strong> in the top right</span>'+
+      '</div>'+
+      '<button onclick="document.getElementById(\'ios-install-modal\').style.display=\'none\'" '+
+        'style="width:100%;padding:11px;border:none;border-radius:10px;background:rgba(58,45,127,.08);color:var(--mc);font-weight:700;font-size:13px;cursor:pointer">Got it</button>'+
+      '</div>';
+    modal.addEventListener('click',e=>{ if(e.target===modal) modal.style.display='none'; });
+    document.body.appendChild(modal);
+  }
+  modal.style.display='flex';
 }
 
 window.addEventListener('appinstalled', ()=>{
@@ -3327,10 +3372,12 @@ window.addEventListener('appinstalled', ()=>{
   _deferredInstallPrompt=null;
 });
 
-// If already running as an installed app (standalone), never show the button.
-// Note: iOS Safari never fires beforeinstallprompt at all — it only supports the
-// user manually doing Share -> Add to Home Screen. That's a platform limitation,
-// not something this button can work around.
+// Show the button on load if we're on iOS (no beforeinstallprompt will ever fire there,
+// so it has to be shown proactively rather than waiting for that event like Chrome/Edge do).
+if(!pwaAlreadyStandalone() && isIOSDevice()){
+  const btn=document.getElementById('pwa-install-btn');
+  if(btn) btn.style.display='flex';
+}
 if(pwaAlreadyStandalone()){
   const btn=document.getElementById('pwa-install-btn');
   if(btn) btn.style.display='none';
