@@ -538,13 +538,6 @@ function icard(name,price,chg,pct,hi,lo,tm,hl){
     ${tm?`<div class="itm">${f(tm)}</div>`:""}
   </div>`;
 }
-function sbadge(s){
-  const l=(s||'').toLowerCase();
-  if(l.includes('open')) return '<span class="sop">OPEN</span>';
-  if(l.includes('upcoming')) return '<span class="sup">UPCOMING</span>';
-  if(l.includes('clos')) return '<span class="scl">CLOSED</span>';
-  return s?`<span class="bd bd-g">${s}</span>`:'—';
-}
 function tbadge(t){return `<span class="bd ${/main/i.test(t||'')?'bd-a':'bd-g'}">${clean(t)||'—'}</span>`;}
 
 const SECT_TH=`<thead><tr><th>Index</th><th>Price</th><th>Chg</th><th>%Chg</th><th>52W High</th><th>52W Low</th></tr></thead>`;
@@ -1516,13 +1509,6 @@ function renderIPO(rows){
           .map(r=>r[0]).filter(v=>v&&v.trim())
     : [];
 
-  const sbadge = s => {
-    const l=(s||'').toLowerCase();
-    if(l.includes('open'))     return '<span class="sop">OPEN</span>';
-    if(l.includes('upcoming')) return '<span class="sup">UPCOMING</span>';
-    if(l.includes('clos'))     return '<span class="scl">CLOSED</span>';
-    return s||'—';
-  };
   const tbadge = t => `<span class="bd ${/main/i.test(st(t))?'bd-a':'bd-g'}">${st(t)||'—'}</span>`;
 
   // Section panel builder
@@ -1662,26 +1648,6 @@ function renderIPO(rows){
   `;
 }
 
-function showIPOTab(key,btn,color){
-  document.querySelectorAll('#s-ipo .corp-panel').forEach(p=>p.classList.remove('on'));
-  document.querySelectorAll('#s-ipo .corp-tab').forEach(b=>{
-    b.classList.remove('on');
-    b.style.background='#fff';
-    b.style.color=b.style.borderColor;
-    const sp=b.querySelector('span');
-    if(sp){sp.style.background=b.style.borderColor+'22';sp.style.color=b.style.borderColor;}
-  });
-  document.getElementById('ipopanel-'+key)?.classList.add('on');
-  btn.classList.add('on');
-  btn.style.background=color;
-  btn.style.color='#fff';
-  const sp=btn.querySelector('span');
-  if(sp){sp.style.background='rgba(255,255,255,0.3)';sp.style.color='#fff';}
-}
-
- // Use dynamic section detection instead of hardcoded indices
-  // because gviz skips blank/merged rows causing index drift
-  const findIdx = (keyword, col=1) => rows.findIndex(r => String(r[col]||'').toLowerCase().includes(keyword.toLowerCase()));
 /* ══════════════════════════════════════════════
    CURRENCY — same as before, working correctly
    Col: [1]=Currency [2]=RateINR [3]=Code | [5]=Symbol [6]=Last [7]=Chg [8]=Chg% [9]=Close [10]=High [11]=Low
@@ -1875,6 +1841,39 @@ function setEquityStatus(){
   }
 }
 
+function sleep(ms){ return new Promise(res=>setTimeout(res,ms)); }
+
+/* Wraps a sheet-fetch call and retries it if the result looks mostly blank.
+   This exists because IMPORTHTML/IMPORTXML formulas in Google Sheets don't recalculate
+   instantly — Google's own export snapshot can lag behind the live sheet by a few minutes
+   regardless of cache-busting on our end. A single retry a couple seconds later often catches
+   the sheet once it's finished recalculating, without the user needing to refresh repeatedly. */
+async function fetchFreshData(fetchFn, ...args){
+  const maxAttempts=3;
+  let lastRows=null;
+  for(let attempt=1; attempt<=maxAttempts; attempt++){
+    let rows;
+    try{ rows=await fetchFn(...args); }catch(e){ if(attempt===maxAttempts) throw e; await sleep(1500*attempt); continue; }
+    lastRows=rows;
+    if(!rows || rows.length<2) { if(attempt<maxAttempts){ await sleep(1500*attempt); continue; } return rows; }
+    const dataRows=rows.slice(1);
+    let totalCells=0, emptyCells=0;
+    dataRows.forEach(r=>{
+      r.forEach((c,i)=>{
+        if(i===0) return; // skip label column
+        totalCells++;
+        const s=String(c==null?'':c).trim();
+        if(!s || s==='—' || s==='-') emptyCells++;
+      });
+    });
+    const emptyRatio = totalCells>0 ? emptyCells/totalCells : 0;
+    if(emptyRatio<0.6 || attempt===maxAttempts) return rows;
+    console.warn('[fetchFreshData] Data mostly blank (attempt '+attempt+'/'+maxAttempts+'), retrying…');
+    await sleep(1500*attempt);
+  }
+  return lastRows;
+}
+
 async function loadAll(){
   const btn=$('rbtn');
   // Kick off the Nifty chart FETCH immediately (DOM-independent), in parallel with everything
@@ -1884,11 +1883,11 @@ async function loadAll(){
   try{ startNiftyFetch(); }catch(e){}
   // Load Dashboard, Global and Futures in parallel on start
   await Promise.allSettled([
-    fetchSheet(GIDS.dashboard).then(d=>{DATA.dashboard=d;}).catch(e=>console.warn('dashboard',e.message)),
+    fetchFreshData(fetchSheet, GIDS.dashboard).then(d=>{DATA.dashboard=d;}).catch(e=>console.warn('dashboard',e.message)),
     fetchSheet(GIDS.news).then(d=>{DATA.news=d;}).catch(e=>console.warn('news',e.message)),
-    fetchSheet(GIDS.global).then(d=>{DATA.global=d;}).catch(e=>console.warn('global',e.message)),
-    fetchSheet(GIDS.futures).then(d=>{DATA.futures=d;}).catch(e=>console.warn('futures',e.message)),
-    fetchSheetCSV(GIDS.ipo).then(d=>{DATA.ipo=d; DATA.ipo2=[];}).catch(async e=>{
+    fetchFreshData(fetchSheet, GIDS.global).then(d=>{DATA.global=d;}).catch(e=>console.warn('global',e.message)),
+    fetchFreshData(fetchSheet, GIDS.futures).then(d=>{DATA.futures=d;}).catch(e=>console.warn('futures',e.message)),
+    fetchFreshData(fetchSheetCSV, GIDS.ipo).then(d=>{DATA.ipo=d; DATA.ipo2=[];}).catch(async e=>{
       console.warn('ipo csv failed, fallback gviz:',e.message);
       try{
         DATA.ipo  = await fetchSheet(GIDS.ipo,  '&tq=select%20*%20limit%2022%20offset%200');
@@ -1909,7 +1908,7 @@ async function loadAll(){
     }),
     fetchSheet2(CORP_GIDS.today).then(d=>{DATA['corp_today']=d;}).catch(e=>console.warn('corp_today',e.message)),
     // Fetch market data for Dashboard widget but don't mark as LOADED so Movers tab still loads+renders properly
-    fetchSheet(GIDS.market).then(d=>{
+    fetchFreshData(fetchSheet, GIDS.market).then(d=>{
       DATA.market=d;
       // Extract Adv/Dec immediately for the floating mood badge (doesn't need full render)
       DATA._bseAdv=(d[28]||[])[8]||'—'; DATA._bseDec=(d[29]||[])[8]||'—';
@@ -1949,7 +1948,7 @@ async function loadTab(key){
     } else if(GIDS[key]){
       if(key==='ipo'){
         try{
-          DATA.ipo=await fetchSheetCSV(GIDS.ipo); DATA.ipo2=[];
+          DATA.ipo=await fetchFreshData(fetchSheetCSV, GIDS.ipo); DATA.ipo2=[];
         }catch(e){
           console.warn('ipo csv failed, fallback gviz:',e.message);
           DATA.ipo  = await fetchSheet(GIDS.ipo,  '&tq=select%20*%20limit%2022%20offset%200');
@@ -1957,7 +1956,7 @@ async function loadTab(key){
         }
         try{ DATA.ipoTypes=await fetchIPOTypes(); }catch(e){}
       } else {
-        DATA[key]=await fetchSheet(GIDS[key]);
+        DATA[key]=await fetchFreshData(fetchSheet, GIDS[key]);
       }
      if(key==='dashboard'){ renderDashboard(DATA.dashboard||[], DATA.news||[]); stampUpdated('dashboard'); if(EQUITY_FETCH_DONE)setEquityStatus(); try{ buildNewsTicker(); }catch(e){} }
       if(key==='futures'){  renderFutures(DATA.futures||[]); stampUpdated('futures'); }
@@ -1995,7 +1994,7 @@ async function refreshAll(){
       } else if(GIDS[k]){
         if(k==='ipo'){
           try{
-            DATA.ipo=await fetchSheetCSV(GIDS.ipo); DATA.ipo2=[];
+            DATA.ipo=await fetchFreshData(fetchSheetCSV, GIDS.ipo); DATA.ipo2=[];
           }catch(e){
             console.warn('ipo csv failed, fallback gviz:',e.message);
             DATA.ipo  = await fetchSheet(GIDS.ipo,  '&tq=select%20*%20limit%2022%20offset%200');
@@ -2003,7 +2002,7 @@ async function refreshAll(){
           }
           try{ DATA.ipoTypes=await fetchIPOTypes(); }catch(e){}
         } else {
-          DATA[k]=await fetchSheet(GIDS[k]);
+          DATA[k]=await fetchFreshData(fetchSheet, GIDS[k]);
         }
         if(k==='dashboard'){ renderDashboard(DATA.dashboard||[], DATA.news||[]); stampUpdated('dashboard'); if(EQUITY_FETCH_DONE)setEquityStatus(); try{ buildNewsTicker(); }catch(e){} }
         if(k==='global'){   renderGlobal(DATA.global||[]); stampUpdated('global'); }
@@ -2021,16 +2020,6 @@ async function refreshAll(){
 }
 
 function renderCalculators(){
-  const calcs = [
-    {name:'Investment Calculator',             url:'https://docs.google.com/spreadsheets/d/19yJmf4_8VWrWbakTmcLxZWwpiFZIANIQ/edit?usp=sharing'},
-    {name:'Financial Independence Calculator', url:'https://docs.google.com/spreadsheets/d/1PHQSSrSZ-_9e33dJFR9VsEl7QZ7YBjd8/edit?usp=sharing'},
-    {name:'Buy or Rent a House Calculator',    url:'https://docs.google.com/spreadsheets/d/1J_ZOEn9b68RlUPWn6CDnh65RDUyG38jo/edit?usp=sharing'},
-    {name:'Pay off vs Invest',                 url:'https://docs.google.com/spreadsheets/d/1FmS_NQo9Q3zVTnXPvKRbiU_lWIQdKDz7/edit?usp=sharing'},
-    {name:'EMI Calculator',                    url:'https://docs.google.com/spreadsheets/d/1kS6OM_9miz-x2FZJ7GUUHYVimwKtjw1l/edit?usp=sharing'},
-    {name:'Other Financial Calculators',       url:'https://docs.google.com/spreadsheets/d/1BL9TGJblifa_aczth-qijnq6mABVz6X7/edit?usp=sharing'},
-    {name:'EV vs ICE',                         url:'https://docs.google.com/spreadsheets/d/1-K4zM4ar4NOluWhlylicldRSeTCkhLBmACzOs1lEw8I/edit?usp=sharing'},
-  ];
-
   const inp = (id,label,ph,val,step) => `
     <div style="margin-bottom:10px">
       <label style="font-size:11px;font-weight:700;color:#6b6b6b;text-transform:uppercase;letter-spacing:.4px;display:block;margin-bottom:4px">${label}</label>
@@ -3287,7 +3276,17 @@ function showTab(key,btn){
   window.scrollTo({top:0,behavior:'smooth'});
   loadTab(key); // lazy load if not yet loaded
   try{ sessionStorage.setItem('nb_last_tab', key); }catch(e){}
+  // Give each tab its own URL (e.g. #ipo) so it can be bookmarked, shared, or opened
+  // directly, and so the browser back/forward buttons move between tabs.
+  if(location.hash.replace('#','')!==key){
+    history.pushState({tab:key}, '', '#'+key);
+  }
 }
+window.addEventListener('popstate', (e)=>{
+  const key=(e.state&&e.state.tab) || location.hash.replace('#','') || 'dashboard';
+  const btn=document.querySelector('[onclick*="showTab(\''+key+'\'"]');
+  if(btn) showTab(key,btn);
+});
 function showInv(id,btn){
   document.querySelectorAll('.ipanel').forEach(p=>p.classList.remove('on'));
   document.querySelectorAll('.itb').forEach(b=>b.classList.remove('on'));
@@ -3392,13 +3391,16 @@ window.addEventListener('load', ()=>{
 loadAll();
 setInterval(loadAll,5*60*1000);
 
-/* Restore last visited tab (session only, resets on new browser session) */
+/* Open directly to a specific tab if the URL says so (e.g. yoursite.com/#ipo shared as a link),
+   otherwise fall back to the last tab visited this session. */
 (function(){
   try{
+    const hashTab=location.hash.replace('#','').trim();
     const lastTab=sessionStorage.getItem('nb_last_tab');
-    if(lastTab && lastTab!=='dashboard'){
-      const btn=document.querySelector('[onclick*="showTab(\''+lastTab+'\'"]');
-      if(btn) setTimeout(()=>showTab(lastTab,btn), 50);
+    const target = hashTab || (lastTab && lastTab!=='dashboard' ? lastTab : null);
+    if(target && target!=='dashboard'){
+      const btn=document.querySelector('[onclick*="showTab(\''+target+'\'"]');
+      if(btn) setTimeout(()=>showTab(target,btn), 50);
     }
   }catch(e){}
 })();
