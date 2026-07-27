@@ -2476,11 +2476,11 @@ function renderCalculators(){
       <div style="flex:1;height:1px;background:var(--bdr)"></div>
       <div style="font-size:10px;color:#999999">Major life & lifestyle cost comparisons</div>
     </div>
-    <!-- ═══ EV vs ICE TOTAL COST OF OWNERSHIP CALCULATOR ═══ -->
-    <div id="calc-ev-vs-ice-total-cost-of-ownership" data-calc-title="EV vs ICE — Total Cost of Ownership" style="background:var(--panel);border:1px solid var(--bdr);border-radius:14px;margin-bottom:14px;overflow:hidden">
+    <!-- ═══ EV vs ICE — COST & CARBON COMPARISON (merged) ═══ -->
+    <div id="calc-ev-vs-ice-total-cost-of-ownership" data-calc-title="EV vs ICE — Cost & Carbon Comparison" style="background:var(--panel);border:1px solid var(--bdr);border-radius:14px;margin-bottom:14px;overflow:hidden">
       <div style="padding:14px 18px;border-bottom:1px solid var(--bdr)">
-        <div style="font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:700;color:#1a1a1a">EV vs ICE — Total Cost of Ownership</div>
-        <div style="font-size:10px;color:#6b6b6b;margin-top:1px">Compare electric vs petrol/diesel vehicle cost including loan interest and resale</div>
+        <div style="font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:700;color:#1a1a1a">EV vs ICE — Cost & Carbon Comparison</div>
+        <div style="font-size:10px;color:#6b6b6b;margin-top:1px">Total cost of ownership and carbon net-zero payback, side by side</div>
       </div>
       <div style="padding:16px 18px">
         <div style="display:flex;gap:8px;margin-bottom:14px">
@@ -2508,6 +2508,7 @@ function renderCalculators(){
             ${evInp('ice-fuel','Fuel Price (₹/Litre)','110','0.1')}
             ${evInp('ice-mileage','Mileage (km/Litre)','16','0.1')}
             ${evInp('ice-resale','Resale Value after period (%)','50')}
+            ${evInp('cnz-baseline','Emissions (kg CO₂/km)','0.140','0.001')}
           </div>
           <div>
             <div style="font-size:11px;font-weight:700;color:var(--green);text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px;padding-bottom:5px;border-bottom:2px solid var(--green)">⚡ EV (Electric)</div>
@@ -2531,6 +2532,14 @@ function renderCalculators(){
           <strong>ICE:</strong> below 5L — 11-13% · 5-10L — 14-15% · 10-20L — 17-18% · above 20L — 18%+
         </div>
 
+        <div style="margin-top:14px">
+          <div style="font-size:11px;font-weight:700;color:var(--mc);text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px">EV Charging Source (for carbon payback)</div>
+          <div style="display:flex;gap:8px">
+            <button id="cnz-charge-grid" onclick="setCNZCharging('grid')" style="flex:1;border:none;border-radius:9px;padding:9px;font-size:12px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;background:var(--mc);color:#fff">🔌 Grid Power</button>
+            <button id="cnz-charge-solar" onclick="setCNZCharging('solar')" style="flex:1;border:1px solid var(--bdr);border-radius:9px;padding:9px;font-size:12px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;background:transparent;color:#6b6b6b">☀️ Solar Power</button>
+          </div>
+        </div>
+
         <div style="margin-top:16px;border-top:1px solid var(--bdr);padding-top:12px;overflow-x:auto">
           <table style="width:100%;border-collapse:collapse;font-size:12px">
             <thead><tr>
@@ -2547,32 +2556,7 @@ function renderCalculators(){
             </tbody>
           </table>
         </div>
-        <div id="evi-verdict" style="margin-top:12px;padding:10px 14px;border-radius:10px;font-size:13px;font-weight:700;text-align:center"></div>
-        <p style="font-size:10px;color:#999999;margin-top:10px">Assumes fixed fuel/electricity prices and straight-line resale % over the ownership period. Actual EV range/mileage may vary with driving conditions and battery degradation.</p>
-      </div>
-    </div>
 
-    <!-- ═══ CARBON NET-ZERO PAYBACK CALCULATOR ═══ -->
-    <div id="calc-carbon-net-zero-payback-calculator" data-calc-title="Carbon Net-Zero Payback Calculator" style="background:var(--panel);border:1px solid var(--bdr);border-radius:14px;margin-bottom:14px;overflow:hidden">
-      <div style="padding:14px 18px;border-bottom:1px solid var(--bdr)">
-        <div style="font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:700;color:#1a1a1a">Carbon Net-Zero Payback Calculator</div>
-        <div style="font-size:10px;color:#6b6b6b;margin-top:1px">Time for an EV's driving emissions savings to offset its battery's manufacturing footprint</div>
-      </div>
-      <div style="padding:16px 18px">
-        <div style="display:flex;gap:8px;margin-bottom:8px">
-          <button id="cnz-preset-2w" onclick="setCNZPreset('2w')" style="flex:1;border:1px solid var(--bdr);border-radius:9px;padding:9px;font-size:12px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;background:transparent;color:#6b6b6b">🛵 2 Wheeler</button>
-          <button id="cnz-preset-4w" onclick="setCNZPreset('4w')" style="flex:1;border:none;border-radius:9px;padding:9px;font-size:12px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;background:var(--mc);color:#fff">🚗 4 Wheeler</button>
-        </div>
-        <div style="display:flex;gap:8px;margin-bottom:14px">
-          <button id="cnz-charge-grid" onclick="setCNZCharging('grid')" style="flex:1;border:none;border-radius:9px;padding:9px;font-size:12px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;background:var(--mc);color:#fff">🔌 Grid Power</button>
-          <button id="cnz-charge-solar" onclick="setCNZCharging('solar')" style="flex:1;border:1px solid var(--bdr);border-radius:9px;padding:9px;font-size:12px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;background:transparent;color:#6b6b6b">☀️ Solar Power</button>
-        </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-          ${evInp('cnz-battery','Battery Size (kWh)','25','0.1')}
-          ${evInp('cnz-daily','Daily Commute (km/day)','20')}
-          ${evInp('cnz-effic','EV Efficiency (kWh/km)','0.150','0.001')}
-          ${evInp('cnz-baseline','ICE Baseline Emissions (kg CO₂/km)','0.140','0.001')}
-        </div>
         <div style="margin-top:14px;display:grid;grid-template-columns:1fr 1fr;gap:10px">
           <div style="background:rgba(58,45,127,.06);border-radius:10px;padding:12px 14px">
             <div style="font-size:9px;color:#6b6b6b;text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px">Lithium Extraction Net-Zero</div>
@@ -2583,8 +2567,9 @@ function renderCalculators(){
             <div id="cnz-fullbattery" style="font-family:'Space Grotesk',sans-serif;font-size:17px;font-weight:700;color:var(--green)">—</div>
           </div>
         </div>
-        <div id="cnz-explain" style="margin-top:12px;font-size:11px;color:#6b6b6b;line-height:1.5"></div>
-        <p style="font-size:10px;color:#999999;margin-top:10px">Fixed emission factors: grid 0.71, solar 0.04, lithium extraction 11.5, full battery manufacturing 68 kg CO₂/kWh. Simplified model for directional comparison — actual figures vary by battery chemistry, grid mix, and manufacturer.</p>
+
+        <div id="evi-verdict" style="margin-top:12px;padding:10px 14px;border-radius:10px;font-size:13px;font-weight:700;text-align:center;line-height:1.5"></div>
+        <p style="font-size:10px;color:#999999;margin-top:10px">Cost side assumes fixed fuel/electricity prices and straight-line resale % over the ownership period. Carbon side uses fixed emission factors: grid 0.71, solar 0.04, lithium extraction 11.5, full battery manufacturing 68 kg CO₂/kWh — simplified model for directional comparison, actual figures vary by battery chemistry, grid mix, and manufacturer.</p>
       </div>
     </div>
 
@@ -2716,15 +2701,18 @@ function xirrSolve(cashflows){
 
 /* EV vs ICE — 2-Wheeler / 4-Wheeler preset data (from the user's own vehicle comparison sheet).
    Fields not present in that sheet (ongoing insurance, maintenance, tyre, resale%) use
-   reasonable scaled estimates — all fields stay fully editable after loading a preset. */
+   reasonable scaled estimates — all fields stay fully editable after loading a preset.
+   `baseline` = ICE tailpipe emissions (kg CO2/km), feeds the carbon payback section below. */
 const EVI_PRESETS={
   '2w':{
     ice:{price:94000, tax:15000, ins1:1600, misc:4000, insY:1200, maint:1500, tyre:3000, fuel:110, mileage:45, resale:35},
-    ev: {price:136500, tax:500, ins1:1800, misc:4000, insY:1200, maint:800, tyre:2500, elec:7, range:105, battery:3.5, resale:30}
+    ev: {price:136500, tax:500, ins1:1800, misc:4000, insY:1200, maint:800, tyre:2500, elec:7, range:105, battery:3.5, resale:30},
+    baseline:0.075
   },
   '4w':{
     ice:{price:613000, tax:85820, ins1:12000, misc:15000, insY:11000, maint:6000, tyre:18000, fuel:110, mileage:16, resale:50},
-    ev: {price:999000, tax:1500, ins1:14000, misc:15000, insY:26000, maint:4000, tyre:20000, elec:7, range:180, battery:25, resale:40}
+    ev: {price:999000, tax:1500, ins1:14000, misc:15000, insY:26000, maint:4000, tyre:20000, elec:7, range:180, battery:25, resale:40},
+    baseline:0.140
   }
 };
 function setEVPreset(type){
@@ -2732,6 +2720,7 @@ function setEVPreset(type){
   if(!p) return;
   Object.entries(p.ice).forEach(([k,v])=>{ const el=$('ice-'+k); if(el) el.value=v; });
   Object.entries(p.ev).forEach(([k,v])=>{ const el=$('ev-'+k); if(el) el.value=v; });
+  const baseEl=$('cnz-baseline'); if(baseEl) baseEl.value=p.baseline;
   const btn2=$('evi-preset-2w'), btn4=$('evi-preset-4w');
   [btn2,btn4].forEach(b=>{ if(b){ b.style.background='transparent'; b.style.color='#6b6b6b'; } });
   const active = type==='2w'?btn2:btn4;
@@ -2739,25 +2728,8 @@ function setEVPreset(type){
   calcRun();
 }
 
-/* Carbon Net-Zero Payback Calculator — vehicle-type presets + charging source toggle */
-const CNZ_PRESETS={
-  '2w':{effic:0.035, baseline:0.075, battery:3.5},
-  '4w':{effic:0.150, baseline:0.140, battery:25}
-};
+/* EV charging source toggle — feeds the carbon payback section (shares the 2W/4W preset above) */
 let CNZ_CHARGING='grid';
-function setCNZPreset(type){
-  const p=CNZ_PRESETS[type];
-  if(!p) return;
-  const effEl=$('cnz-effic'), baseEl=$('cnz-baseline'), battEl=$('cnz-battery');
-  if(effEl) effEl.value=p.effic;
-  if(baseEl) baseEl.value=p.baseline;
-  if(battEl) battEl.value=p.battery;
-  const btn2=$('cnz-preset-2w'), btn4=$('cnz-preset-4w');
-  [btn2,btn4].forEach(b=>{ if(b){ b.style.background='transparent'; b.style.color='#6b6b6b'; b.style.border='1px solid var(--bdr)'; } });
-  const active = type==='2w'?btn2:btn4;
-  if(active){ active.style.background='var(--mc)'; active.style.color='#fff'; active.style.border='none'; }
-  calcRun();
-}
 function setCNZCharging(mode){
   CNZ_CHARGING=mode;
   const btnG=$('cnz-charge-grid'), btnS=$('cnz-charge-solar');
@@ -3154,30 +3126,14 @@ function calcRun(){
     setTxt('evi-tco-ice', fmtINR(iceR.finalTCO));
     setTxt('evi-tco-ev',  fmtINR(evR.finalTCO));
 
-    const eviVerdict=$('evi-verdict');
-    if(eviVerdict){
-      const diff = iceR.finalTCO - evR.finalTCO;
-      if(Math.abs(diff) < Math.max(iceR.finalTCO,evR.finalTCO)*0.03){
-        eviVerdict.textContent='⚖️ Verdict: Very close — pick based on preference, charging access & driving pattern';
-        eviVerdict.style.background='rgba(58,45,127,.10)'; eviVerdict.style.color='var(--mc)';
-      } else if(diff>0){
-        eviVerdict.textContent='⚡ Verdict: EV is cheaper by '+fmtINR(diff)+' over '+eviOwn+' years';
-        eviVerdict.style.background='rgba(47,158,94,.10)'; eviVerdict.style.color='var(--green)';
-      } else {
-        eviVerdict.textContent='⛽ Verdict: ICE is cheaper by '+fmtINR(-diff)+' over '+eviOwn+' years';
-        eviVerdict.style.background='rgba(224,86,47,.10)'; eviVerdict.style.color='var(--red)';
-      }
-    }
-  }
-
-  // Carbon Net-Zero Payback Calculator
-  const cnzBattery=gv('cnz-battery'), cnzDaily=gv('cnz-daily'),
-        cnzEffic=gv('cnz-effic'), cnzBaseline=gv('cnz-baseline');
-  if(cnzBattery&&cnzDaily&&cnzEffic!=null&&cnzBaseline!=null){
+    // Carbon Net-Zero Payback — reuses EV battery/range from above + ICE baseline emissions input,
+    // so nothing has to be entered twice. Daily commute is derived from the monthly km already given.
+    const cnzBattery=gv('ev-battery'), cnzRange=gv('ev-range'), cnzBaseline=gv('cnz-baseline');
+    const cnzDaily = eviKm/30;
+    const cnzEffic = (cnzBattery>0 && cnzRange>0) ? cnzBattery/cnzRange : 0; // kWh per km
     const gridIntensity=0.71, solarIntensity=0.04;
     const lithiumFactor=11.5, fullBatteryFactor=68.0;
     const energyIntensity = CNZ_CHARGING==='solar' ? solarIntensity : gridIntensity;
-
     const co2SavedPerKm = cnzBaseline - (cnzEffic*energyIntensity);
     const dailyOffset = co2SavedPerKm*cnzDaily;
 
@@ -3188,25 +3144,32 @@ function calcRun(){
       if(months<=0) return remDays+' day'+(remDays===1?'':'s');
       return months+' month'+(months===1?'':'s')+(remDays>0?', '+remDays+' day'+(remDays===1?'':'s'):'');
     }
-
     const extractionDays = dailyOffset>0 ? (cnzBattery*lithiumFactor)/dailyOffset : -1;
     const fullBatteryDays = dailyOffset>0 ? (cnzBattery*fullBatteryFactor)/dailyOffset : -1;
-
     setTxt('cnz-extraction', fmtDays(extractionDays));
     setTxt('cnz-fullbattery', fmtDays(fullBatteryDays));
 
-    const cnzExplain=$('cnz-explain');
-    if(cnzExplain){
-      if(dailyOffset<=0){
-        cnzExplain.innerHTML='At this efficiency and charging source, the EV doesn\'t save CO₂ per km over the ICE baseline — try switching to Solar or check your inputs.';
-      } else {
-        const otherIntensity = CNZ_CHARGING==='solar' ? gridIntensity : solarIntensity;
-        const otherOffset = (cnzBaseline-(cnzEffic*otherIntensity))*cnzDaily;
-        const otherFullDays = otherOffset>0 ? (cnzBattery*fullBatteryFactor)/otherOffset : -1;
-        const otherLabel = CNZ_CHARGING==='solar' ? 'Grid' : 'Solar';
-        cnzExplain.innerHTML = 'Charging on <strong>'+(CNZ_CHARGING==='solar'?'Solar':'Grid')+'</strong> power, full battery net-zero in <strong>'+fmtDays(fullBatteryDays)+'</strong>. '+
-          (otherOffset>0 ? 'On '+otherLabel+' power instead, that would take <strong>'+fmtDays(otherFullDays)+'</strong>.' : '');
-      }
+    // Combined verdict — cost + carbon together
+    const eviVerdict=$('evi-verdict');
+    if(eviVerdict){
+      const diff = iceR.finalTCO - evR.finalTCO; // positive = EV cheaper
+      const costClose = Math.abs(diff) < Math.max(iceR.finalTCO,evR.finalTCO)*0.03;
+      const costLine = costClose
+        ? 'Cost: nearly equal (within 3%)'
+        : diff>0
+          ? 'Cost: EV cheaper by '+fmtINR(diff)+' over '+eviOwn+' yrs'
+          : 'Cost: ICE cheaper by '+fmtINR(-diff)+' over '+eviOwn+' yrs';
+      const carbonLine = dailyOffset>0
+        ? 'Carbon: EV turns net-zero (full battery) in '+fmtDays(fullBatteryDays)
+        : "Carbon: EV doesn't offset its footprint at this efficiency/charging source";
+
+      let icon='⚖️', bg='rgba(58,45,127,.10)', color='var(--mc)';
+      if(!costClose && diff>0 && dailyOffset>0){ icon='⚡'; bg='rgba(47,158,94,.10)'; color='var(--green)'; }
+      else if(!costClose && diff<0 && dailyOffset<=0){ icon='⛽'; bg='rgba(224,86,47,.10)'; color='var(--red)'; }
+      else if(costClose && dailyOffset>0){ icon='🌱'; bg='rgba(47,158,94,.10)'; color='var(--green)'; }
+
+      eviVerdict.innerHTML = icon+' '+costLine+' &nbsp;·&nbsp; '+carbonLine;
+      eviVerdict.style.background=bg; eviVerdict.style.color=color;
     }
   }
 
