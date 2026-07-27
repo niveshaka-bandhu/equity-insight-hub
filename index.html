@@ -1216,7 +1216,7 @@ function renderHeatmapSection(title, items){
 
 function renderIndian(rows){
   // EXACT row slices — gviz is 0-indexed, matches CSV row - 1
-  const nseRows   = rows.slice(0,  18); // CSV rows 3–21
+  const nseRows   = rows.slice(0,  17); // CSV rows 3–21
   const bseRows   = rows.slice(19, 36); // CSV rows 24–41
   const sensexRows= rows.slice(37, 66); // CSV rows 44–73
   const niftyRows = rows.slice(67,117); // CSV rows 76–125
