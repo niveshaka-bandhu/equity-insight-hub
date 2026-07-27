@@ -1219,7 +1219,7 @@ function renderIndian(rows){
   const nseRows   = rows.slice(0,  18); // CSV rows 3–21
   const bseRows   = rows.slice(18, 36); // CSV rows 24–41
   const sensexRows= rows.slice(36, 66); // CSV rows 44–73
-  const niftyRows = rows.slice(66,116); // CSV rows 76–125
+  const niftyRows = rows.slice(66,117); // CSV rows 76–125
 
   // Filter: only rows where col[0] has a name (skip accidental blank rows)
   const hasName = r => r[0]&&r[0].trim();
