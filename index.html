@@ -1216,10 +1216,10 @@ function renderHeatmapSection(title, items){
 
 function renderIndian(rows){
   // EXACT row slices — gviz is 0-indexed, matches CSV row - 1
-  const nseRows   = rows.slice(0,  17); // CSV rows 3–21
-  const bseRows   = rows.slice(18, 35); // CSV rows 24–41
-  const sensexRows= rows.slice(36, 65); // CSV rows 44–73
-  const niftyRows = rows.slice(66,115); // CSV rows 76–125
+  const nseRows   = rows.slice(0,  18); // CSV rows 3–21
+  const bseRows   = rows.slice(19, 36); // CSV rows 24–41
+  const sensexRows= rows.slice(37, 66); // CSV rows 44–73
+  const niftyRows = rows.slice(67,117); // CSV rows 76–125
 
   // Filter: only rows where col[0] has a name (skip accidental blank rows)
   const hasName = r => r[0]&&r[0].trim();
