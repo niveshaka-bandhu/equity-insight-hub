@@ -2020,6 +2020,24 @@ async function refreshAll(){
   if(btn){btn.textContent='⟳ Refresh'; btn.disabled=false;}
 }
 
+/* Calculators are collapsed by default; clicking a title opens it and closes any other
+   currently-open one, so only one calculator is expanded at a time. */
+function toggleCalc(id){
+  document.querySelectorAll('#s-calculators .calc-body').forEach(b=>{
+    const owner=b.dataset.owner;
+    const chevron=document.getElementById('chev-'+owner);
+    if(owner===id){
+      const willOpen = b.style.display==='none';
+      b.style.display = willOpen ? 'block' : 'none';
+      if(chevron) chevron.textContent = willOpen ? '▾' : '▸';
+      if(willOpen) b.scrollIntoView({behavior:'smooth',block:'nearest'});
+    } else {
+      b.style.display='none';
+      if(chevron) chevron.textContent='▸';
+    }
+  });
+}
+
 function renderCalculators(){
   const inp = (id,label,ph,val,step) => `
     <div style="margin-bottom:10px">
@@ -2045,17 +2063,22 @@ function renderCalculators(){
       <span id="${id}" style="font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:700;color:${color||'#1a1a1a'}">—</span>
     </div>`;
 
-  const calcCard = (title, subtitle, inputsHtml, resultsHtml) => `
-    <div id="calc-${slugify(title)}" data-calc-title="${title}" style="background:var(--panel);border:1px solid var(--bdr);border-radius:14px;margin-bottom:14px;overflow:hidden">
-      <div style="padding:14px 18px;border-bottom:1px solid var(--bdr)">
-        <div style="font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:700;color:#1a1a1a">${title}</div>
-        <div style="font-size:10px;color:#6b6b6b;margin-top:1px">${subtitle}</div>
+  const calcCard = (title, subtitle, inputsHtml, resultsHtml) => { const id='calc-'+slugify(title); return `
+    <div id="${id}" data-calc-title="${title}" style="background:var(--panel);border:1px solid var(--bdr);border-radius:14px;margin-bottom:14px;overflow:hidden">
+      <div onclick="toggleCalc('${id}')" style="padding:14px 18px;${resultsHtml||inputsHtml?'border-bottom:1px solid var(--bdr);':''}cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:10px;user-select:none">
+        <div>
+          <div style="font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:700;color:#1a1a1a">${title}</div>
+          <div style="font-size:10px;color:#6b6b6b;margin-top:1px">${subtitle}</div>
+        </div>
+        <span id="chev-${id}" style="font-size:12px;color:var(--mc);flex-shrink:0;transition:.2s">▸</span>
       </div>
-      <div style="padding:16px 18px;display:grid;grid-template-columns:1fr 1fr;gap:20px">
-        <div>${inputsHtml}</div>
-        <div style="padding-left:6px">${resultsHtml}</div>
+      <div class="calc-body" data-owner="${id}" style="display:none">
+        <div style="padding:16px 18px;display:grid;grid-template-columns:1fr 1fr;gap:20px">
+          <div>${inputsHtml}</div>
+          <div style="padding-left:6px">${resultsHtml}</div>
+        </div>
       </div>
-    </div>`;
+    </div>`; };
 
   $('s-calculators').innerHTML=`
     <div class="stitle">Financial Calculators</div>
@@ -2143,11 +2166,14 @@ function renderCalculators(){
     </div>
     <!-- ═══ RETIREMENT CORPUS CALCULATOR (multi-scenario) ═══ -->
     <div id="calc-retirement-corpus-calculator" data-calc-title="Retirement Corpus Calculator" style="background:var(--panel);border:1px solid var(--bdr);border-radius:14px;margin-bottom:14px;overflow:hidden">
-      <div style="padding:14px 18px;border-bottom:1px solid var(--bdr)">
-        <div style="font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:700;color:#1a1a1a">Retirement Corpus Calculator</div>
-        <div style="font-size:10px;color:#6b6b6b;margin-top:1px">See your corpus at different return rates — and what it's worth after inflation</div>
+      <div onclick="toggleCalc('calc-retirement-corpus-calculator')" style="padding:14px 18px;border-bottom:1px solid var(--bdr);cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:10px;user-select:none">
+        <div>
+          <div style="font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:700;color:#1a1a1a">Retirement Corpus Calculator</div>
+          <div style="font-size:10px;color:#6b6b6b;margin-top:1px">See your corpus at different return rates — and what it's worth after inflation</div>
+        </div>
+        <span id="chev-calc-retirement-corpus-calculator" style="font-size:12px;color:var(--mc);flex-shrink:0;transition:.2s">▸</span>
       </div>
-      <div style="padding:16px 18px">
+      <div class="calc-body" data-owner="calc-retirement-corpus-calculator" style="display:none;padding:16px 18px">
         ${inp('ret-age','Current Age','30',30)}
         ${inp('ret-retage','Retirement Age','60',60)}
         ${inp('ret-amt','Monthly Contribution (₹)','10,000',10000)}
@@ -2377,11 +2403,14 @@ function renderCalculators(){
 
     <!-- ═══ INCOME TAX CALCULATOR (OLD VS NEW REGIME) ═══ -->
     <div id="calc-income-tax-calculator" data-calc-title="Income Tax Calculator (Old vs New Regime)" style="background:var(--panel);border:1px solid var(--bdr);border-radius:14px;margin-bottom:14px;overflow:hidden">
-      <div style="padding:14px 18px;border-bottom:1px solid var(--bdr)">
-        <div style="font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:700;color:#1a1a1a">Income Tax Calculator — Old vs New Regime</div>
-        <div style="font-size:10px;color:#6b6b6b;margin-top:1px">FY 2026-27 (AY 2027-28) slabs — compare your tax under both regimes</div>
+      <div onclick="toggleCalc('calc-income-tax-calculator')" style="padding:14px 18px;border-bottom:1px solid var(--bdr);cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:10px;user-select:none">
+        <div>
+          <div style="font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:700;color:#1a1a1a">Income Tax Calculator — Old vs New Regime</div>
+          <div style="font-size:10px;color:#6b6b6b;margin-top:1px">FY 2026-27 (AY 2027-28) slabs — compare your tax under both regimes</div>
+        </div>
+        <span id="chev-calc-income-tax-calculator" style="font-size:12px;color:var(--mc);flex-shrink:0;transition:.2s">▸</span>
       </div>
-      <div style="padding:16px 18px">
+      <div class="calc-body" data-owner="calc-income-tax-calculator" style="display:none;padding:16px 18px">
         ${evInp('itx-income','Gross Annual Income (₹)','12,00,000')}
         ${evInp('itx-deductions','Deductions — 80C, 80D, HRA, Home Loan Interest, etc. — Old Regime only (₹)','1,50,000')}
         <div style="margin-top:14px;border-top:1px solid var(--bdr);padding-top:12px">
@@ -2478,11 +2507,14 @@ function renderCalculators(){
     </div>
     <!-- ═══ EV vs ICE — COST & CARBON COMPARISON (merged) ═══ -->
     <div id="calc-ev-vs-ice-total-cost-of-ownership" data-calc-title="EV vs ICE — Cost & Carbon Comparison" style="background:var(--panel);border:1px solid var(--bdr);border-radius:14px;margin-bottom:14px;overflow:hidden">
-      <div style="padding:14px 18px;border-bottom:1px solid var(--bdr)">
-        <div style="font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:700;color:#1a1a1a">EV vs ICE — Cost & Carbon Comparison</div>
-        <div style="font-size:10px;color:#6b6b6b;margin-top:1px">Total cost of ownership and carbon net-zero payback, side by side</div>
+      <div onclick="toggleCalc('calc-ev-vs-ice-total-cost-of-ownership')" style="padding:14px 18px;border-bottom:1px solid var(--bdr);cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:10px;user-select:none">
+        <div>
+          <div style="font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:700;color:#1a1a1a">EV vs ICE — Cost & Carbon Comparison</div>
+          <div style="font-size:10px;color:#6b6b6b;margin-top:1px">Total cost of ownership and carbon net-zero payback, side by side</div>
+        </div>
+        <span id="chev-calc-ev-vs-ice-total-cost-of-ownership" style="font-size:12px;color:var(--mc);flex-shrink:0;transition:.2s">▸</span>
       </div>
-      <div style="padding:16px 18px">
+      <div class="calc-body" data-owner="calc-ev-vs-ice-total-cost-of-ownership" style="display:none;padding:16px 18px">
         <div style="display:flex;gap:8px;margin-bottom:14px">
           <button id="evi-preset-2w" onclick="setEVPreset('2w')" style="flex:1;border:none;border-radius:9px;padding:9px;font-size:12px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;background:transparent;color:#6b6b6b;border:1px solid var(--bdr)">🛵 2 Wheeler</button>
           <button id="evi-preset-4w" onclick="setEVPreset('4w')" style="flex:1;border:none;border-radius:9px;padding:9px;font-size:12px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;background:var(--mc);color:#fff">🚗 4 Wheeler</button>
@@ -2500,23 +2532,21 @@ function renderCalculators(){
             <div style="font-size:11px;font-weight:700;color:#444444;text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px;padding-bottom:5px;border-bottom:2px solid #444444">⛽ ICE (Petrol/Diesel)</div>
             ${evInp('ice-price','Ex-Showroom Price (₹)','6,13,000')}
             ${evInp('ice-tax','Road Tax (₹)','85,820')}
-            ${evInp('ice-ins1','Insurance — Year 1 (₹)','12,000')}
+            ${evInp('ice-insAvg','Annual Avg. Insurance Cost (₹)','12,500')}
             ${evInp('ice-misc','Misc / Handling (₹)','15,000')}
-            ${evInp('ice-insY','Ongoing Annual Insurance (₹)','11,000')}
             ${evInp('ice-maint','Annual Maintenance (₹)','6,000')}
             ${evInp('ice-tyre','Tyre Cost — one-time (₹)','18,000')}
             ${evInp('ice-fuel','Fuel Price (₹/Litre)','110','0.1')}
             ${evInp('ice-mileage','Mileage (km/Litre)','16','0.1')}
-            ${evInp('ice-resale','Resale Value after period (%)','50')}
             ${evInp('cnz-baseline','Emissions (kg CO₂/km)','0.140','0.001')}
+            ${evInp('ice-resale','Resale Value after period (%)','50')}
           </div>
           <div>
             <div style="font-size:11px;font-weight:700;color:var(--green);text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px;padding-bottom:5px;border-bottom:2px solid var(--green)">⚡ EV (Electric)</div>
             ${evInp('ev-price','Ex-Showroom Price (₹)','9,99,000')}
             ${evInp('ev-tax','Road Tax (₹)','1,500')}
-            ${evInp('ev-ins1','Insurance — Year 1 (₹)','14,000')}
+            ${evInp('ev-insAvg','Annual Avg. Insurance Cost (₹)','18,000')}
             ${evInp('ev-misc','Misc / Handling (₹)','15,000')}
-            ${evInp('ev-insY','Ongoing Annual Insurance (₹)','26,000')}
             ${evInp('ev-maint','Annual Maintenance (₹)','4,000')}
             ${evInp('ev-tyre','Tyre Cost — one-time (₹)','20,000')}
             ${evInp('ev-elec','Electricity Cost (₹/kWh)','7','0.1')}
@@ -2575,11 +2605,14 @@ function renderCalculators(){
 
     <!-- ═══ RENT VS BUY CALCULATOR ═══ -->
     <div id="calc-rent-vs-buy-calculator" data-calc-title="Rent vs Buy Calculator" style="background:var(--panel);border:1px solid var(--bdr);border-radius:14px;margin-bottom:14px;overflow:hidden">
-      <div style="padding:14px 18px;border-bottom:1px solid var(--bdr)">
-        <div style="font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:700;color:#1a1a1a">Rent vs Buy Calculator</div>
-        <div style="font-size:10px;color:#6b6b6b;margin-top:1px">Should you rent and invest the difference, or buy a home?</div>
+      <div onclick="toggleCalc('calc-rent-vs-buy-calculator')" style="padding:14px 18px;border-bottom:1px solid var(--bdr);cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:10px;user-select:none">
+        <div>
+          <div style="font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:700;color:#1a1a1a">Rent vs Buy Calculator</div>
+          <div style="font-size:10px;color:#6b6b6b;margin-top:1px">Should you rent and invest the difference, or buy a home?</div>
+        </div>
+        <span id="chev-calc-rent-vs-buy-calculator" style="font-size:12px;color:var(--mc);flex-shrink:0;transition:.2s">▸</span>
       </div>
-      <div style="padding:16px 18px">
+      <div class="calc-body" data-owner="calc-rent-vs-buy-calculator" style="display:none;padding:16px 18px">
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
           <div>
             <div style="font-size:11px;font-weight:700;color:#444444;text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px;padding-bottom:5px;border-bottom:2px solid #444444">🏠 Renting</div>
@@ -2705,13 +2738,13 @@ function xirrSolve(cashflows){
    `baseline` = ICE tailpipe emissions (kg CO2/km), feeds the carbon payback section below. */
 const EVI_PRESETS={
   '2w':{
-    ice:{price:94000, tax:15000, ins1:1600, misc:4000, insY:1200, maint:1500, tyre:3000, fuel:110, mileage:45, resale:35},
-    ev: {price:136500, tax:500, ins1:1800, misc:4000, insY:1200, maint:800, tyre:2500, elec:7, range:105, battery:3.5, resale:30},
+    ice:{price:94000, tax:15000, insAvg:1500, misc:4000, maint:3000, tyre:3000, fuel:110, mileage:45, resale:35},
+    ev: {price:136500, tax:500, insAvg:1500, misc:4000, maint:2000, tyre:3000, elec:7, range:105, battery:3.5, resale:30},
     baseline:0.075
   },
   '4w':{
-    ice:{price:613000, tax:85820, ins1:12000, misc:15000, insY:11000, maint:6000, tyre:18000, fuel:110, mileage:16, resale:50},
-    ev: {price:999000, tax:1500, ins1:14000, misc:15000, insY:26000, maint:4000, tyre:20000, elec:7, range:180, battery:25, resale:40},
+    ice:{price:613000, tax:85820, insAvg:12500, misc:15000, maint:6000, tyre:18000, fuel:110, mileage:16, resale:50},
+    ev: {price:999000, tax:1500, insAvg:18000, misc:15000, maint:4000, tyre:20000, elec:7, range:180, battery:25, resale:40},
     baseline:0.140
   }
 };
@@ -3082,21 +3115,21 @@ function calcRun(){
 
     function computeVehicle(prefix, isEV){
       const price=gv(prefix+'-price'), roadTax=gv(prefix+'-tax'),
-            ins1=gv(prefix+'-ins1'), misc=gv(prefix+'-misc'),
-            insY=gv(prefix+'-insY'), maint=gv(prefix+'-maint'),
+            insAvg=gv(prefix+'-insAvg'), misc=gv(prefix+'-misc'),
+            maint=gv(prefix+'-maint'),
             tyre=gv(prefix+'-tyre'), resalePct=gv(prefix+'-resale')/100;
-      const onRoad = price + roadTax + ins1 + misc;
+      const onRoad = price + roadTax + misc;
 
       let runCost;
       if(isEV){
         const range=gv('ev-range'), battery=gv('ev-battery'), elecCost=gv('ev-elec');
         const kmPerKwh = battery>0 ? range/battery : 0;
         const energyUsed = kmPerKwh>0 ? totalKm/kmPerKwh : 0;
-        runCost = energyUsed*elecCost + insY*Math.max(0,eviOwn-1) + maint*eviOwn + tyre;
+        runCost = energyUsed*elecCost + insAvg*eviOwn + maint*eviOwn + tyre;
       } else {
         const mileage=gv('ice-mileage'), fuelPrice=gv('ice-fuel');
         const litersUsed = mileage>0 ? totalKm/mileage : 0;
-        runCost = litersUsed*fuelPrice + insY*Math.max(0,eviOwn-1) + maint*eviOwn + tyre;
+        runCost = litersUsed*fuelPrice + insAvg*eviOwn + maint*eviOwn + tyre;
       }
 
       const loanAmt = onRoad*(1-eviDown);
