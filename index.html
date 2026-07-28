@@ -304,6 +304,12 @@ footer a{color:var(--mc)}
       background:var(--mc);font-family:'Inter',sans-serif">
       📲 Install App
     </button>
+    <button onclick="shareApp(this)" title="Share"
+      style="cursor:pointer;display:flex;align-items:center;justify-content:center;
+        width:26px;height:26px;border:1px solid var(--bdr);border-radius:8px;
+        background:rgba(255,255,255,.4);font-size:12px;padding:0">
+      📤
+    </button>
   </span>
 </div>
 <header>
@@ -578,6 +584,19 @@ function buildNewsTicker(){
   if(!strip) return;
   const dashRows = DATA.dashboard || [];
 
+  // Looks up a company's short ticker symbol from the Equity sheet (same data that powers
+  // Stock Lookup autocomplete), so the ticker strip shows "RELIANCE" instead of
+  // "Reliance Industries Ltd" — matching real ticker-tape style.
+  function tickerSymbolFor(name){
+    if(!name || !EQUITY_LIST.length) return name;
+    const norm = s => String(s||'').toLowerCase().replace(/\./g,'').replace(/\b(ltd|limited|ld)\b/g,'').replace(/[^a-z0-9]/g,'').trim();
+    const target = norm(name);
+    if(!target) return name;
+    let match = EQUITY_LIST.find(e=>norm(e.name)===target);
+    if(!match) match = EQUITY_LIST.find(e=>{ const n=norm(e.name); return n.startsWith(target)||target.startsWith(n); });
+    return match ? match.symbol : name;
+  }
+
   function quoteChip(name,price,chg,pct){
     if(!price) return '';
     const pctNum=parseFloat(String(pct||'').replace(/[^0-9.-]/g,''));
@@ -596,21 +615,21 @@ function buildNewsTicker(){
   const idxRows = dashRows.filter(r=>r[0]&&r[0].trim()&&r[1]&&!isNaN(parseFloat(String(r[1]).replace(/,/g,'')))&&!(r[0]||'').includes('2026'));
   const nifty50Row = idxRows.find(r=>(r[0]||'').toUpperCase().trim()==='NIFTY 50');
   const bankNiftyRow = idxRows.find(r=>{const u=(r[0]||'').toUpperCase(); return u.includes('BANK NIFTY')||u.includes('NIFTY BANK');});
-  if(nifty50Row) items.push(quoteChip('NIFTY 50', nifty50Row[1], nifty50Row[2], nifty50Row[3]));
-  if(bankNiftyRow) items.push(quoteChip('BANK NIFTY', bankNiftyRow[1], bankNiftyRow[2], bankNiftyRow[3]));
+  if(nifty50Row) items.push(quoteChip('NIFTY50', nifty50Row[1], nifty50Row[2], nifty50Row[3]));
+  if(bankNiftyRow) items.push(quoteChip('BANKNIFTY', bankNiftyRow[1], bankNiftyRow[2], bankNiftyRow[3]));
 
   // Gift Nifty — from the Futures sheet
   const futRows = DATA.futures || [];
   const giftRow = futRows.find(r=>(r[0]||'').toUpperCase().trim()==='GIFT NIFTY FUTURES');
-  if(giftRow) items.push(quoteChip('GIFT NIFTY', giftRow[2], giftRow[3], giftRow[4]));
+  if(giftRow) items.push(quoteChip('GIFTNIFTY', giftRow[2], giftRow[3], giftRow[4]));
 
-  // Top 5 Nifty 50 gainers/losers — from the Movers sheet
+  // Top 5 Nifty 50 gainers/losers — from the Movers sheet, shown as ticker symbols not full names
   const mktRows = DATA.market || [];
   const Lg=(s,e)=>mktRows.slice(s,e)
     .filter(r=>r[1]&&r[1].trim()&&r[2]&&!isNaN(parseFloat(String(r[2]).replace(/,/g,''))))
     .map(r=>[r[1],r[2],r[3],r[4]]);
-  Lg(0,5).slice(0,5).forEach(r=>items.push(quoteChip(r[0],r[1],r[2],r[3])));
-  Lg(6,12).slice(0,5).forEach(r=>items.push(quoteChip(r[0],r[1],r[2],r[3])));
+  Lg(0,5).slice(0,5).forEach(r=>items.push(quoteChip(tickerSymbolFor(r[0]),r[1],r[2],r[3])));
+  Lg(6,12).slice(0,5).forEach(r=>items.push(quoteChip(tickerSymbolFor(r[0]),r[1],r[2],r[3])));
 
   if(!items.length) return;
   const html=items.join('');
@@ -3456,7 +3475,35 @@ window.addEventListener('beforeinstallprompt', (e)=>{
   _deferredInstallPrompt=e;
   const btn=document.getElementById('pwa-install-btn');
   if(btn && !pwaAlreadyStandalone()) btn.style.display='flex';
+
+  // Auto-prompt once per session on Android (covers "opened a shared link -> asked to install"
+  // without needing the visitor to notice and tap the small button themselves). Only once per
+  // session so it doesn't nag on every reload if they dismiss it.
+  try{
+    if(!pwaAlreadyStandalone() && !sessionStorage.getItem('nb_install_prompted')){
+      sessionStorage.setItem('nb_install_prompted','1');
+      setTimeout(()=>{ if(_deferredInstallPrompt) installPWA(); }, 600);
+    }
+  }catch(err){}
 });
+
+/* Share button — shares just the app link (no extra text), title-only via Web Share API.
+   On Android, opening that shared link will itself trigger the beforeinstallprompt auto-prompt
+   above if the recipient doesn't have the app installed yet. On iOS there's no install API at
+   all, so the link just opens normally in Safari — expected platform behavior, not a bug. */
+function shareApp(btn){
+  const shareUrl = location.origin + location.pathname;
+  if(navigator.share){
+    navigator.share({ title:'Niveshaka-bandhu', url:shareUrl }).catch(()=>{});
+  } else if(navigator.clipboard){
+    navigator.clipboard.writeText(shareUrl).then(()=>{
+      if(btn){
+        const original=btn.textContent;
+        btn.textContent='✅'; setTimeout(()=>{ btn.textContent=original; }, 1500);
+      }
+    }).catch(()=>{});
+  }
+}
 
 function installPWA(){
   // Path 1: Chrome/Edge/Android — native install prompt is available
