@@ -1216,6 +1216,7 @@ function renderHeatmapSection(title, items){
 
 function renderIndian(rows){
   // EXACT row slices — gviz is 0-indexed, matches CSV row - 1
+  // Updated after the NIFTY 50 header row was deleted from the sheet, shifting everything up by 1
   const nseRows   = rows.slice(0,  18); // CSV rows 3–21
   const bseRows   = rows.slice(18, 36); // CSV rows 24–41
   const sensexRows= rows.slice(36, 66); // CSV rows 44–73
@@ -2329,33 +2330,45 @@ function renderCalculators(){
       <div style="font-size:10px;color:#999999">Estimate what a stock may be worth</div>
     </div>
     <!-- ═══ XIRR CALCULATOR ═══ -->
-    <div style="background:var(--panel);border:1px solid var(--bdr);border-radius:14px;margin-bottom:14px;overflow:hidden">
-      <div style="padding:14px 18px;border-bottom:1px solid var(--bdr)">
-        <div style="font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:700;color:#1a1a1a">XIRR Calculator</div>
-        <div style="font-size:10px;color:#6b6b6b;margin-top:1px">Extended internal rate of return for irregular cash flows</div>
+    <div id="calc-xirr-calculator" data-calc-title="XIRR Calculator" style="background:var(--panel);border:1px solid var(--bdr);border-radius:14px;margin-bottom:14px;overflow:hidden">
+      <div class="calc-head" onclick="toggleCalc('calc-xirr-calculator')" style="padding:14px 18px;border-bottom:1px solid var(--bdr);cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:10px">
+        <div>
+          <div style="font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:700;color:#1a1a1a">XIRR Calculator</div>
+          <div style="font-size:10px;color:#6b6b6b;margin-top:1px">Annualized return for a regular investment schedule (SIP-style)</div>
+        </div>
+        <span id="chev-calc-xirr-calculator" style="font-size:12px;color:var(--mc);transition:.2s;flex-shrink:0">▸</span>
       </div>
-      <div style="padding:16px 18px">
-        <div id="xirr-rows" style="margin-bottom:10px">
-          <div class="xirr-row" style="display:grid;grid-template-columns:1fr 1fr auto;gap:8px;margin-bottom:8px;align-items:end">
-            <div><label style="font-size:10px;font-weight:700;color:#6b6b6b;text-transform:uppercase">Date</label>
-              <input type="date" class="xirr-date" oninput="calcRun()" style="width:100%;padding:7px 9px;border:1px solid var(--bdr);border-radius:8px;font-size:13px;font-family:'Space Grotesk',sans-serif"></div>
-            <div><label style="font-size:10px;font-weight:700;color:#6b6b6b;text-transform:uppercase">Amount (₹, − for investment)</label>
-              <input type="number" class="xirr-amt" oninput="calcRun()" placeholder="e.g. -50000" style="width:100%;padding:7px 9px;border:1px solid var(--bdr);border-radius:8px;font-size:13px;font-family:'Space Grotesk',sans-serif"></div>
-            <button onclick="removeXirrRow(this)" style="padding:7px 10px;border:1px solid var(--bdr);border-radius:8px;background:#fff;color:var(--red);cursor:pointer;font-size:12px">✕</button>
+      <div class="calc-body" data-owner="calc-xirr-calculator" style="display:none;padding:16px 18px">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          ${evInp('xirr-amt','Investment Amount per Installment (₹)','5,000')}
+          <div style="margin-bottom:8px">
+            <label style="font-size:9px;font-weight:700;color:#6b6b6b;text-transform:uppercase;letter-spacing:.3px;display:block;margin-bottom:3px">Frequency</label>
+            <select id="xirr-freq" onchange="calcRun()" style="width:100%;padding:6px 8px;border:1px solid var(--bdr);border-radius:7px;font-size:12px;font-family:'Space Grotesk',sans-serif;color:#1a1a1a;background:#fff">
+              <option value="daily">Daily</option>
+              <option value="weekly">Weekly</option>
+              <option value="monthly" selected>Monthly</option>
+              <option value="quarterly">Quarterly</option>
+              <option value="biannual">Biannually (every 6 months)</option>
+              <option value="yearly">Yearly</option>
+            </select>
           </div>
-          <div class="xirr-row" style="display:grid;grid-template-columns:1fr 1fr auto;gap:8px;margin-bottom:8px;align-items:end">
-            <div><label style="font-size:10px;font-weight:700;color:#6b6b6b;text-transform:uppercase">Date</label>
-              <input type="date" class="xirr-date" oninput="calcRun()" style="width:100%;padding:7px 9px;border:1px solid var(--bdr);border-radius:8px;font-size:13px;font-family:'Space Grotesk',sans-serif"></div>
-            <div><label style="font-size:10px;font-weight:700;color:#6b6b6b;text-transform:uppercase">Amount (₹, + for return)</label>
-              <input type="number" class="xirr-amt" oninput="calcRun()" placeholder="e.g. 65000" style="width:100%;padding:7px 9px;border:1px solid var(--bdr);border-radius:8px;font-size:13px;font-family:'Space Grotesk',sans-serif"></div>
-            <button onclick="removeXirrRow(this)" style="padding:7px 10px;border:1px solid var(--bdr);border-radius:8px;background:#fff;color:var(--red);cursor:pointer;font-size:12px">✕</button>
+          ${evInp('xirr-count','Number of Times Invested','60')}
+          <div style="margin-bottom:8px">
+            <label style="font-size:9px;font-weight:700;color:#6b6b6b;text-transform:uppercase;letter-spacing:.3px;display:block;margin-bottom:3px">Start Date (first installment)</label>
+            <input type="date" id="xirr-start" oninput="calcRun()" style="width:100%;padding:6px 8px;border:1px solid var(--bdr);border-radius:7px;font-size:12px;font-family:'Space Grotesk',sans-serif;color:#1a1a1a;background:#fff">
+          </div>
+          ${evInp('xirr-final','Final / Current Value (₹)','4,50,000')}
+          <div style="margin-bottom:8px">
+            <label style="font-size:9px;font-weight:700;color:#6b6b6b;text-transform:uppercase;letter-spacing:.3px;display:block;margin-bottom:3px">As-of Date (leave blank for today)</label>
+            <input type="date" id="xirr-asof" oninput="calcRun()" style="width:100%;padding:6px 8px;border:1px solid var(--bdr);border-radius:7px;font-size:12px;font-family:'Space Grotesk',sans-serif;color:#1a1a1a;background:#fff">
           </div>
         </div>
-        <button onclick="addXirrRow()" style="padding:6px 14px;border:1px solid var(--bdr);border-radius:8px;background:#fff;color:var(--mc);font-weight:700;font-size:12px;cursor:pointer;margin-bottom:14px">+ Add Cash Flow</button>
-        <div style="border-top:1px solid var(--bdr);padding-top:10px">
+        <div style="border-top:1px solid var(--bdr);padding-top:10px;margin-top:6px">
+          ${resultRow('Total Invested','xirr-invested')}
+          ${resultRow('Total Gain','xirr-gain','var(--green)')}
           ${resultRow('XIRR (Annualized Return)','xirr-result','var(--mc)')}
         </div>
-        <p style="font-size:10px;color:#999999;margin-top:8px">Enter negative amounts for money invested (outflows) and positive amounts for money received (inflows/current value). Needs at least one negative and one positive entry.</p>
+        <p style="font-size:10px;color:#999999;margin-top:8px">Builds a regular investment schedule — same amount, invested every [frequency] for the number of times entered, starting from your start date — then compares it against the final value to compute the annualized return. Matches how most people actually invest (SIP-style), no manual date-by-date entry needed.</p>
       </div>
     </div>
 
@@ -2692,23 +2705,6 @@ function taxOldRegime(ti){
   return tax;
 }
 
-function addXirrRow(){
-  const wrap=$('xirr-rows');
-  const row=document.createElement('div');
-  row.className='xirr-row';
-  row.style.cssText='display:grid;grid-template-columns:1fr 1fr auto;gap:8px;margin-bottom:8px;align-items:end';
-  row.innerHTML=`
-    <div><label style="font-size:10px;font-weight:700;color:#6b6b6b;text-transform:uppercase">Date</label>
-      <input type="date" class="xirr-date" oninput="calcRun()" style="width:100%;padding:7px 9px;border:1px solid var(--bdr);border-radius:8px;font-size:13px;font-family:'Space Grotesk',sans-serif"></div>
-    <div><label style="font-size:10px;font-weight:700;color:#6b6b6b;text-transform:uppercase">Amount (₹)</label>
-      <input type="number" class="xirr-amt" oninput="calcRun()" placeholder="e.g. -10000" style="width:100%;padding:7px 9px;border:1px solid var(--bdr);border-radius:8px;font-size:13px;font-family:'Space Grotesk',sans-serif"></div>
-    <button onclick="removeXirrRow(this)" style="padding:7px 10px;border:1px solid var(--bdr);border-radius:8px;background:#fff;color:var(--red);cursor:pointer;font-size:12px">✕</button>`;
-  wrap.appendChild(row);
-}
-function removeXirrRow(btn){
-  const wrap=$('xirr-rows');
-  if(wrap.children.length>1){ btn.closest('.xirr-row').remove(); calcRun(); }
-}
 /* XIRR solver — Newton-Raphson on XNPV */
 function xnpv(rate, cashflows){
   const d0 = cashflows[0].date;
@@ -3014,30 +3010,41 @@ function calcRun(){
     setTxt('swp-duration', durationTxt);
   }
 
-  // XIRR Calculator
-  const xirrDates=document.querySelectorAll('.xirr-date');
-  const xirrAmts=document.querySelectorAll('.xirr-amt');
-  const cashflows=[];
-  xirrDates.forEach((d,i)=>{
-    const dateVal=d.value;
-    const amtVal=parseFloat(xirrAmts[i]?.value);
-    if(dateVal && !isNaN(amtVal) && amtVal!==0){
-      cashflows.push({date:new Date(dateVal), amount:amtVal});
+  // XIRR Calculator — builds a regular investment schedule instead of requiring manual cash-flow entry
+  const xirrAmt=gv('xirr-amt'), xirrCount=gv('xirr-count'), xirrFinal=gv('xirr-final');
+  const xirrFreqEl=$('xirr-freq'), xirrStartEl=$('xirr-start'), xirrAsofEl=$('xirr-asof');
+  if(xirrAmt>0 && xirrCount>0 && xirrFinal>0 && xirrStartEl && xirrStartEl.value){
+    const freq=xirrFreqEl?xirrFreqEl.value:'monthly';
+    const startDate=new Date(xirrStartEl.value);
+    const asOfDate=(xirrAsofEl&&xirrAsofEl.value) ? new Date(xirrAsofEl.value) : new Date();
+
+    function addInterval(date, freq, n){
+      const d=new Date(date);
+      if(freq==='daily')      d.setDate(d.getDate()+n);
+      else if(freq==='weekly')d.setDate(d.getDate()+n*7);
+      else if(freq==='monthly')   d.setMonth(d.getMonth()+n);
+      else if(freq==='quarterly') d.setMonth(d.getMonth()+n*3);
+      else if(freq==='biannual')  d.setMonth(d.getMonth()+n*6);
+      else if(freq==='yearly')    d.setFullYear(d.getFullYear()+n);
+      return d;
     }
-  });
-  if(cashflows.length>=2){
+
+    const cashflows=[];
+    for(let i=0;i<xirrCount;i++){
+      cashflows.push({date:addInterval(startDate,freq,i), amount:-xirrAmt});
+    }
+    const totalInvested=xirrAmt*xirrCount;
+    cashflows.push({date:asOfDate, amount:xirrFinal});
     cashflows.sort((a,b)=>a.date-b.date);
-    const hasPos=cashflows.some(c=>c.amount>0);
-    const hasNeg=cashflows.some(c=>c.amount<0);
-    if(hasPos&&hasNeg){
-      const rate=xirrSolve(cashflows);
-      if(isFinite(rate) && !isNaN(rate)){
-        setTxt('xirr-result', (rate*100).toFixed(2)+'%');
-      } else {
-        setTxt('xirr-result', '—');
-      }
+
+    setTxt('xirr-invested', fmtINR(totalInvested));
+    setTxt('xirr-gain', fmtINR(xirrFinal-totalInvested));
+
+    if(asOfDate<=startDate){
+      setTxt('xirr-result', 'As-of date must be after start date');
     } else {
-      setTxt('xirr-result', 'Need +ve & −ve');
+      const rate=xirrSolve(cashflows);
+      setTxt('xirr-result', (isFinite(rate)&&!isNaN(rate)) ? (rate*100).toFixed(2)+'%' : '—');
     }
   }
 
