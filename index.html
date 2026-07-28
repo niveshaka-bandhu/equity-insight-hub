@@ -282,7 +282,7 @@ footer a{color:var(--mc)}
 <body>
 
 <div id="disclaimer-modal" style="position:fixed;inset:0;z-index:20000;background:rgba(58,45,127,.45);
-  backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;padding:20px">
+  backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center;padding:20px">
   <div style="background:#fff;border-radius:16px;max-width:400px;width:100%;padding:26px 24px;
     box-shadow:0 20px 60px rgba(58,45,127,.3);text-align:center">
     <div style="font-size:30px;margin-bottom:10px">⚠️</div>
@@ -298,10 +298,16 @@ footer a{color:var(--mc)}
   </div>
 </div>
 <script>
-  // Hide immediately (before paint) if already dismissed this session, so it doesn't flash on every tab click/reload
+  // Shows 5 seconds after page load (lets people see the app first) — but only once per session,
+  // so it doesn't interrupt every reload/tab click within the same visit.
   try{
-    if(sessionStorage.getItem('nb_disclaimer_seen')){
-      document.getElementById('disclaimer-modal').style.display='none';
+    if(!sessionStorage.getItem('nb_disclaimer_seen')){
+      setTimeout(()=>{
+        if(!sessionStorage.getItem('nb_disclaimer_seen')){
+          const m=document.getElementById('disclaimer-modal');
+          if(m) m.style.display='flex';
+        }
+      }, 5000);
     }
   }catch(e){}
   function dismissDisclaimer(){
@@ -3511,9 +3517,16 @@ function showTab(key,btn){
   }
 }
 window.addEventListener('popstate', (e)=>{
-  const key=(e.state&&e.state.tab) || location.hash.replace('#','') || 'dashboard';
-  const btn=document.querySelector('[onclick*="showTab(\''+key+'\'"]');
-  if(btn) showTab(key,btn);
+  if(e.state && e.state.tab){
+    const key=e.state.tab;
+    const btn=document.querySelector('[onclick*="showTab(\''+key+'\'"]');
+    if(btn) showTab(key,btn);
+    return;
+  }
+  // No tab state left — the user is backing out of the app entirely. Best possible moment
+  // to ask for a review, since they're already on their way out (not interrupting anything).
+  // Deliberately NOT re-trapping after this — one more back press genuinely exits, as expected.
+  maybeShowReviewPrompt();
 });
 function showInv(id,btn){
   document.querySelectorAll('.ipanel').forEach(p=>p.classList.remove('on'));
@@ -3576,7 +3589,7 @@ function shareApp(btn){
 /* ── Review collection — submits to a Google Apps Script Web App, which appends to a Sheet ── */
 // PASTE your deployed Apps Script Web App URL here (see the accompanying apps-script-reviews.gs
 // file for the server-side code + deployment steps). Reviews won't submit until this is set.
-const REVIEW_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyYjvFkE1FTWgwDEVmdr_8fx5A6snKOs0h2Wch5p-8eieLhJtpyjLLq6n8TUv1iiMCZ/exec';
+const REVIEW_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzoHWurvvjkfbe6yMVSZm8GGy0pQceuLIvCa9VQtP6SfWRpKB8mtim2ubTNypdkXmZsuA/exec';
 
 let REVIEW_RATING=0;
 function openReviewModal(){
@@ -3628,23 +3641,26 @@ function submitReview(){
   });
 }
 
-/* Auto-prompt for a review periodically — NOT every visit. Once every REVIEW_PROMPT_DAYS days,
-   and never again once they've actually submitted a review. Change the constant below to 7 for
-   "once a week" instead of the current "once a month" default. */
+/* Review prompt — shown when the user presses the back button (about to leave the app), not on
+   a fixed timer while they're still browsing. Still throttled to once every REVIEW_PROMPT_DAYS
+   days, and never again once they've actually submitted a review. Change the constant below to
+   7 for "once a week" instead of the current "once a month" default. */
 const REVIEW_PROMPT_DAYS=30;
-(function(){
+function maybeShowReviewPrompt(){
   try{
     if(localStorage.getItem('nb_review_submitted')) return;
     const last=parseInt(localStorage.getItem('nb_review_last_prompt')||'0',10);
     const daysSince=(Date.now()-last)/(1000*60*60*24);
     if(daysSince>=REVIEW_PROMPT_DAYS){
-      setTimeout(()=>{
-        openReviewModal();
-        try{ localStorage.setItem('nb_review_last_prompt', Date.now().toString()); }catch(e){}
-      }, 15000); // wait 15s after load so it's not intrusive on arrival
+      openReviewModal();
+      localStorage.setItem('nb_review_last_prompt', Date.now().toString());
     }
   }catch(e){}
-})();
+}
+// History trap: push one extra entry so the back button still fires popstate on our own page
+// (giving us a chance to show the review prompt) instead of immediately leaving the app. The
+// user gets caught once, sees the prompt if it's due, and a second back press exits normally.
+try{ history.pushState({trap:true}, '', location.href); }catch(e){}
 
 function installPWA(){
   // Path 1: Chrome/Edge/Android — native install prompt is available
