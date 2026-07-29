@@ -1050,9 +1050,10 @@ function buildDashGMP(){
   const gmpStart = findIdx('Grey Market Premium');
   const expertsStart = rows.findIndex(r => String(r[1]||'').toLowerCase().includes('expert') || String(r[0]||'').toLowerCase().includes('expert'));
   const gmpEnd = rows.findIndex((r,i)=> i>gmpStart && clean(r[0])==='company' && String(r[1]||'').toLowerCase().includes('issue date'));
+  const looksLikeMoneyOnly = v => { const s=String(v||'').trim(); return s!==''&&s!=='—'&&!/[A-Za-z]/.test(s)&&/\d/.test(s); };
   let gmp = gmpStart > 0
-    ? rows.slice(gmpStart+2, gmpEnd>0?gmpEnd:(expertsStart>0?expertsStart:gmpStart+15))
-        .filter(r => r[0]&&r[0].trim()&&clean(r[0])!=='ipo name'&&r[1]&&String(r[1]).trim()!=='—'&&/\d/.test(String(r[1])))
+    ? rows.slice(gmpStart+2, gmpEnd>0?gmpEnd:(expertsStart>0?expertsStart:gmpStart+20))
+        .filter(r => r[0]&&r[0].trim()&&clean(r[0])!=='ipo name'&&looksLikeMoneyOnly(r[1]))
     : [];
   // Sort by GMP value descending for "top" GMP
   gmp = gmp.slice().sort((a,b)=>{
@@ -1576,16 +1577,24 @@ function renderIPO(rows){
     String(r[0]||'').toLowerCase().includes('expert'));
   const subsStart    = findIdx('IPO Subscription Status');
 
+  // Content-shape validators — used instead of trusting exact row positions, since gviz can skip/shift
+  // blank rows differently than a plain CSV export, which made fixed row-index slicing unreliable
+  // (real symptom seen: date-range strings like "30-3 August" leaking into the GMP column, and
+  // Expert's Advice rating rows leaking into the Mainboard IPO table).
+  const looksLikeMoneyOnly = v => { const s=String(v||'').trim(); return s!==''&&s!=='—'&&!/[A-Za-z]/.test(s)&&/\d/.test(s); };
+  const looksLikeDateRange = v => /\d{1,2}\s*[-–]\s*\d{1,2}\s*[A-Za-z]{3,}/.test(String(v||'').trim()) || /^\d{1,2}\s+[A-Za-z]{3,}/.test(String(v||'').trim());
+
   const isNotSME = r => !/sme/i.test(r[1]||'');
   const listed = rows.slice(1, gmpStart > 0 ? gmpStart : 22)
                      .filter(r => r[0]&&r[0].trim()&&r[0]!=='Company Name')
                      .filter(isNotSME);
   const gmpEnd = rows.findIndex((r,i) => i > gmpStart && clean(r[0])==='company' && String(r[1]||'').toLowerCase().includes('issue date'));
   const gmp    = gmpStart > 0
-               // Capped at gviz row 38 (sheet row 39) — that's where the Mainboard IPO table (A39:C48)
-               // starts, so GMP's fallback window can no longer bleed into its rows.
-               ? rows.slice(gmpStart+2, gmpEnd > 0 ? gmpEnd : Math.min(gmpStart+15, 38))
-                     .filter(r => r[0]&&r[0].trim()&&clean(r[0])!=='ipo name'&&r[1]&&String(r[1]).trim()!=='—'&&/\d/.test(String(r[1])))
+               // Content-validated: only rows whose GMP column is a pure money/number value are kept,
+               // so date-range rows (Mainboard IPO) or rating rows (Expert's Advice) never leak in
+               // even if the index window happens to reach that far.
+               ? rows.slice(gmpStart+2, gmpEnd > 0 ? gmpEnd : gmpStart+20)
+                     .filter(r => r[0]&&r[0].trim()&&clean(r[0])!=='ipo name'&&looksLikeMoneyOnly(r[1]))
                : [];
   const expertsEnd = subsStart > 0 ? subsStart : expertsStart + 25;
   const experts = expertsStart > 0
@@ -1597,12 +1606,18 @@ function renderIPO(rows){
                    .filter(r => r[0]&&r[0].trim()&&clean(r[0])!=='ipo')
                    .filter(isNotSME)
              : [];
-  // Mainboard IPO — fixed sheet range A39:C48 (Company / Open Date / Close Date).
-  // Not dynamically detected like other sections, since this table has no header row of its own
-  // in the sheet — it's a fixed block the user fills in directly.
-  const mainboardIPO = rows.slice(38, 48)
-    .filter(r => r[0] && r[0].trim())
-    .map(r => ({company:r[0], openDate:r[1]||'—', closeDate:r[2]||'—'}));
+  // Mainboard IPO — Company / IPO Date / IPO Size, content-detected rather than a fixed row range.
+  // Scans everywhere between the GMP header and the next section (Expert's Advice or Subscription),
+  // keeping only rows whose date column actually looks like a date range — this naturally skips
+  // stray sub-header rows ("Company"/"Apply") and Expert's Advice rating rows that a fixed slice
+  // would otherwise have caught.
+  const mbSearchStart = gmpStart > 0 ? gmpStart+2 : 0;
+  const mbSearchEnd = expertsStart > 0 ? expertsStart : (subsStart > 0 ? subsStart : rows.length);
+  const seenMB = new Set();
+  const mainboardIPO = rows.slice(mbSearchStart, mbSearchEnd)
+    .filter(r => r[0] && r[0].trim() && clean(r[0])!=='company' && clean(r[0])!=='ipo name' && looksLikeDateRange(r[1]))
+    .filter(r => { const key=clean(r[0]); if(seenMB.has(key)) return false; seenMB.add(key); return true; })
+    .map(r => ({company:r[0], ipoDate:r[1]||'—', ipoSize:r[2]||'—'}));
 
   const tbadge = t => `<span class="bd ${/main/i.test(st(t))?'bd-a':'bd-g'}">${st(t)||'—'}</span>`;
 
@@ -1723,17 +1738,17 @@ function renderIPO(rows){
     }).join('')}</tbody>
   </table></div>`;
 
-  // Mainboard IPO — Company / Open Date / Close Date table (fixed sheet range A39:C48)
+  // Mainboard IPO — Company / IPO Date / IPO Size table
   const mainboardBody = `<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse">
-    <thead><tr>${['Company','Open Date','Close Date']
+    <thead><tr>${['Company','IPO Date','IPO Size']
       .map((h,i)=>`<th style="font-size:10px;font-weight:700;color:#6b6b6b;padding:7px 10px;border-bottom:1px solid var(--bdr);text-align:${i===0?'left':'center'};white-space:nowrap">${h}</th>`).join('')}</tr></thead>
     <tbody>${mainboardIPO.map((r,i)=>{
       const elId=`si-ipo-mainboard-${i}`;
-      pushSearch('ipo','IPO · Mainboard',r.company,'Open '+r.openDate+' · Close '+r.closeDate,elId);
+      pushSearch('ipo','IPO · Mainboard',r.company,r.ipoDate+' · '+r.ipoSize,elId);
       return `<tr id="${elId}" style="border-bottom:1px solid rgba(58,45,127,.20)">
         <td style="padding:8px 10px;font-size:12px;text-align:left"><strong>${f(r.company)}</strong></td>
-        <td style="padding:8px 10px;font-size:12px;text-align:center">${f(r.openDate)}</td>
-        <td style="padding:8px 10px;font-size:12px;text-align:center">${f(r.closeDate)}</td>
+        <td style="padding:8px 10px;font-size:12px;text-align:center">${f(r.ipoDate)}</td>
+        <td style="padding:8px 10px;font-size:12px;text-align:center;font-family:'Space Grotesk',sans-serif">${f(r.ipoSize)}</td>
       </tr>`;
     }).join('')}</tbody>
   </table></div>`;
