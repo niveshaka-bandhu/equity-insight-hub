@@ -1612,23 +1612,29 @@ function renderIPO(rows){
   // stray sub-header rows ("Company"/"Apply") and Expert's Advice rating rows that a fixed slice
   // would otherwise have caught.
   const looksLikeMoney = v => /₹|Cr\.?\b|Lakh/i.test(String(v||''));
-  const mbSearchStart = gmpStart > 0 ? gmpStart+2 : 0;
+  // Only scan for Mainboard IPO rows if we have a reliable anchor (GMP's header was actually found).
+  // Previously this defaulted to scanning from row 0 whenever GMP detection failed for any reason,
+  // which meant Listed IPO rows could get pulled into this table too — the exact "one table fails,
+  // its data leaks into another" problem. Now: no reliable anchor -> empty table, not a guess.
+  const mbSearchStart = gmpStart > 0 ? gmpStart+2 : -1;
   const mbSearchEnd = expertsStart > 0 ? expertsStart : (subsStart > 0 ? subsStart : rows.length);
   const seenMB = new Set();
-  const mainboardIPO = rows.slice(mbSearchStart, mbSearchEnd)
-    .filter(r => r[0] && r[0].trim() && clean(r[0])!=='company' && clean(r[0])!=='ipo name' && looksLikeDateRange(r[1]))
-    .filter(r => { const key=clean(r[0]); if(seenMB.has(key)) return false; seenMB.add(key); return true; })
-    .map(r => {
-      // IPO Size: prefer col C, but if that cell doesn't actually look like a currency amount
-      // (₹ / Cr / Lakh), scan the rest of the row for whichever cell does — more robust than
-      // assuming it's always in exactly the same column.
-      let ipoSize = r[2];
-      if(!looksLikeMoney(ipoSize)){
-        const found = r.slice(2).find(c=>looksLikeMoney(c));
-        if(found) ipoSize = found;
-      }
-      return {company:r[0], ipoDate:r[1]||'—', ipoSize:ipoSize||'—'};
-    });
+  const mainboardIPO = mbSearchStart >= 0
+    ? rows.slice(mbSearchStart, mbSearchEnd)
+        .filter(r => r[0] && r[0].trim() && clean(r[0])!=='company' && clean(r[0])!=='ipo name' && looksLikeDateRange(r[1]))
+        .filter(r => { const key=clean(r[0]); if(seenMB.has(key)) return false; seenMB.add(key); return true; })
+        .map(r => {
+          // IPO Size: prefer col C, but if that cell doesn't actually look like a currency amount
+          // (₹ / Cr / Lakh), scan the rest of the row for whichever cell does — more robust than
+          // assuming it's always in exactly the same column.
+          let ipoSize = r[2];
+          if(!looksLikeMoney(ipoSize)){
+            const found = r.slice(2).find(c=>looksLikeMoney(c));
+            if(found) ipoSize = found;
+          }
+          return {company:r[0], ipoDate:r[1]||'—', ipoSize:ipoSize||'—'};
+        })
+    : [];
 
   const tbadge = t => `<span class="bd ${/main/i.test(st(t))?'bd-a':'bd-g'}">${st(t)||'—'}</span>`;
 
