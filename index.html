@@ -4471,8 +4471,14 @@ function jumpToTab(key,elId){
   };
   setTimeout(tryScroll,250);
 }
-/* Background warm-load so search covers stocks/IPOs/dividends/calculators before the user visits those tabs */
+/* Background warm-load so search covers stocks/IPOs/dividends/calculators before the user visits those tabs.
+   Skipped on slow connections or when the browser's Data Saver mode is on — the extra fetches
+   have a real bandwidth/battery cost that isn't worth it if the connection is already struggling. */
 function warmSearchTabs(){
+  try{
+    const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+    if(conn && (conn.saveData || ['slow-2g','2g'].includes(conn.effectiveType))) return;
+  }catch(e){}
   ['market','ipo','corporate','calculators'].forEach(k=>{ try{ loadTab(k); }catch(e){} });
 }
 setTimeout(warmSearchTabs, 1200);
