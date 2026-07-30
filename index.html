@@ -1585,7 +1585,7 @@ function renderIPO(rows){
   const looksLikeDateRange = v => /\d{1,2}\s*[-–]\s*\d{1,2}\s*[A-Za-z]{3,}/.test(String(v||'').trim()) || /^\d{1,2}\s+[A-Za-z]{3,}/.test(String(v||'').trim());
 
   const isNotSME = r => !/sme/i.test(r[1]||'');
-  const listed = rows.slice(1, gmpStart > 0 ? gmpStart : 22)
+  const listed = rows.slice(0, gmpStart > 0 ? gmpStart : 22)
                      .filter(r => r[0]&&r[0].trim()&&r[0]!=='Company Name')
                      .filter(isNotSME);
   const gmpEnd = rows.findIndex((r,i) => i > gmpStart && clean(r[0])==='company' && String(r[1]||'').toLowerCase().includes('issue date'));
