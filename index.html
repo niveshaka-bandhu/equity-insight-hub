@@ -285,7 +285,7 @@ footer a{color:var(--mc)}
   backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center;padding:20px">
   <div style="background:#fff;border-radius:16px;max-width:400px;width:100%;padding:26px 24px;
     box-shadow:0 20px 60px rgba(58,45,127,.3);text-align:center">
-    <div style="font-size:30px;margin-bottom:10px">⚠️</div>
+    
     <div style="font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:700;color:#1a1a1a;margin-bottom:10px">Before you continue</div>
     <div style="font-size:13px;color:#444444;line-height:1.6;margin-bottom:22px">
       For investing purposes only. Not for active trading.<br/>
@@ -352,28 +352,22 @@ footer a{color:var(--mc)}
       <span style="font-family:'Space Grotesk',sans-serif;font-weight:700;color:#1a1a1a;font-size:12px" id="mkt-cd-time">--:--:--</span>
     </span>
     <span><span class="live-dot"></span><span id="ts" style="font-size:10px;color:#444444">Fetching live data…</span></span>
-    <span onclick="openSearch()" style="cursor:pointer;display:flex;align-items:center;gap:5px;
-      font-size:11px;color:#444444;border:1px solid var(--bdr);border-radius:8px;padding:3px 9px;
-      background:rgba(255,255,255,.4)">
-      🔍 <span style="font-size:10px;color:#999999;border:1px solid var(--bdr);border-radius:4px;padding:0 4px">Ctrl K</span>
-    </span>
     <button id="pwa-install-btn" onclick="installPWA()" style="display:none;cursor:pointer;align-items:center;gap:5px;
       font-size:11px;font-weight:700;color:#fff;border:none;border-radius:8px;padding:4px 10px;
       background:var(--mc);font-family:'Inter',sans-serif">
-      📲 Install App
+      Install App
     </button>
     <button onclick="shareApp(this)" title="Share"
       style="cursor:pointer;display:flex;align-items:center;gap:4px;
         border:1px solid var(--bdr);border-radius:8px;padding:4px 8px;
         background:rgba(255,255,255,.4);color:#444444">
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92 1.61 0 2.92-1.31 2.92-2.92s-1.31-2.92-2.92-2.92z"/></svg>
       <span style="font-size:10px;font-weight:600">Share</span>
     </button>
     <button onclick="openReviewModal()" title="Leave a review"
       style="cursor:pointer;display:flex;align-items:center;gap:4px;
         border:1px solid var(--bdr);border-radius:8px;padding:4px 8px;
         background:rgba(255,255,255,.4);color:#444444">
-      <span style="font-size:12px">⭐</span>
+      
       <span style="font-size:10px;font-weight:600">Review</span>
     </button>
   </span>
@@ -401,7 +395,7 @@ footer a{color:var(--mc)}
 </header>
 
 <div class="news-ticker">
-  <span class="nt-label">📊 MARKET</span>
+  <span class="nt-label">MARKET</span>
   <div class="nt-track">
     <div class="nt-strip" id="news-ticker-strip"><a class="nt-item"><span class="nt-title">Loading headlines…</span></a></div>
   </div>
@@ -797,7 +791,7 @@ function renderDashboard(rows, newsRows){
 
     <!-- STOCK LOOKUP SEARCH BAR -->
     <div style="background:var(--panel);border:1px solid var(--bdr);border-radius:14px;padding:16px 18px;margin-bottom:14px">
-      <div style="font-size:11px;font-weight:700;color:var(--mc);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">🔍 Stock Lookup</div>
+      <div style="font-size:11px;font-weight:700;color:var(--mc);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Stock Lookup</div>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
         <div style="position:relative;flex:1;min-width:200px">
           <input id="stock-lookup-input" type="text" placeholder="e.g. RELIANCE, TCS, Tata Motors, Infosys..." autocomplete="off"
@@ -812,10 +806,10 @@ function renderDashboard(rows, newsRows){
         </div>
         <button onclick="openStockLookup()"
           style="padding:10px 18px;border:none;border-radius:9px;background:var(--mc);color:#fff;
-            font-weight:700;font-size:13px;cursor:pointer;flex-shrink:0;white-space:nowrap">📊 Fundamentals</button>
+            font-weight:700;font-size:13px;cursor:pointer;flex-shrink:0;white-space:nowrap">Fundamentals</button>
         <button onclick="openChartLookup()"
           style="padding:10px 18px;border:1px solid var(--mc);border-radius:9px;background:#fff;color:var(--mc);
-            font-weight:700;font-size:13px;cursor:pointer;flex-shrink:0;white-space:nowrap">📈 TradingView</button>
+            font-weight:700;font-size:13px;cursor:pointer;flex-shrink:0;white-space:nowrap">TradingView</button>
       </div>
       <p id="equity-status" style="font-size:10px;color:#999999;margin-top:8px">Loading ticker list…</p>
     </div>
@@ -839,68 +833,7 @@ function renderDashboard(rows, newsRows){
     </div>
 
     <!-- FII/DII ABOVE NEWS -->
-    ${(()=>{
-      if(!fiiDii.length) return '';
-      const today = fiiDii[0];
-      const prev  = fiiDii[1]||null;
-      const fii   = parseFloat(String(today[1]||'0').replace(/,/g,''))||0;
-      const dii   = parseFloat(String(today[2]||'0').replace(/,/g,''))||0;
-      const fiiPos = fii>=0, diiPos = dii>=0;
-      const total  = Math.abs(fii)+Math.abs(dii)||1;
-      const fiiPct = (Math.abs(fii)/total*100).toFixed(1);
-      const diiPct = (Math.abs(dii)/total*100).toFixed(1);
-      const crFmt  = v=>{const s=v<0?'-':'+';return s+'₹'+Math.abs(v).toLocaleString('en-IN',{maximumFractionDigits:2,minimumFractionDigits:2})+' Cr';};
-      const fmtFiiDate = s=>{try{const d=new Date(s);if(isNaN(d))return s;return d.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}).replace(/ /g,'-');}catch(e){return s;}};
-      const net    = fii+dii;
-      const domFII = Math.abs(fii)>Math.abs(dii);
-      const sentColor = net>=0?'var(--green)':'var(--red)';
-      const sentLabel = net>=0
-        ? (fiiPos&&diiPos?'Both Buying ↑':domFII?'FII Led Rally ↑':'DII Dominant ↑')
-        : ((!fiiPos)&&(!diiPos)?'Both Selling ↓':domFII?'FII Selloff ↓':'DII Dominant ↓');
-      let prevHtml='';
-      if(prev){
-        const pf=parseFloat(String(prev[1]||'0').replace(/,/g,''))||0;
-        const pd=parseFloat(String(prev[2]||'0').replace(/,/g,''))||0;
-        prevHtml=`<div class="fii-prev3">
-          <div class="fii-prev3-lbl">${fmtFiiDate(prev[0])}</div>
-          FII <strong style="color:${pf>=0?'var(--green)':'var(--red)'};margin:0 4px">${crFmt(pf)}</strong>
-          <span style="color:#e0c9b0">·</span>
-          DII <strong style="color:${pd>=0?'var(--green)':'var(--red)'};margin-left:4px">${crFmt(pd)}</strong>
-        </div>`;
-      }
-      return `<div class="fii-wrap">
-        <div class="fii-hdr3">
-          <div class="fii-title3">FII / DII Activity</div>
-          <div class="fii-date3">${fmtFiiDate(today[0])}</div>
-        </div>
-        <div class="fii-meter-labels">
-          <span style="color:var(--red)">← FII ${fiiPos?'Buying':'Selling'}</span>
-          <span style="color:var(--green)">DII ${diiPos?'Buying':'Selling'} →</span>
-        </div>
-        <div class="fii-track">
-          <div class="fii-fill-sell" style="width:${fiiPct}%;background:${fiiPos?'var(--green)':'var(--red)'}"></div>
-          <div class="fii-fill-buy"  style="width:${diiPct}%;background:${diiPos?'var(--green)':'var(--red)'}"></div>
-          <div class="fii-needle"></div>
-        </div>
-        <div class="fii-sentiment">
-          <div class="fii-sent-lbl">Market Sentiment</div>
-          <div class="fii-sent-val" style="color:${sentColor}">${sentLabel}</div>
-        </div>
-        <div class="fii-cards3">
-          <div class="fii-card3" style="background:${fiiPos?'rgba(47,158,94,.09)':'rgba(224,86,47,.09)'};border:1px solid ${fiiPos?'rgba(47,158,94,.2)':'rgba(224,86,47,.2)'}">
-            <div class="fii-c3-lbl" style="color:${fiiPos?'var(--green)':'var(--red)'}">FII / FPI</div>
-            <div class="fii-c3-val" style="color:${fiiPos?'var(--green)':'var(--red)'}">${crFmt(fii)}</div>
-            <div class="fii-c3-sub" style="color:${fiiPos?'var(--green)':'var(--red)'}">${fiiPos?'Net Buyer':'Net Seller'}</div>
-          </div>
-          <div class="fii-card3" style="background:${diiPos?'rgba(47,158,94,.09)':'rgba(224,86,47,.09)'};border:1px solid ${diiPos?'rgba(47,158,94,.2)':'rgba(224,86,47,.2)'}">
-            <div class="fii-c3-lbl" style="color:${diiPos?'var(--green)':'var(--red)'}">DII</div>
-            <div class="fii-c3-val" style="color:${diiPos?'var(--green)':'var(--red)'}">${crFmt(dii)}</div>
-            <div class="fii-c3-sub" style="color:${diiPos?'var(--green)':'var(--red)'}">${diiPos?'Net Buyer':'Net Seller'}</div>
-          </div>
-        </div>
-        ${prevHtml}
-      </div>`;
-    })()}
+    ${buildFiiDiiWidget()}
 
     <!-- NIFTY 50 TODAY'S INTRADAY CHART (real data via Yahoo Finance) -->
     <div class="tcw">
@@ -923,7 +856,7 @@ function renderDashboard(rows, newsRows){
           </span>
           <button onclick="window.open('https://www.tradingview.com/chart/?symbol=NSE%3ANIFTY','_blank','noopener')"
             title="Open full chart on TradingView"
-            style="border:none;background:transparent;cursor:pointer;color:#6b6b6b;font-size:15px;padding:2px 4px;line-height:1">☰</button>
+            style="border:none;background:transparent;cursor:pointer;color:#6b6b6b;font-size:10px;font-weight:600;padding:2px 4px">TradingView</button>
         </span>
       </div>
       <div style="padding:14px 18px">
@@ -952,7 +885,7 @@ function renderDashboard(rows, newsRows){
     </div>
 
     <!-- NEWS LAST -->
-    ${newsBlock('Latest News','📰',allNews,'#c0392b')}
+    ${newsBlock('Latest News','',allNews,'#c0392b')}
       </div>
     </div>
   `;
@@ -990,7 +923,7 @@ function buildDashFuturesGlobal(){
     <div class="tcw">
       <div class="tch" style="color:#0d47a1">Key Futures
         <a href="javascript:void(0)" onclick="showTab('futures',document.querySelector('[onclick*=&quot;futures&quot;]'))"
-           style="font-size:11px;font-weight:600;color:var(--mc)">View All →</a>
+           style="font-size:11px;font-weight:600;color:var(--mc)">View All</a>
       </div>
       <div class="tscr"><table>
         <thead><tr><th>Index</th><th>Price</th><th>Change</th><th>% Chg</th></tr></thead>
@@ -1000,7 +933,7 @@ function buildDashFuturesGlobal(){
     <div class="tcw">
       <div class="tch" style="color:#0d47a1">Key Global Indices
         <a href="javascript:void(0)" onclick="showTab('global',document.querySelector('[onclick*=&quot;global&quot;]'))"
-           style="font-size:11px;font-weight:600;color:var(--mc)">View All →</a>
+           style="font-size:11px;font-weight:600;color:var(--mc)">View All</a>
       </div>
       <div class="tscr"><table>
         <thead><tr><th>Index</th><th>Price</th><th>Change</th><th>% Chg</th></tr></thead>
@@ -1024,7 +957,7 @@ function buildDashMovers(){
   const tbl = (title, color, items) => `<div class="tcw">
     <div class="tch" style="color:${color}">${title}
       <a href="javascript:void(0)" onclick="showTab('market',document.querySelector('[onclick*=&quot;market&quot;]'))"
-         style="font-size:11px;font-weight:600;color:var(--mc)">View All →</a>
+         style="font-size:11px;font-weight:600;color:var(--mc)">View All</a>
     </div>
     <div class="tscr"><table>
       <thead><tr><th>Company</th><th>Price ₹</th><th>% Chg</th></tr></thead>
@@ -1065,7 +998,7 @@ function buildDashGMP(){
   return `<div class="tcw">
     <div class="tch" style="color:#0d47a1">Top GMP IPOs
       <a href="javascript:void(0)" onclick="showTab('ipo',document.querySelector('[onclick*=&quot;ipo&quot;]'))"
-         style="font-size:11px;font-weight:600;color:var(--mc)">View All →</a>
+         style="font-size:11px;font-weight:600;color:var(--mc)">View All</a>
     </div>
     <div class="tscr"><table>
       <thead><tr><th>IPO Name</th><th>GMP</th><th>Est. Listing</th></tr></thead>
@@ -1092,11 +1025,11 @@ function buildDashCorpToday(){
         <td>${f(r[1])}</td>
         <td>${f(r[3])}</td>
       </tr>`).join('')
-    : `<tr><td colspan="3" style="text-align:center;color:#aaa;padding:16px">No corporate actions today 🎉</td></tr>`;
+    : `<tr><td colspan="3" style="text-align:center;color:#aaa;padding:16px">No corporate actions today</td></tr>`;
   return `<div class="tcw">
     <div class="tch" style="color:#555555">Today's Corporate Actions
       <a href="javascript:void(0)" onclick="showTab('corporate',document.querySelector('[onclick*=&quot;corporate&quot;]'))"
-         style="font-size:11px;font-weight:600;color:var(--mc)">View All →</a>
+         style="font-size:11px;font-weight:600;color:var(--mc)">View All</a>
     </div>
     <div class="tscr"><table>
       <thead><tr><th>Company</th><th>Action</th><th>Ex-Date</th></tr></thead>
@@ -1342,6 +1275,75 @@ function renderIndian(rows){
    Section headers detected by col[1] or col[6] text values
    Adv/Dec: col[6]='BSE'/'NSE', col[7]='Adv:'/'Dec:', col[8]=count
 ══════════════════════════════════════════════ */
+/* FII/DII Activity widget — displayed on the Dashboard tab, but reads its raw data from the
+   Market Data sheet (col A: Date, col B: Net FII, col C: Net DII — detected by content, not a
+   fixed row/column, so it works wherever those 2-3 rows sit as long as col A has a date like
+   "2026" or "-06-" in it and col B/C are numeric). */
+function buildFiiDiiWidget(){
+  const rows = DATA.market || [];
+  const fiiDii = rows.filter(r=>r[0]&&(r[0].includes('2026')||r[0].includes('-06-'))&&r[1]&&!isNaN(parseFloat(String(r[1]).replace(/,/g,''))));
+  if(!fiiDii.length) return '';
+  const today = fiiDii[0];
+  const prev  = fiiDii[1]||null;
+  const fii   = parseFloat(String(today[1]||'0').replace(/,/g,''))||0;
+  const dii   = parseFloat(String(today[2]||'0').replace(/,/g,''))||0;
+  const fiiPos = fii>=0, diiPos = dii>=0;
+  const total  = Math.abs(fii)+Math.abs(dii)||1;
+  const fiiPct = (Math.abs(fii)/total*100).toFixed(1);
+  const diiPct = (Math.abs(dii)/total*100).toFixed(1);
+  const crFmt  = v=>{const s=v<0?'-':'+';return s+'₹'+Math.abs(v).toLocaleString('en-IN',{maximumFractionDigits:2,minimumFractionDigits:2})+' Cr';};
+  const fmtFiiDate = s=>{try{const d=new Date(s);if(isNaN(d))return s;return d.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}).replace(/ /g,'-');}catch(e){return s;}};
+  const net    = fii+dii;
+  const domFII = Math.abs(fii)>Math.abs(dii);
+  const sentColor = net>=0?'var(--green)':'var(--red)';
+  const sentLabel = net>=0
+    ? (fiiPos&&diiPos?'Both Buying':domFII?'FII Led Rally':'DII Dominant')
+    : ((!fiiPos)&&(!diiPos)?'Both Selling':domFII?'FII Selloff':'DII Dominant');
+  let prevHtml='';
+  if(prev){
+    const pf=parseFloat(String(prev[1]||'0').replace(/,/g,''))||0;
+    const pd=parseFloat(String(prev[2]||'0').replace(/,/g,''))||0;
+    prevHtml=`<div class="fii-prev3">
+      <div class="fii-prev3-lbl">${fmtFiiDate(prev[0])}</div>
+      FII <strong style="color:${pf>=0?'var(--green)':'var(--red)'};margin:0 4px">${crFmt(pf)}</strong>
+      <span style="color:#e0c9b0">·</span>
+      DII <strong style="color:${pd>=0?'var(--green)':'var(--red)'};margin-left:4px">${crFmt(pd)}</strong>
+    </div>`;
+  }
+  return `<div class="fii-wrap">
+    <div class="fii-hdr3">
+      <div class="fii-title3">FII / DII Activity</div>
+      <div class="fii-date3">${fmtFiiDate(today[0])}</div>
+    </div>
+    <div class="fii-meter-labels">
+      <span style="color:var(--red)">FII ${fiiPos?'Buying':'Selling'}</span>
+      <span style="color:var(--green)">DII ${diiPos?'Buying':'Selling'}</span>
+    </div>
+    <div class="fii-track">
+      <div class="fii-fill-sell" style="width:${fiiPct}%;background:${fiiPos?'var(--green)':'var(--red)'}"></div>
+      <div class="fii-fill-buy"  style="width:${diiPct}%;background:${diiPos?'var(--green)':'var(--red)'}"></div>
+      <div class="fii-needle"></div>
+    </div>
+    <div class="fii-sentiment">
+      <div class="fii-sent-lbl">Market Sentiment</div>
+      <div class="fii-sent-val" style="color:${sentColor}">${sentLabel}</div>
+    </div>
+    <div class="fii-cards3">
+      <div class="fii-card3" style="background:${fiiPos?'rgba(47,158,94,.09)':'rgba(224,86,47,.09)'};border:1px solid ${fiiPos?'rgba(47,158,94,.2)':'rgba(224,86,47,.2)'}">
+        <div class="fii-c3-lbl" style="color:${fiiPos?'var(--green)':'var(--red)'}">FII / FPI</div>
+        <div class="fii-c3-val" style="color:${fiiPos?'var(--green)':'var(--red)'}">${crFmt(fii)}</div>
+        <div class="fii-c3-sub" style="color:${fiiPos?'var(--green)':'var(--red)'}">${fiiPos?'Net Buyer':'Net Seller'}</div>
+      </div>
+      <div class="fii-card3" style="background:${diiPos?'rgba(47,158,94,.09)':'rgba(224,86,47,.09)'};border:1px solid ${diiPos?'rgba(47,158,94,.2)':'rgba(224,86,47,.2)'}">
+        <div class="fii-c3-lbl" style="color:${diiPos?'var(--green)':'var(--red)'}">DII</div>
+        <div class="fii-c3-val" style="color:${diiPos?'var(--green)':'var(--red)'}">${crFmt(dii)}</div>
+        <div class="fii-c3-sub" style="color:${diiPos?'var(--green)':'var(--red)'}">${diiPos?'Net Buyer':'Net Seller'}</div>
+      </div>
+    </div>
+    ${prevHtml}
+  </div>`;
+}
+
 function renderMarket(rows){
   /*
    CONFIRMED from CSV analysis (col indices in gviz):
@@ -1585,7 +1587,7 @@ function renderIPO(rows){
   const looksLikeDateRange = v => /\d{1,2}\s*[-–]\s*\d{1,2}\s*[A-Za-z]{3,}/.test(String(v||'').trim()) || /^\d{1,2}\s+[A-Za-z]{3,}/.test(String(v||'').trim());
 
   const isNotSME = r => !/sme/i.test(r[1]||'');
-  const listed = rows.slice(0, gmpStart > 0 ? gmpStart : 22)
+  const listed = rows.slice(1, gmpStart > 0 ? gmpStart : 22)
                      .filter(r => r[0]&&r[0].trim()&&r[0]!=='Company Name')
                      .filter(isNotSME);
   const gmpEnd = rows.findIndex((r,i) => i > gmpStart && clean(r[0])==='company' && String(r[1]||'').toLowerCase().includes('issue date'));
@@ -1642,14 +1644,10 @@ function renderIPO(rows){
   const panel = (icon, title, subtitle, count, color, body) => `
     <div style="background:var(--panel);border:1px solid var(--bdr);border-radius:14px;
       margin-bottom:12px;overflow:hidden">
-      <div style="padding:14px 18px;display:flex;align-items:center;gap:12px;
+      <div style="padding:14px 18px;
         border-bottom:1px solid var(--bdr)">
-        <div style="width:36px;height:36px;border-radius:9px;display:flex;align-items:center;
-          justify-content:center;font-size:18px;flex-shrink:0;background:${color}18">${icon}</div>
-        <div style="flex:1">
-          <div style="font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:700;color:#1a1a1a">${title}</div>
-          <div style="font-size:10px;color:#6b6b6b;margin-top:1px">${subtitle}</div>
-        </div>
+        <div style="font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:700;color:#1a1a1a">${title}</div>
+        <div style="font-size:10px;color:#6b6b6b;margin-top:1px">${subtitle}</div>
       </div>
       <div style="padding:14px 18px">${body}</div>
     </div>`;
@@ -1773,11 +1771,11 @@ function renderIPO(rows){
   clearSearchTab('ipo');
   $('s-ipo').innerHTML=`
     <div class="stitle">IPO Corner</div>
-    ${panel('📈','Recently Listed IPOs','Performance since listing date · Mainboard only',listed.length,'#1a7a4a',listedBody)}
-    ${panel('📊','Grey Market Premium','Unofficial pre-listing market prices',gmp.length,'#0d47a1',gmpBody)}
-    ${panel('🎓','Expert\'s Advice','Analyst recommendations',experts.length,'#e07b00',expertsBody)}
-    ${panel('📋','Subscription Status','Live subscription data · Mainboard only',subs.length,'#6a1b9a',subsBody)}
-    ${panel('🏛️','Mainboard IPO','Upcoming open & close dates',mainboardIPO.length,'#555555',mainboardBody)}
+    ${panel('','Recently Listed IPOs','Performance since listing date · Mainboard only',listed.length,'#1a7a4a',listedBody)}
+    ${panel('','Grey Market Premium','Unofficial pre-listing market prices',gmp.length,'#0d47a1',gmpBody)}
+    ${panel('','Expert\'s Advice','Analyst recommendations',experts.length,'#e07b00',expertsBody)}
+    ${panel('','Subscription Status','Live subscription data · Mainboard only',subs.length,'#6a1b9a',subsBody)}
+    ${panel('','Mainboard IPO','Upcoming open & close dates',mainboardIPO.length,'#555555',mainboardBody)}
   `;
 }
 
@@ -1967,7 +1965,7 @@ function setEquityStatus(){
   const el=document.getElementById('equity-status');
   if(!el) return;
   if(EQUITY_LIST.length===0){
-    el.textContent='⚠ 0 tickers found — the Equity sheet tab was reached but has no data rows in A2/B2 onward.';
+    el.textContent='0 tickers found — the Equity sheet tab was reached but has no data rows in A2/B2 onward.';
     el.style.color='var(--red)';
   } else {
     el.textContent=''; // working normally — no need to show a status line
@@ -2037,7 +2035,7 @@ async function loadAll(){
       console.warn('equity',e.message);
       EQUITY_FETCH_DONE=true;
       const el=document.getElementById('equity-status');
-      if(el){ el.textContent='⚠ Couldn\'t load ticker list — check the Equity sheet gid/sharing. See console for details.'; el.style.color='var(--red)'; }
+      if(el){ el.textContent='Couldn\'t load ticker list — check the Equity sheet gid/sharing. See console for details.'; el.style.color='var(--red)'; }
     }),
     fetchSheet2(CORP_GIDS.today).then(d=>{DATA['corp_today']=d;}).catch(e=>console.warn('corp_today',e.message)),
     // Fetch market data for Dashboard widget but don't mark as LOADED so Movers tab still loads+renders properly
@@ -2113,7 +2111,7 @@ async function refreshAll(){
     console.warn('equity refresh',e.message);
     EQUITY_FETCH_DONE=true;
     const el=document.getElementById('equity-status');
-    if(el){ el.textContent='⚠ Couldn\'t load ticker list — check the Equity sheet gid/sharing. See console for details.'; el.style.color='var(--red)'; }
+    if(el){ el.textContent='Couldn\'t load ticker list — check the Equity sheet gid/sharing. See console for details.'; el.style.color='var(--red)'; }
   });
   const keys=Object.keys(LOADED);
   await Promise.allSettled(keys.map(async k=>{
@@ -2161,11 +2159,11 @@ function toggleCalc(id){
     if(owner===id){
       const willOpen = b.style.display==='none';
       b.style.display = willOpen ? 'block' : 'none';
-      if(chevron) chevron.textContent = willOpen ? '▾' : '▸';
+      if(chevron) chevron.textContent = willOpen ? '−' : '+';
       if(willOpen) b.scrollIntoView({behavior:'smooth',block:'nearest'});
     } else {
       b.style.display='none';
-      if(chevron) chevron.textContent='▸';
+      if(chevron) chevron.textContent='+';
     }
   });
 }
@@ -2202,7 +2200,7 @@ function renderCalculators(){
           <div style="font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:700;color:#1a1a1a">${title}</div>
           <div style="font-size:10px;color:#6b6b6b;margin-top:1px">${subtitle}</div>
         </div>
-        <span id="chev-${id}" style="font-size:12px;color:var(--mc);flex-shrink:0;transition:.2s">▸</span>
+        <span id="chev-${id}" style="font-size:12px;color:var(--mc);flex-shrink:0;transition:.2s">+</span>
       </div>
       <div class="calc-body" data-owner="${id}" style="display:none">
         <div style="padding:16px 18px;display:grid;grid-template-columns:1fr 1fr;gap:20px">
@@ -2303,7 +2301,7 @@ function renderCalculators(){
           <div style="font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:700;color:#1a1a1a">Retirement Corpus Calculator</div>
           <div style="font-size:10px;color:#6b6b6b;margin-top:1px">See your corpus at different return rates — and what it's worth after inflation</div>
         </div>
-        <span id="chev-calc-retirement-corpus-calculator" style="font-size:12px;color:var(--mc);flex-shrink:0;transition:.2s">▸</span>
+        <span id="chev-calc-retirement-corpus-calculator" style="font-size:12px;color:var(--mc);flex-shrink:0;transition:.2s">+</span>
       </div>
       <div class="calc-body" data-owner="calc-retirement-corpus-calculator" style="display:none;padding:16px 18px">
         ${inp('ret-age','Current Age','30',30)}
@@ -2467,7 +2465,7 @@ function renderCalculators(){
           <div style="font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:700;color:#1a1a1a">XIRR Calculator</div>
           <div style="font-size:10px;color:#6b6b6b;margin-top:1px">Annualized return for a regular investment schedule (SIP-style)</div>
         </div>
-        <span id="chev-calc-xirr-calculator" style="font-size:12px;color:var(--mc);transition:.2s;flex-shrink:0">▸</span>
+        <span id="chev-calc-xirr-calculator" style="font-size:12px;color:var(--mc);transition:.2s;flex-shrink:0">+</span>
       </div>
       <div class="calc-body" data-owner="calc-xirr-calculator" style="display:none;padding:16px 18px">
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
@@ -2552,7 +2550,7 @@ function renderCalculators(){
           <div style="font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:700;color:#1a1a1a">Income Tax Calculator — Old vs New Regime</div>
           <div style="font-size:10px;color:#6b6b6b;margin-top:1px">FY 2026-27 (AY 2027-28) slabs — compare your tax under both regimes</div>
         </div>
-        <span id="chev-calc-income-tax-calculator" style="font-size:12px;color:var(--mc);flex-shrink:0;transition:.2s">▸</span>
+        <span id="chev-calc-income-tax-calculator" style="font-size:12px;color:var(--mc);flex-shrink:0;transition:.2s">+</span>
       </div>
       <div class="calc-body" data-owner="calc-income-tax-calculator" style="display:none;padding:16px 18px">
         ${evInp('itx-income','Gross Annual Income (₹)','12,00,000')}
@@ -2656,12 +2654,12 @@ function renderCalculators(){
           <div style="font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:700;color:#1a1a1a">EV vs ICE — Cost & Carbon Comparison</div>
           <div style="font-size:10px;color:#6b6b6b;margin-top:1px">Total cost of ownership and carbon net-zero payback, side by side</div>
         </div>
-        <span id="chev-calc-ev-vs-ice-total-cost-of-ownership" style="font-size:12px;color:var(--mc);flex-shrink:0;transition:.2s">▸</span>
+        <span id="chev-calc-ev-vs-ice-total-cost-of-ownership" style="font-size:12px;color:var(--mc);flex-shrink:0;transition:.2s">+</span>
       </div>
       <div class="calc-body" data-owner="calc-ev-vs-ice-total-cost-of-ownership" style="display:none;padding:16px 18px">
         <div style="display:flex;gap:8px;margin-bottom:14px">
-          <button id="evi-preset-2w" onclick="setEVPreset('2w')" style="flex:1;border:none;border-radius:9px;padding:9px;font-size:12px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;background:transparent;color:#6b6b6b;border:1px solid var(--bdr)">🛵 2 Wheeler</button>
-          <button id="evi-preset-4w" onclick="setEVPreset('4w')" style="flex:1;border:none;border-radius:9px;padding:9px;font-size:12px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;background:var(--mc);color:#fff">🚗 4 Wheeler</button>
+          <button id="evi-preset-2w" onclick="setEVPreset('2w')" style="flex:1;border:none;border-radius:9px;padding:9px;font-size:12px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;background:transparent;color:#6b6b6b;border:1px solid var(--bdr)">2 Wheeler</button>
+          <button id="evi-preset-4w" onclick="setEVPreset('4w')" style="flex:1;border:none;border-radius:9px;padding:9px;font-size:12px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;background:var(--mc);color:#fff">4 Wheeler</button>
         </div>
         <div style="font-size:11px;font-weight:700;color:var(--mc);text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px">Shared Inputs</div>
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:16px">
@@ -2673,7 +2671,7 @@ function renderCalculators(){
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
           <div>
-            <div style="font-size:11px;font-weight:700;color:#444444;text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px;padding-bottom:5px;border-bottom:2px solid #444444">⛽ ICE (Petrol/Diesel)</div>
+            <div style="font-size:11px;font-weight:700;color:#444444;text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px;padding-bottom:5px;border-bottom:2px solid #444444">ICE (Petrol/Diesel)</div>
             ${evInp('ice-price','Ex-Showroom Price (₹)','6,13,000')}
             ${evInp('ice-tax','Road Tax (₹)','85,820')}
             ${evInp('ice-insAvg','Annual Avg. Insurance Cost (₹)','12,500')}
@@ -2686,7 +2684,7 @@ function renderCalculators(){
             ${evInp('ice-resale','Resale Value after period (%)','50')}
           </div>
           <div>
-            <div style="font-size:11px;font-weight:700;color:var(--green);text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px;padding-bottom:5px;border-bottom:2px solid var(--green)">⚡ EV (Electric)</div>
+            <div style="font-size:11px;font-weight:700;color:var(--green);text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px;padding-bottom:5px;border-bottom:2px solid var(--green)">EV (Electric)</div>
             ${evInp('ev-price','Ex-Showroom Price (₹)','9,99,000')}
             ${evInp('ev-tax','Road Tax (₹)','1,500')}
             ${evInp('ev-insAvg','Annual Avg. Insurance Cost (₹)','18,000')}
@@ -2709,8 +2707,8 @@ function renderCalculators(){
         <div style="margin-top:14px">
           <div style="font-size:11px;font-weight:700;color:var(--mc);text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px">EV Charging Source (for carbon payback)</div>
           <div style="display:flex;gap:8px">
-            <button id="cnz-charge-grid" onclick="setCNZCharging('grid')" style="flex:1;border:none;border-radius:9px;padding:9px;font-size:12px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;background:var(--mc);color:#fff">🔌 Grid Power</button>
-            <button id="cnz-charge-solar" onclick="setCNZCharging('solar')" style="flex:1;border:1px solid var(--bdr);border-radius:9px;padding:9px;font-size:12px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;background:transparent;color:#6b6b6b">☀️ Solar Power</button>
+            <button id="cnz-charge-grid" onclick="setCNZCharging('grid')" style="flex:1;border:none;border-radius:9px;padding:9px;font-size:12px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;background:var(--mc);color:#fff">Grid Power</button>
+            <button id="cnz-charge-solar" onclick="setCNZCharging('solar')" style="flex:1;border:1px solid var(--bdr);border-radius:9px;padding:9px;font-size:12px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;background:transparent;color:#6b6b6b">Solar Power</button>
           </div>
         </div>
 
@@ -2754,18 +2752,18 @@ function renderCalculators(){
           <div style="font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:700;color:#1a1a1a">Rent vs Buy Calculator</div>
           <div style="font-size:10px;color:#6b6b6b;margin-top:1px">Should you rent and invest the difference, or buy a home?</div>
         </div>
-        <span id="chev-calc-rent-vs-buy-calculator" style="font-size:12px;color:var(--mc);flex-shrink:0;transition:.2s">▸</span>
+        <span id="chev-calc-rent-vs-buy-calculator" style="font-size:12px;color:var(--mc);flex-shrink:0;transition:.2s">+</span>
       </div>
       <div class="calc-body" data-owner="calc-rent-vs-buy-calculator" style="display:none;padding:16px 18px">
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
           <div>
-            <div style="font-size:11px;font-weight:700;color:#444444;text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px;padding-bottom:5px;border-bottom:2px solid #444444">🏠 Renting</div>
+            <div style="font-size:11px;font-weight:700;color:#444444;text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px;padding-bottom:5px;border-bottom:2px solid #444444">Renting</div>
             ${evInp('rvb-rent','Current Monthly Rent (₹)','25,000')}
             ${evInp('rvb-rentinc','Annual Rent Increase (%)','5')}
             ${evInp('rvb-investret','Return if Investing Savings (% p.a.)','10','0.1')}
           </div>
           <div>
-            <div style="font-size:11px;font-weight:700;color:var(--mc);text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px;padding-bottom:5px;border-bottom:2px solid var(--mc)">🏡 Buying</div>
+            <div style="font-size:11px;font-weight:700;color:var(--mc);text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px;padding-bottom:5px;border-bottom:2px solid var(--mc)">Buying</div>
             ${evInp('rvb-price','Property Price (₹)','80,00,000')}
             ${evInp('rvb-down','Down Payment (%)','20')}
             ${evInp('rvb-rate','Home Loan Rate (% p.a.)','8.5','0.1')}
@@ -3016,13 +3014,13 @@ function calcRun(){
     if(itxVerdict){
       const diff=oldTax-newTax;
       if(Math.abs(diff)<500){
-        itxVerdict.textContent='⚖️ Verdict: Both regimes result in nearly the same tax';
+        itxVerdict.textContent='Verdict: Both regimes result in nearly the same tax';
         itxVerdict.style.background='rgba(58,45,127,.10)'; itxVerdict.style.color='var(--mc)';
       } else if(diff>0){
-        itxVerdict.textContent='✅ Verdict: New Regime saves you '+fmtINR(diff)+' in tax';
+        itxVerdict.textContent='Verdict: New Regime saves you '+fmtINR(diff)+' in tax';
         itxVerdict.style.background='rgba(47,158,94,.10)'; itxVerdict.style.color='var(--green)';
       } else {
-        itxVerdict.textContent='✅ Verdict: Old Regime saves you '+fmtINR(-diff)+' in tax';
+        itxVerdict.textContent='Verdict: Old Regime saves you '+fmtINR(-diff)+' in tax';
         itxVerdict.style.background='rgba(47,158,94,.10)'; itxVerdict.style.color='var(--green)';
       }
     }
@@ -3232,13 +3230,13 @@ function calcRun(){
     const verdictEl=$('poi-verdict');
     if(verdictEl){
       if(netBenefit > totalInterest*0.15){ // investing clearly wins by a healthy margin
-        verdictEl.textContent='💡 Verdict: INVEST THE AMOUNT — your investment growth likely outweighs loan interest saved';
+        verdictEl.textContent='Verdict: INVEST THE AMOUNT — your investment growth likely outweighs loan interest saved';
         verdictEl.style.background='rgba(47,158,94,.10)'; verdictEl.style.color='var(--green)';
       } else if(netBenefit < -totalInterest*0.15){
-        verdictEl.textContent='💡 Verdict: PAY OFF THE LOAN — prepaying saves more than investing would earn';
+        verdictEl.textContent='Verdict: PAY OFF THE LOAN — prepaying saves more than investing would earn';
         verdictEl.style.background='rgba(224,86,47,.10)'; verdictEl.style.color='var(--red)';
       } else {
-        verdictEl.textContent='💡 Verdict: FAIRLY CLOSE — either choice is reasonable; consider risk tolerance & loan mental burden';
+        verdictEl.textContent='Verdict: FAIRLY CLOSE — either choice is reasonable; consider risk tolerance & loan mental burden';
         verdictEl.style.background='rgba(58,45,127,.10)'; verdictEl.style.color='var(--mc)';
       }
     }
@@ -3334,12 +3332,12 @@ function calcRun(){
         ? 'Carbon: EV turns net-zero (full battery) in '+fmtDays(fullBatteryDays)
         : "Carbon: EV doesn't offset its footprint at this efficiency/charging source";
 
-      let icon='⚖️', bg='rgba(58,45,127,.10)', color='var(--mc)';
-      if(!costClose && diff>0 && dailyOffset>0){ icon='⚡'; bg='rgba(47,158,94,.10)'; color='var(--green)'; }
-      else if(!costClose && diff<0 && dailyOffset<=0){ icon='⛽'; bg='rgba(224,86,47,.10)'; color='var(--red)'; }
-      else if(costClose && dailyOffset>0){ icon='🌱'; bg='rgba(47,158,94,.10)'; color='var(--green)'; }
+      let bg='rgba(58,45,127,.10)', color='var(--mc)';
+      if(!costClose && diff>0 && dailyOffset>0){ bg='rgba(47,158,94,.10)'; color='var(--green)'; }
+      else if(!costClose && diff<0 && dailyOffset<=0){ bg='rgba(224,86,47,.10)'; color='var(--red)'; }
+      else if(costClose && dailyOffset>0){ bg='rgba(47,158,94,.10)'; color='var(--green)'; }
 
-      eviVerdict.innerHTML = icon+' '+costLine+' &nbsp;·&nbsp; '+carbonLine;
+      eviVerdict.innerHTML = costLine+' &nbsp;·&nbsp; '+carbonLine;
       eviVerdict.style.background=bg; eviVerdict.style.color=color;
     }
   }
@@ -3369,13 +3367,13 @@ function calcRun(){
       setTxt('iv-margin', (margin>=0?'+':'')+margin.toFixed(1)+'%');
       if(ivVerdict){
         if(margin>15){
-          ivVerdict.textContent='✅ Potentially Undervalued — trades below estimated intrinsic value';
+          ivVerdict.textContent='Potentially Undervalued — trades below estimated intrinsic value';
           ivVerdict.style.background='rgba(47,158,94,.10)'; ivVerdict.style.color='var(--green)';
         } else if(margin<-15){
-          ivVerdict.textContent='⚠️ Potentially Overvalued — trades above estimated intrinsic value';
+          ivVerdict.textContent='Potentially Overvalued — trades above estimated intrinsic value';
           ivVerdict.style.background='rgba(224,86,47,.10)'; ivVerdict.style.color='var(--red)';
         } else {
-          ivVerdict.textContent='⚖️ Near Fair Value — CMP close to intrinsic estimate';
+          ivVerdict.textContent='Near Fair Value — CMP close to intrinsic estimate';
           ivVerdict.style.background='rgba(58,45,127,.10)'; ivVerdict.style.color='var(--mc)';
         }
       }
@@ -3396,13 +3394,13 @@ function calcRun(){
       setTxt('fair-currentpe', currentPE.toFixed(1)+'x');
       if(fairVerdict){
         if(fairCmp<fairValue*0.9){
-          fairVerdict.textContent='✅ Trading Below Fair Value';
+          fairVerdict.textContent='Trading Below Fair Value';
           fairVerdict.style.background='rgba(47,158,94,.10)'; fairVerdict.style.color='var(--green)';
         } else if(fairCmp>fairValue*1.1){
-          fairVerdict.textContent='⚠️ Trading Above Fair Value';
+          fairVerdict.textContent='Trading Above Fair Value';
           fairVerdict.style.background='rgba(224,86,47,.10)'; fairVerdict.style.color='var(--red)';
         } else {
-          fairVerdict.textContent='⚖️ Trading Near Fair Value';
+          fairVerdict.textContent='Trading Near Fair Value';
           fairVerdict.style.background='rgba(58,45,127,.10)'; fairVerdict.style.color='var(--mc)';
         }
       }
@@ -3524,13 +3522,13 @@ function calcRun(){
     if(rvbVerdict){
       const diff=netWorthBuy-netWorthRent;
       if(Math.abs(diff) < Math.max(netWorthBuy,netWorthRent)*0.05){
-        rvbVerdict.textContent='⚖️ Verdict: Very close — either choice works out similarly over '+rvbHorizon+' years';
+        rvbVerdict.textContent='Verdict: Very close — either choice works out similarly over '+rvbHorizon+' years';
         rvbVerdict.style.background='rgba(58,45,127,.10)'; rvbVerdict.style.color='var(--mc)';
       } else if(diff>0){
-        rvbVerdict.textContent='🏡 Verdict: Buying builds '+fmtINR(diff)+' more net worth over '+rvbHorizon+' years';
+        rvbVerdict.textContent='Verdict: Buying builds '+fmtINR(diff)+' more net worth over '+rvbHorizon+' years';
         rvbVerdict.style.background='rgba(58,45,127,.10)'; rvbVerdict.style.color='var(--mc)';
       } else {
-        rvbVerdict.textContent='🏠 Verdict: Renting + investing builds '+fmtINR(-diff)+' more net worth over '+rvbHorizon+' years';
+        rvbVerdict.textContent='Verdict: Renting + investing builds '+fmtINR(-diff)+' more net worth over '+rvbHorizon+' years';
         rvbVerdict.style.background='rgba(47,158,94,.10)'; rvbVerdict.style.color='var(--green)';
       }
     }
@@ -3618,7 +3616,7 @@ function shareApp(btn){
     navigator.clipboard.writeText(shareUrl).then(()=>{
       if(btn){
         const original=btn.innerHTML;
-        btn.innerHTML='<span style="font-size:10px;font-weight:600">✅ Copied</span>';
+        btn.innerHTML='<span style="font-size:10px;font-weight:600">Copied</span>';
         setTimeout(()=>{ btn.innerHTML=original; }, 1500);
       }
     }).catch(()=>{});
@@ -3672,7 +3670,7 @@ function submitReview(){
     headers:{'Content-Type':'text/plain'}, // text/plain avoids a CORS preflight that Apps Script doesn't handle
     body: JSON.stringify({name, rating:REVIEW_RATING, review:text, page:location.pathname})
   }).then(()=>{
-    if(status){ status.textContent='Thank you for your feedback! 🙏'; status.style.color='var(--green)'; }
+    if(status){ status.textContent='Thank you for your feedback!'; status.style.color='var(--green)'; }
     try{ localStorage.setItem('nb_review_submitted','1'); }catch(e){}
     setTimeout(closeReviewModal, 1500);
   }).catch(()=>{
@@ -3731,7 +3729,7 @@ function showIOSInstallInstructions(){
       '<div style="font-size:12px;color:#6b6b6b;margin-bottom:16px">iOS doesn\'t allow apps to install themselves — just three quick taps in Safari:</div>'+
       '<div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">'+
         '<span style="flex-shrink:0;width:26px;height:26px;border-radius:50%;background:var(--mc);color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center">1</span>'+
-        '<span style="font-size:13px;color:#1a1a1a">Tap the <strong>Share</strong> icon <span style="font-size:15px">⬆️</span> in Safari\'s toolbar</span>'+
+        '<span style="font-size:13px;color:#1a1a1a">Tap the <strong>Share</strong> icon in Safari\'s toolbar</span>'+
       '</div>'+
       '<div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">'+
         '<span style="flex-shrink:0;width:26px;height:26px;border-radius:50%;background:var(--mc);color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center">2</span>'+
@@ -4581,14 +4579,6 @@ function openChartLookup(){
   if(!symbol) return;
   window.open('https://www.tradingview.com/chart/?symbol=NSE%3A'+symbol, '_blank', 'noopener');
 }
-
-document.addEventListener('keydown',function(e){
-  if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='k'){ e.preventDefault(); openSearch(); return; }
-  if(e.key==='/'&&document.activeElement.tagName!=='INPUT'&&document.activeElement.tagName!=='TEXTAREA'){
-    e.preventDefault(); openSearch(); return;
-  }
-  if(e.key==='Escape') closeSearch();
-});
 
 /* ── GLASSMORPHISM PARALLAX ── */
 (function(){
