@@ -276,7 +276,40 @@ footer a{color:var(--mc)}
 .hm-row{display:flex;justify-content:space-between;align-items:baseline;gap:6px}
 .hm-price{font-size:13px;font-weight:600;color:#fff;font-family:'Space Grotesk',sans-serif;white-space:nowrap}
 .hm-pct{font-size:12.5px;font-weight:700;color:#fff;font-family:'Space Grotesk',sans-serif;white-space:nowrap}
-@media(max-width:600px){.hm-grid{grid-template-columns:repeat(auto-fill,minmax(115px,1fr))}.hm-name{font-size:10px}.hm-price,.hm-pct{font-size:11px}}
+@media(max-width:600px){.hm-grid{grid-template-columns:repeat(auto-fill,minmax(115px,1fr))}.hm-name{font-size:10px}.hm-price,.hm-pct{font-size:11px}}/* BOTTOM TAB BAR — hidden on desktop, shown on mobile only */
+.bottom-nav{display:none}
+@media(max-width:768px){
+  header nav{display:none} /* top nav replaced by bottom bar on mobile, avoids duplicate navigation */
+  body{padding-bottom:58px} /* room for the fixed bottom bar */
+  .bottom-nav{
+    display:flex;position:fixed;bottom:0;left:0;right:0;z-index:500;
+    background:rgba(247,247,252,0.96);backdrop-filter:blur(18px);
+    border-top:1px solid var(--bdr);padding:6px 4px calc(6px + env(safe-area-inset-bottom));
+  }
+  .bnb{flex:1;border:none;background:transparent;color:#6b6b6b;font-size:10.5px;font-weight:600;
+    padding:6px 2px;cursor:pointer;font-family:'Inter',sans-serif;border-radius:8px}
+  .bnb-on{color:var(--mc);font-weight:700;background:rgba(58,45,127,.08)}
+}
+.more-sheet-overlay{display:none;position:fixed;inset:0;z-index:600;background:rgba(58,45,127,.35);
+  backdrop-filter:blur(3px)}
+.more-sheet-overlay.on{display:flex;align-items:flex-end;justify-content:center}
+.more-sheet{background:#fff;border-radius:16px 16px 0 0;width:100%;max-width:480px;
+  padding:10px 14px calc(14px + env(safe-area-inset-bottom));box-shadow:0 -10px 40px rgba(58,45,127,.25)}
+.more-sheet-handle{width:36px;height:4px;background:var(--bdr);border-radius:2px;margin:4px auto 12px}
+.more-sheet-item{display:block;width:100%;text-align:left;padding:13px 10px;border:none;
+  background:transparent;font-size:14px;font-weight:600;color:#1a1a1a;cursor:pointer;
+  font-family:'Inter',sans-serif;border-bottom:1px solid rgba(58,45,127,.10)}
+.more-sheet-cancel{display:block;width:100%;text-align:center;padding:13px 10px;border:none;
+  background:rgba(58,45,127,.06);border-radius:9px;margin-top:8px;font-size:13px;font-weight:700;
+  color:var(--mc);cursor:pointer;font-family:'Inter',sans-serif}
+
+/* PULL TO REFRESH — mobile only */
+.ptr-indicator{display:none;position:fixed;top:0;left:0;right:0;z-index:400;text-align:center;
+  padding:10px;font-size:11px;font-weight:700;color:var(--mc);background:rgba(247,247,252,0.96);
+  transform:translateY(-100%);transition:transform .2s ease}
+@media(max-width:768px){.ptr-indicator{display:block}}
+.ptr-indicator.visible{transform:translateY(0)}
+.ptr-indicator.spin{}
 </style>
 </head>
 <body>
@@ -393,6 +426,31 @@ footer a{color:var(--mc)}
     </nav>
   </div>
 </header>
+
+<!-- BOTTOM TAB BAR — mobile only. 4 primary tabs + More (rest live in the More sheet) so it
+     doesn't get cramped with all 9 sections crammed into one bar. -->
+<div id="bottom-nav" class="bottom-nav">
+  <button class="bnb bnb-on" data-tab="dashboard" onclick="bottomNavGo('dashboard',this)">Dashboard</button>
+  <button class="bnb" data-tab="market" onclick="bottomNavGo('market',this)">Movers</button>
+  <button class="bnb" data-tab="ipo" onclick="bottomNavGo('ipo',this)">IPO</button>
+  <button class="bnb" data-tab="calculators" onclick="bottomNavGo('calculators',this)">Calc</button>
+  <button class="bnb" onclick="openMoreSheet()">More</button>
+</div>
+
+<div id="more-sheet-overlay" class="more-sheet-overlay" onclick="closeMoreSheet(event)">
+  <div class="more-sheet">
+    <div class="more-sheet-handle"></div>
+    <button class="more-sheet-item" data-tab="global" onclick="bottomNavGo('global',this)">Global Indices</button>
+    <button class="more-sheet-item" data-tab="futures" onclick="bottomNavGo('futures',this)">Futures</button>
+    <button class="more-sheet-item" data-tab="indian" onclick="bottomNavGo('indian',this)">Indian Indices</button>
+    <button class="more-sheet-item" data-tab="currency" onclick="bottomNavGo('currency',this)">Currencies</button>
+    <button class="more-sheet-item" data-tab="corporate" onclick="bottomNavGo('corporate',this)">Corporate Actions</button>
+    <button class="more-sheet-cancel" onclick="closeMoreSheet()">Cancel</button>
+  </div>
+</div>
+
+<!-- Pull-to-refresh indicator (mobile only) -->
+<div id="ptr-indicator" class="ptr-indicator">Pull to refresh</div>
 
 <div class="news-ticker">
   <span class="nt-label">MARKET</span>
@@ -3757,6 +3815,9 @@ function calcRun(){
 function showTab(key,btn){
   document.querySelectorAll('.sec').forEach(s=>s.classList.remove('on'));
   document.querySelectorAll('.nb').forEach(b=>b.classList.remove('on'));
+  document.querySelectorAll('.bnb').forEach(b=>b.classList.remove('bnb-on'));
+  const bnbBtn=document.querySelector('.bnb[data-tab="'+key+'"]');
+  if(bnbBtn) bnbBtn.classList.add('bnb-on');
   const target=$('s-'+key);
   target.classList.add('on'); btn.classList.add('on');
   // Force animation restart even if this section was already rendered before
@@ -3784,6 +3845,58 @@ window.addEventListener('popstate', (e)=>{
   // Deliberately NOT re-trapping after this — one more back press genuinely exits, as expected.
   maybeShowReviewPrompt();
 });
+
+/* Bottom tab bar (mobile) — routes through the existing showTab() via the matching top-nav
+   button, so URL/history/lazy-load stay identical either way; just also syncs the bottom bar's
+   own active state and closes the More sheet if it was open. */
+function bottomNavGo(key, btn){
+  const topBtn=document.querySelector('.nb[onclick*="showTab(\''+key+'\'"]');
+  if(topBtn) showTab(key, topBtn);
+  closeMoreSheet();
+}
+function openMoreSheet(){
+  const el=document.getElementById('more-sheet-overlay');
+  if(el) el.classList.add('on');
+}
+function closeMoreSheet(e){
+  if(e && e.target!==e.currentTarget) return; // click landed inside the sheet, not the backdrop
+  const el=document.getElementById('more-sheet-overlay');
+  if(el) el.classList.remove('on');
+}
+
+/* Pull-to-refresh (mobile) — swipe down from the very top of the page to trigger refreshAll() */
+(function(){
+  let startY=0, pulling=false;
+  const THRESHOLD=70;
+  const indicator=()=>document.getElementById('ptr-indicator');
+  window.addEventListener('touchstart', e=>{
+    if(window.scrollY<=0 && e.touches.length===1){ startY=e.touches[0].clientY; pulling=true; }
+    else pulling=false;
+  }, {passive:true});
+  window.addEventListener('touchmove', e=>{
+    if(!pulling) return;
+    const dy=e.touches[0].clientY-startY;
+    const ind=indicator();
+    if(dy>10 && ind){
+      ind.classList.add('visible');
+      ind.textContent = dy>THRESHOLD ? 'Release to refresh' : 'Pull to refresh';
+    }
+  }, {passive:true});
+  window.addEventListener('touchend', e=>{
+    if(!pulling) return;
+    pulling=false;
+    const dy=(e.changedTouches[0].clientY-startY);
+    const ind=indicator();
+    if(dy>THRESHOLD && ind){
+      ind.textContent='Refreshing…';
+      ind.classList.add('spin');
+      refreshAll();
+      setTimeout(()=>{ ind.classList.remove('visible','spin'); }, 1200);
+    } else if(ind){
+      ind.classList.remove('visible');
+    }
+  }, {passive:true});
+})();
 function showInv(id,btn){
   document.querySelectorAll('.ipanel').forEach(p=>p.classList.remove('on'));
   document.querySelectorAll('.itb').forEach(b=>b.classList.remove('on'));
