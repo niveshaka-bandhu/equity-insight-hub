@@ -1653,10 +1653,8 @@ function renderIPO(rows){
     </div>`;
 
   // Listed — compact table
-  const listedBody = `<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse">
-    <thead><tr>${['Company','Type','Listed','Issue ₹','Subs','List Open','List Close','List Gain','LTP ₹','As of Todays Gain','Size']
-      .map((h,i)=>`<th style="font-size:10px;font-weight:700;color:#6b6b6b;padding:7px 10px;border-bottom:1px solid var(--bdr);text-align:${i===0?'left':'center'};white-space:nowrap">${h}</th>`).join('')}</tr></thead>
-    <tbody>${listed.map((r,i)=>{
+  const listedBody = `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:8px">
+    ${listed.map((r,i)=>{
       const elId=`si-ipo-listed-${i}`;
       // "List Gain" (col 7) sometimes comes through blank from the sheet — fall back to computing it
       // from List Close vs Issue Price (cols 6 and 3). Deliberately NOT using LTP/CMP (col 8) —
@@ -1670,20 +1668,42 @@ function renderIPO(rows){
         }
       }
       pushSearch('ipo','IPO · Listed',r[0],'Listed '+f(r[2])+' · List gain '+listGain,elId);
-      return `<tr id="${elId}" style="border-bottom:1px solid rgba(58,45,127,.20)">
-      <td style="padding:8px 10px;font-size:12px;text-align:left"><strong>${f(r[0])}</strong></td>
-      <td style="padding:8px 10px;text-align:center">${tbadge(r[1])}</td>
-      <td style="padding:8px 10px;font-size:12px;color:#6b6b6b;text-align:center">${f(r[2])}</td>
-      <td style="padding:8px 10px;font-size:12px;font-family:'Space Grotesk',sans-serif;text-align:center">${f(r[3])}</td>
-      <td style="padding:8px 10px;font-size:12px;text-align:center">${f(r[4])}</td>
-      <td style="padding:8px 10px;font-size:12px;text-align:center">${f(r[5])}</td>
-      <td style="padding:8px 10px;font-size:12px;text-align:center">${f(r[6])}</td>
-      <td style="padding:8px 10px;font-size:12px;font-weight:700;text-align:center" class="${ic(listGain)}">${listGain}</td>
-      <td style="padding:8px 10px;font-size:12px;font-family:'Space Grotesk',sans-serif;text-align:center">${f(r[8])}</td>
-      <td style="padding:8px 10px;font-size:12px;font-weight:700;text-align:center" class="${ic(r[9])}">${f(r[9])}</td>
-      <td style="padding:8px 10px;font-size:12px;color:#6b6b6b;text-align:center">${f(r[10])}</td>
-    </tr>`;}).join('')}</tbody>
-  </table></div>`;
+      const lgPos=!String(listGain).trim().startsWith('-')&&listGain!=='—';
+      const tgPos=!String(r[9]||'').trim().startsWith('-')&&f(r[9])!=='—';
+      return `<div id="${elId}" style="background:rgba(255,255,255,.55);border:1px solid var(--bdr);border-radius:10px;padding:12px 14px">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:8px">
+          <div style="font-size:12px;font-weight:700;color:#1a1a1a;line-height:1.3">${f(r[0])}</div>
+          ${tbadge(r[1])}
+        </div>
+        <div style="font-size:10px;color:#6b6b6b;margin-bottom:10px">Listed ${f(r[2])}</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+          <div>
+            <div style="font-size:9px;color:#6b6b6b;text-transform:uppercase;letter-spacing:.4px">Issue Price</div>
+            <div style="font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:600;color:#1a1a1a">${f(r[3])}</div>
+          </div>
+          <div style="text-align:right">
+            <div style="font-size:9px;color:#6b6b6b;text-transform:uppercase;letter-spacing:.4px">LTP</div>
+            <div style="font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:600;color:#1a1a1a">${f(r[8])}</div>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;padding-top:8px;border-top:1px solid rgba(58,45,127,.14)">
+          <div>
+            <div style="font-size:9px;color:#6b6b6b;text-transform:uppercase;letter-spacing:.4px">List Gain</div>
+            <div style="font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:700;color:${lgPos?'var(--green)':'var(--red)'}">${listGain}</div>
+          </div>
+          <div style="text-align:right">
+            <div style="font-size:9px;color:#6b6b6b;text-transform:uppercase;letter-spacing:.4px">As of Todays Gain</div>
+            <div style="font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:700;color:${tgPos?'var(--green)':'var(--red)'}">${f(r[9])}</div>
+          </div>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:10px;color:#999999;margin-top:10px;padding-top:8px;border-top:1px solid rgba(58,45,127,.14)">
+          <span>Subs ${f(r[4])}</span>
+          <span>Open ${f(r[5])} → Close ${f(r[6])}</span>
+        </div>
+        <div style="font-size:10px;color:#999999;margin-top:4px">Issue Size ${f(r[10])}</div>
+      </div>`;
+    }).join('')}
+  </div>`;
 
   // GMP — tinted cards grid
   const gmpBody = `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:8px">
@@ -1736,22 +1756,35 @@ function renderIPO(rows){
       </div>`;}).join('')}
   </div>`;
 
-  // Subscription — table
-  const subsBody = `<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse">
-    <thead><tr>${['IPO','Type','Closing Date','QIB (×)','NII (×)','Retail (×)','Total (×)','Updated']
-      .map((h,i)=>`<th style="font-size:10px;font-weight:700;color:#6b6b6b;padding:7px 10px;border-bottom:1px solid var(--bdr);text-align:${i===0?'left':'center'};white-space:nowrap">${h}</th>`).join('')}</tr></thead>
-    <tbody>${subs.map((r,i)=>{
+  // Subscription — card grid
+  const subsBody = `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:8px">
+    ${subs.map((r,i)=>{
       const elId=`si-ipo-subs-${i}`;
       pushSearch('ipo','IPO · Subscription',r[0],'Total subscription '+f(r[6])+'×',elId);
-      return `<tr id="${elId}" style="border-bottom:1px solid rgba(58,45,127,.20)">
-        <td style="padding:8px 10px;font-size:12px;text-align:left"><strong>${f(r[0])}</strong></td>
-        <td style="padding:8px 10px;text-align:center">${tbadge(r[1])}</td>
-        <td style="padding:8px 10px;font-size:12px;color:#6b6b6b;text-align:center">${f(r[2])}</td>
-        ${[3,4,5,6].map(i=>{const v=parseFloat(r[i]);const cl=isNaN(v)?'':v>=10?'color:var(--green);font-weight:700':v>=1?'':'color:var(--red)';return`<td style="padding:8px 10px;font-size:12px;font-family:'Space Grotesk',sans-serif;text-align:center;${cl}">${f(r[i])}</td>`;}).join('')}
-        <td style="padding:8px 10px;font-size:11px;color:#999999;text-align:center">${f(r[7])}</td>
-      </tr>`;
-    }).join('')}</tbody>
-  </table></div>`;
+      const subCell=(label,val)=>{
+        const v=parseFloat(val);
+        const color=isNaN(v)?'#1a1a1a':v>=10?'var(--green)':v>=1?'#1a1a1a':'var(--red)';
+        return `<div>
+          <div style="font-size:9px;color:#6b6b6b;text-transform:uppercase;letter-spacing:.4px">${label}</div>
+          <div style="font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:700;color:${color}">${f(val)}</div>
+        </div>`;
+      };
+      return `<div id="${elId}" style="background:rgba(255,255,255,.55);border:1px solid var(--bdr);border-radius:10px;padding:12px 14px">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:4px">
+          <div style="font-size:12px;font-weight:700;color:#1a1a1a;line-height:1.3">${f(r[0])}</div>
+          ${tbadge(r[1])}
+        </div>
+        <div style="font-size:10px;color:#6b6b6b;margin-bottom:10px">Closes ${f(r[2])}</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;padding-top:8px;border-top:1px solid rgba(58,45,127,.14)">
+          ${subCell('QIB',r[3])}
+          ${subCell('NII',r[4])}
+          ${subCell('Retail',r[5])}
+          ${subCell('Total',r[6])}
+        </div>
+        <div style="font-size:10px;color:#999999;margin-top:10px;padding-top:8px;border-top:1px solid rgba(58,45,127,.14)">Updated ${f(r[7])}</div>
+      </div>`;
+    }).join('')}
+  </div>`;
 
   // Mainboard IPO — Company / IPO Date / IPO Size table
   const mainboardBody = `<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse">
@@ -2794,6 +2827,77 @@ function renderCalculators(){
       </div>
     </div>
 
+    <!-- ═══ CAR OWNERSHIP TRUE COST vs CAB/SIP CALCULATOR ═══ -->
+    ${calcCard('Car "True Cost" vs Cab + SIP Calculator','Total cost of owning a car vs taking cabs and investing the difference',
+      evInp('car-price','Car On-Road Price (₹)','9,00,000')+
+      evInp('car-down','Down Payment (%)','20')+
+      evInp('car-tenure','Loan Tenure (Years)','5')+
+      evInp('car-rate','Loan Interest (% p.a.)','9','0.1')+
+      evInp('car-fuel','Monthly Fuel/Energy (₹)','5,000')+
+      evInp('car-ins','Monthly Insurance (₹)','1,500')+
+      evInp('car-maint','Monthly Maintenance (₹)','1,500')+
+      evInp('car-resale','Resale Value after period (%)','45')+
+      evInp('car-cab','Monthly Cab/Ola-Uber Spend Instead (₹)','8,000')+
+      evInp('car-sipret','Expected SIP Return (% p.a.)','12','0.1')+
+      evInp('car-period','Comparison Period (Years)','5'),
+      resultRow('Car Monthly Outflow (EMI+Fuel+Ins+Maint)','car-outflow')+
+      resultRow('Car True Cost (period, after resale)','car-truecost','var(--red)')+
+      resultRow('Cab Total Spend (period)','car-cabtotal')+
+      resultRow('Monthly Surplus Invested via SIP','car-surplus')+
+      resultRow('SIP Corpus Built from Surplus','car-sipcorpus','var(--green)')+
+      resultRow('Cab+SIP Net Cost (period)','car-cabnet','var(--mc)')+
+      `<div id="car-verdict" style="margin-top:10px;padding:10px 14px;border-radius:10px;font-size:13px;font-weight:700;text-align:center"></div>
+      <p style="font-size:10px;color:#999999;margin-top:8px">India context: cars depreciate fast, plus 10-20% road tax already baked into on-road price, high insurance/fuel/maintenance. Surplus = Car outflow − Cab spend, invested monthly via SIP at your expected return. Simplified model — ignores parking, tolls, resale negotiation, and cab price inflation.</p>`
+    )}
+
+    <!-- ═══ EPF vs VPF vs NPS TIER-1 ALLOCATION CALCULATOR ═══ -->
+    <div id="calc-epf-vpf-nps-allocation-calculator" data-calc-title="EPF vs VPF vs NPS Tier-1 Allocation Calculator" style="background:var(--panel);border:1px solid var(--bdr);border-radius:14px;margin-bottom:14px;overflow:hidden">
+      <div class="calc-head" onclick="toggleCalc('calc-epf-vpf-nps-allocation-calculator')" style="padding:14px 18px;border-bottom:1px solid var(--bdr);cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:10px">
+        <div>
+          <div style="font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:700;color:#1a1a1a">EPF vs VPF vs NPS Tier-1 Allocation Calculator</div>
+          <div style="font-size:10px;color:#6b6b6b;margin-top:1px">Where extra retirement savings should go, based on your tax regime</div>
+        </div>
+        <span id="chev-calc-epf-vpf-nps-allocation-calculator" style="font-size:12px;color:var(--mc);transition:.2s;flex-shrink:0">+</span>
+      </div>
+      <div class="calc-body" data-owner="calc-epf-vpf-nps-allocation-calculator" style="display:none;padding:16px 18px">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          ${evInp('epf-basic','Basic + DA (Monthly, ₹)','50,000')}
+          <div style="margin-bottom:8px">
+            <label style="font-size:9px;font-weight:700;color:#6b6b6b;text-transform:uppercase;letter-spacing:.3px;display:block;margin-bottom:3px">Tax Regime</label>
+            <select id="epf-regime" onchange="calcRun()" style="width:100%;padding:6px 8px;border:1px solid var(--bdr);border-radius:7px;font-size:12px;font-family:'Space Grotesk',sans-serif;color:#1a1a1a;background:#fff">
+              <option value="old">Old Regime</option>
+              <option value="new">New Regime</option>
+            </select>
+          </div>
+          ${evInp('epf-extra','Extra Monthly Savings Capacity (₹)','15,000')}
+          ${evInp('epf-other80c','Other 80C Investments (Annual, ₹, e.g. ELSS/Insurance)','0')}
+        </div>
+        <div style="border-top:1px solid var(--bdr);padding-top:10px;margin-top:6px">
+          ${resultRow('Mandatory EPF (12% of Basic, Monthly)','epf-mandatory')}
+          ${resultRow('Suggested VPF (Monthly)','epf-vpf','var(--mc)')}
+          ${resultRow('Suggested NPS Tier-1 (Monthly)','epf-nps','var(--green)')}
+          ${resultRow('Remaining — Other Instruments (Monthly)','epf-remaining')}
+        </div>
+        <div id="epf-explain" style="margin-top:10px;font-size:11px;color:#6b6b6b;line-height:1.5"></div>
+        <p style="font-size:10px;color:#999999;margin-top:8px">Old Regime: EPF+VPF fill Section 80C (₹1.5L/yr, shared with other 80C investments entered above), then NPS Tier-1 gets the extra ₹50,000/yr under 80CCD(1B). New Regime: neither 80C nor 80CCD(1B) apply, so the split instead favors VPF for its safe ~8%+ guaranteed return up to your surplus. Simplified guidance, not personalized tax advice.</p>
+      </div>
+    </div>
+
+    <!-- ═══ EDUCATION INFLATION & CHILD FUTURE FUND PLANNER ═══ -->
+    ${calcCard('Education Inflation & Child Future Fund Planner','What today\'s course cost will become — and the SIP needed to get there',
+      evInp('edu-cost','Current Cost of Education (₹)','25,00,000')+
+      evInp('edu-years','Years Until Needed','15')+
+      evInp('edu-inflation','Education Inflation (% p.a.)','11','0.1')+
+      evInp('edu-return','Expected Investment Return (% p.a.)','12','0.1')+
+      evInp('edu-existing','Existing Savings for This Goal (₹)','0'),
+      resultRow('Future Cost of Education','edu-futurecost','var(--red)')+
+      resultRow('Future Value of Existing Savings','edu-existingfv')+
+      resultRow('Required Corpus (remaining)','edu-required')+
+      resultRow('Required Monthly SIP','edu-sip','var(--mc)')+
+      resultRow('Total You\u2019ll Invest','edu-invested')+
+      `<p style="font-size:10px;color:#999999;margin-top:8px">Indian education inflation (engineering/medical/MBA) typically runs 10-12% p.a., well above general CPI inflation — so "today's fee" is a poor planning anchor. This projects the real future cost first, then works out the SIP needed to fund it, same approach as any other goal-based SIP.</p>`
+    )}
+
     <p style="margin:4px 0 16px;font-size:10px;color:#999999">
       These calculators use simplified formulas for estimation purposes only and are not tax/investment advice.
       Actual figures may vary based on brokerage, STT, cess, surcharge, and current tax rules.
@@ -3532,6 +3636,124 @@ function calcRun(){
         rvbVerdict.style.background='rgba(47,158,94,.10)'; rvbVerdict.style.color='var(--green)';
       }
     }
+  }
+
+  // Car "True Cost" vs Cab + SIP Calculator
+  const carPrice=gv('car-price'), carDownPct=gv('car-down')/100, carTenure=gv('car-tenure'),
+        carRate=gv('car-rate')/100/12, carFuel=gv('car-fuel'), carIns=gv('car-ins'), carMaint=gv('car-maint'),
+        carResalePct=gv('car-resale')/100, carCab=gv('car-cab'), carSipRet=gv('car-sipret')/100/12, carPeriod=gv('car-period');
+  if(carPrice&&carPeriod){
+    const carDown=carPrice*carDownPct;
+    const loanAmt=carPrice-carDown;
+    const nMonthsLoan=carTenure*12;
+    let carEmi=0;
+    if(loanAmt>0&&carRate>0&&nMonthsLoan>0){
+      carEmi=loanAmt*carRate*Math.pow(1+carRate,nMonthsLoan)/(Math.pow(1+carRate,nMonthsLoan)-1);
+    } else if(loanAmt>0&&nMonthsLoan>0){
+      carEmi=loanAmt/nMonthsLoan;
+    }
+    const periodMonths=carPeriod*12;
+    // EMI only applies while the loan is still running; after loan tenure ends, outflow drops
+    const monthsWithEmi=Math.min(nMonthsLoan,periodMonths);
+    const totalEmiPaid=carEmi*monthsWithEmi;
+    const carOutflowMonthly=carEmi+carFuel+carIns+carMaint; // while loan active — shown as headline figure
+    const totalFuelInsMaint=(carFuel+carIns+carMaint)*periodMonths;
+    const resaleValue=carPrice*carResalePct;
+    const carTrueCost=carDown+totalEmiPaid+totalFuelInsMaint-resaleValue;
+
+    const cabTotal=carCab*periodMonths;
+    const surplusMonthly=Math.max(0, carOutflowMonthly-carCab);
+    let sipCorpus=0;
+    if(surplusMonthly>0&&carSipRet>0){
+      sipCorpus=surplusMonthly*((Math.pow(1+carSipRet,periodMonths)-1)/carSipRet)*(1+carSipRet);
+    } else if(surplusMonthly>0){
+      sipCorpus=surplusMonthly*periodMonths;
+    }
+    const cabNetCost=cabTotal-sipCorpus;
+
+    setTxt('car-outflow', fmtINR(carOutflowMonthly));
+    setTxt('car-truecost', fmtINR(carTrueCost));
+    setTxt('car-cabtotal', fmtINR(cabTotal));
+    setTxt('car-surplus', fmtINR(surplusMonthly));
+    setTxt('car-sipcorpus', fmtINR(sipCorpus));
+    setTxt('car-cabnet', fmtINR(cabNetCost));
+
+    const carVerdict=$('car-verdict');
+    if(carVerdict){
+      const diff=carTrueCost-cabNetCost; // positive = Cab+SIP cheaper
+      if(Math.abs(diff) < Math.max(carTrueCost,Math.abs(cabNetCost))*0.05){
+        carVerdict.textContent='Verdict: Very close — either choice works out similarly over '+carPeriod+' years';
+        carVerdict.style.background='rgba(58,45,127,.10)'; carVerdict.style.color='var(--mc)';
+      } else if(diff>0){
+        carVerdict.textContent='Verdict: Cab + SIP saves '+fmtINR(diff)+' over '+carPeriod+' years';
+        carVerdict.style.background='rgba(47,158,94,.10)'; carVerdict.style.color='var(--green)';
+      } else {
+        carVerdict.textContent='Verdict: Owning the car works out '+fmtINR(-diff)+' cheaper over '+carPeriod+' years';
+        carVerdict.style.background='rgba(58,45,127,.10)'; carVerdict.style.color='var(--mc)';
+      }
+    }
+  }
+
+  // EPF vs VPF vs NPS Tier-1 Allocation Calculator
+  const epfBasic=gv('epf-basic'), epfExtra=gv('epf-extra'), epfOther80c=gv('epf-other80c');
+  const epfRegimeEl=$('epf-regime');
+  if(epfBasic&&epfRegimeEl){
+    const regime=epfRegimeEl.value;
+    const mandatoryEpfMonthly=epfBasic*0.12;
+    const mandatoryEpfAnnual=mandatoryEpfMonthly*12;
+    let vpfMonthly=0, npsMonthly=0, remainingMonthly=epfExtra;
+    const epfExplain=$('epf-explain');
+    let explainText='';
+
+    if(regime==='old'){
+      // Fill remaining 80C room (₹1.5L/yr) with VPF first, after mandatory EPF + other 80C already used
+      const room80cAnnual=Math.max(0, 150000-mandatoryEpfAnnual-epfOther80c);
+      const vpfAnnualSuggested=Math.min(room80cAnnual, epfExtra*12);
+      vpfMonthly=vpfAnnualSuggested/12;
+      remainingMonthly=Math.max(0, epfExtra-vpfMonthly);
+      // Then NPS Tier-1 gets the extra ₹50,000/yr under 80CCD(1B)
+      const npsAnnualSuggested=Math.min(50000, remainingMonthly*12);
+      npsMonthly=npsAnnualSuggested/12;
+      remainingMonthly=Math.max(0, remainingMonthly-npsMonthly);
+      explainText='Old Regime: 80C room after mandatory EPF'+(epfOther80c?' and other 80C investments':'')+
+        ' is ~'+fmtINR(room80cAnnual)+'/yr — VPF suggested to fill that first, then NPS Tier-1 up to the extra ₹50,000/yr under 80CCD(1B). Anything beyond that has no further tax benefit here.';
+    } else {
+      // New Regime: no 80C/80CCD(1B) benefit. Suggest VPF up to full surplus for its safe guaranteed
+      // return (~8%+), since there's no tax reason to prefer NPS-employee-contribution here.
+      vpfMonthly=epfExtra;
+      npsMonthly=0;
+      remainingMonthly=0;
+      explainText='New Regime: neither Section 80C nor 80CCD(1B) apply, so there\u2019s no tax reason to split between VPF and NPS here. Full surplus suggested into VPF for its safe, government-backed return; consider NPS only if you specifically want its equity exposure or annuity structure, not for tax savings.';
+    }
+
+    setTxt('epf-mandatory', fmtINR(mandatoryEpfMonthly));
+    setTxt('epf-vpf', fmtINR(vpfMonthly));
+    setTxt('epf-nps', fmtINR(npsMonthly));
+    setTxt('epf-remaining', fmtINR(remainingMonthly));
+    if(epfExplain) epfExplain.textContent=explainText;
+  }
+
+  // Education Inflation & Child Future Fund Planner
+  const eduCost=gv('edu-cost'), eduYears=gv('edu-years'), eduInfl=gv('edu-inflation')/100,
+        eduRet=gv('edu-return')/100, eduExisting=gv('edu-existing');
+  if(eduCost&&eduYears){
+    const futureCost=eduCost*Math.pow(1+eduInfl,eduYears);
+    const existingFV=eduExisting*Math.pow(1+eduRet,eduYears);
+    const required=Math.max(0, futureCost-existingFV);
+    const monthlyRet=eduRet/12, months=eduYears*12;
+    let requiredSip=0;
+    if(months>0&&monthlyRet>0){
+      requiredSip=required/(((Math.pow(1+monthlyRet,months)-1)/monthlyRet)*(1+monthlyRet));
+    } else if(months>0){
+      requiredSip=required/months;
+    }
+    const totalInvested=requiredSip*months;
+
+    setTxt('edu-futurecost', fmtINR(futureCost));
+    setTxt('edu-existingfv', fmtINR(existingFV));
+    setTxt('edu-required', fmtINR(required));
+    setTxt('edu-sip', fmtINR(requiredSip));
+    setTxt('edu-invested', fmtINR(totalInvested));
   }
 }
 
