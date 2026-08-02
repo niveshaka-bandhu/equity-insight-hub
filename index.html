@@ -44,8 +44,8 @@ nav{display:flex;gap:2px;flex:1;flex-wrap:wrap}
 .up{color:var(--green)}.dn{color:var(--red)}
 
 /* RSS NEWS TICKER */
-.news-ticker{display:flex;align-items:stretch;background:rgba(255,255,255,0.55);backdrop-filter:blur(10px);
-  border-bottom:1px solid var(--bdr);height:32px;overflow:hidden}
+.news-ticker{display:flex;align-items:stretch;background:rgba(58,45,127,.05);
+  border:1px solid var(--bdr);border-radius:9px;height:34px;overflow:hidden}
 .nt-label{flex-shrink:0;display:flex;align-items:center;padding:0 14px;font-size:11px;font-weight:800;
   color:#fff;background:var(--mc);letter-spacing:.5px;white-space:nowrap}
 .nt-track{flex:1;overflow:hidden;position:relative;display:flex;align-items:center}
@@ -280,15 +280,25 @@ footer a{color:var(--mc)}
 .bottom-nav{display:none}
 @media(max-width:768px){
   header nav{display:none} /* top nav replaced by bottom bar on mobile, avoids duplicate navigation */
-  body{padding-bottom:58px} /* room for the fixed bottom bar */
+  body{padding-bottom:64px} /* room for the fixed bottom bar */
   .bottom-nav{
-    display:flex;position:fixed;bottom:0;left:0;right:0;z-index:500;
+    display:flex;align-items:flex-end;position:fixed;bottom:0;left:0;right:0;z-index:500;
     background:rgba(247,247,252,0.96);backdrop-filter:blur(18px);
     border-top:1px solid var(--bdr);padding:6px 4px calc(6px + env(safe-area-inset-bottom));
   }
-  .bnb{flex:1;border:none;background:transparent;color:#6b6b6b;font-size:10.5px;font-weight:600;
-    padding:6px 2px;cursor:pointer;font-family:'Inter',sans-serif;border-radius:8px}
+  .bnb{flex:1;border:none;background:transparent;color:#6b6b6b;font-size:9.5px;font-weight:600;
+    padding:6px 2px;cursor:pointer;font-family:'Inter',sans-serif;border-radius:8px;
+    display:flex;flex-direction:column;align-items:center;gap:2px}
+  .bnb-ic{font-size:16px;line-height:1}
   .bnb-on{color:var(--mc);font-weight:700;background:rgba(58,45,127,.08)}
+  .bnb-center{
+    flex:0 0 auto;width:52px;height:52px;margin:0 4px;position:relative;top:-16px;
+    border-radius:50%;background:var(--mc);border:3px solid #fff;
+    box-shadow:0 4px 14px rgba(58,45,127,.35);display:flex;align-items:center;justify-content:center;
+    padding:0;cursor:pointer;color:#fff;font-size:20px
+  }
+  .bnb-center img{width:68%;height:68%;object-fit:contain;border-radius:50%}
+  .bnb-center.bnb-on{box-shadow:0 4px 18px rgba(58,45,127,.55)}
 }
 .more-sheet-overlay{display:none;position:fixed;inset:0;z-index:600;background:rgba(58,45,127,.35);
   backdrop-filter:blur(3px)}
@@ -413,6 +423,11 @@ footer a{color:var(--mc)}
            style="height:48px;width:auto;object-fit:contain"
            onerror="this.style.display='none'"/>
     </div>
+    <div class="news-ticker" style="flex:1;min-width:0">
+      <div class="nt-track">
+        <div class="nt-strip" id="news-ticker-strip"><a class="nt-item"><span class="nt-title">Loading headlines…</span></a></div>
+      </div>
+    </div>
     <nav>
       <button class="nb on"  onclick="showTab('dashboard',this)">Dashboard</button>
       <button class="nb"     onclick="showTab('global',this)">Global</button>
@@ -427,37 +442,32 @@ footer a{color:var(--mc)}
   </div>
 </header>
 
-<!-- BOTTOM TAB BAR — mobile only. 4 primary tabs + More (rest live in the More sheet) so it
-     doesn't get cramped with all 9 sections crammed into one bar. -->
+<!-- BOTTOM TAB BAR — mobile only. Dashboard sits in the raised center slot (your logo),
+     Global/Currency/IPO get dedicated tabs either side, everything else lives in More. -->
 <div id="bottom-nav" class="bottom-nav">
-  <button class="bnb bnb-on" data-tab="dashboard" onclick="bottomNavGo('dashboard',this)">Dashboard</button>
-  <button class="bnb" data-tab="market" onclick="bottomNavGo('market',this)">Movers</button>
-  <button class="bnb" data-tab="ipo" onclick="bottomNavGo('ipo',this)">IPO</button>
-  <button class="bnb" data-tab="calculators" onclick="bottomNavGo('calculators',this)">Calc</button>
-  <button class="bnb" onclick="openMoreSheet()">More</button>
+  <button class="bnb" data-tab="global" onclick="bottomNavGo('global',this)"><span class="bnb-ic">🌍</span><span>Global</span></button>
+  <button class="bnb" data-tab="currency" onclick="bottomNavGo('currency',this)"><span class="bnb-ic">💱</span><span>Currency</span></button>
+  <button class="bnb-center" data-tab="dashboard" onclick="bottomNavGo('dashboard',this)">
+    <img src="logo-icon.png" alt="Dashboard" onerror="this.style.display='none';this.parentElement.textContent='🏠';"/>
+  </button>
+  <button class="bnb" data-tab="ipo" onclick="bottomNavGo('ipo',this)"><span class="bnb-ic">📈</span><span>IPO</span></button>
+  <button class="bnb" onclick="openMoreSheet()"><span class="bnb-ic">☰</span><span>More</span></button>
 </div>
 
 <div id="more-sheet-overlay" class="more-sheet-overlay" onclick="closeMoreSheet(event)">
   <div class="more-sheet">
     <div class="more-sheet-handle"></div>
-    <button class="more-sheet-item" data-tab="global" onclick="bottomNavGo('global',this)">Global Indices</button>
+    <button class="more-sheet-item" data-tab="market" onclick="bottomNavGo('market',this)">Movers</button>
     <button class="more-sheet-item" data-tab="futures" onclick="bottomNavGo('futures',this)">Futures</button>
     <button class="more-sheet-item" data-tab="indian" onclick="bottomNavGo('indian',this)">Indian Indices</button>
-    <button class="more-sheet-item" data-tab="currency" onclick="bottomNavGo('currency',this)">Currencies</button>
     <button class="more-sheet-item" data-tab="corporate" onclick="bottomNavGo('corporate',this)">Corporate Actions</button>
+    <button class="more-sheet-item" data-tab="calculators" onclick="bottomNavGo('calculators',this)">Calculators</button>
     <button class="more-sheet-cancel" onclick="closeMoreSheet()">Cancel</button>
   </div>
 </div>
 
 <!-- Pull-to-refresh indicator (mobile only) -->
 <div id="ptr-indicator" class="ptr-indicator">Pull to refresh</div>
-
-<div class="news-ticker">
-  <span class="nt-label">MARKET</span>
-  <div class="nt-track">
-    <div class="nt-strip" id="news-ticker-strip"><a class="nt-item"><span class="nt-title">Loading headlines…</span></a></div>
-  </div>
-</div>
 
 <div class="wrap">
   <div class="sec on" id="s-dashboard">
@@ -1688,7 +1698,6 @@ function renderIPO(rows){
           // currency amount (₹ / Cr / Lakh) — more robust than assuming a fixed column, since this
           // kept coming up blank despite the sheet data looking correct in exports.
           const found = r.find(c=>looksLikeMoney(c));
-          console.log('[Mainboard IPO] row:', r, '-> matched size cell:', found);
           return {company:r[0], ipoDate:r[1]||'—', ipoSize:found||'—'};
         })
     : [];
@@ -3815,8 +3824,8 @@ function calcRun(){
 function showTab(key,btn){
   document.querySelectorAll('.sec').forEach(s=>s.classList.remove('on'));
   document.querySelectorAll('.nb').forEach(b=>b.classList.remove('on'));
-  document.querySelectorAll('.bnb').forEach(b=>b.classList.remove('bnb-on'));
-  const bnbBtn=document.querySelector('.bnb[data-tab="'+key+'"]');
+  document.querySelectorAll('.bnb, .bnb-center').forEach(b=>b.classList.remove('bnb-on'));
+  const bnbBtn=document.querySelector('[data-tab="'+key+'"].bnb, [data-tab="'+key+'"].bnb-center');
   if(bnbBtn) bnbBtn.classList.add('bnb-on');
   const target=$('s-'+key);
   target.classList.add('on'); btn.classList.add('on');
