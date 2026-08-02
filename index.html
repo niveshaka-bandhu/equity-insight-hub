@@ -1626,15 +1626,12 @@ function renderIPO(rows){
         .filter(r => r[0] && r[0].trim() && clean(r[0])!=='company' && clean(r[0])!=='ipo name' && looksLikeDateRange(r[1]))
         .filter(r => { const key=clean(r[0]); if(seenMB.has(key)) return false; seenMB.add(key); return true; })
         .map(r => {
-          // IPO Size: prefer col C, but if that cell doesn't actually look like a currency amount
-          // (₹ / Cr / Lakh), scan the rest of the row for whichever cell does — more robust than
-          // assuming it's always in exactly the same column.
-          let ipoSize = r[2];
-          if(!looksLikeMoney(ipoSize)){
-            const found = r.slice(2).find(c=>looksLikeMoney(c));
-            if(found) ipoSize = found;
-          }
-          return {company:r[0], ipoDate:r[1]||'—', ipoSize:ipoSize||'—'};
+          // IPO Size: scan the WHOLE row (not just col C onward) for whichever cell looks like a
+          // currency amount (₹ / Cr / Lakh) — more robust than assuming a fixed column, since this
+          // kept coming up blank despite the sheet data looking correct in exports.
+          const found = r.find(c=>looksLikeMoney(c));
+          console.log('[Mainboard IPO] row:', r, '-> matched size cell:', found);
+          return {company:r[0], ipoDate:r[1]||'—', ipoSize:found||'—'};
         })
     : [];
 
