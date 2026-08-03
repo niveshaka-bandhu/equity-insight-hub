@@ -1687,7 +1687,9 @@ function renderIPO(rows){
   // keeping only rows whose date column actually looks like a date range — this naturally skips
   // stray sub-header rows ("Company"/"Apply") and Expert's Advice rating rows that a fixed slice
   // would otherwise have caught.
-  const looksLikeMoney = v => /₹|Cr\.?\b|Lakh/i.test(String(v||''));
+  // IPO Size column in the sheet is a plain number (no ₹/Cr text) — the site adds the "₹...Cr."
+  // formatting itself, which sidesteps gviz's unreliable handling of custom currency number formats.
+  const looksLikePlainNumber = v => { const s=String(v||'').trim(); return s!==''&&/^[\d,]+(\.\d+)?$/.test(s); };
   // Only scan for Mainboard IPO rows if we have a reliable anchor (GMP's header was actually found).
   // Previously this defaulted to scanning from row 0 whenever GMP detection failed for any reason,
   // which meant Listed IPO rows could get pulled into this table too — the exact "one table fails,
@@ -1700,30 +1702,15 @@ function renderIPO(rows){
         .filter(r => r[0] && r[0].trim() && clean(r[0])!=='company' && clean(r[0])!=='ipo name' && looksLikeDateRange(r[1]))
         .filter(r => { const key=clean(r[0]); if(seenMB.has(key)) return false; seenMB.add(key); return true; })
         .map(r => {
-          // IPO Size: first try to find a cell that already looks like currency text (₹ / Cr / Lakh).
-          // If that fails everywhere, fall back to the next plain unformatted NUMBER after the date —
-          // Google's gviz API can sometimes drop a cell's custom number format (e.g. "₹"0.00" Cr.")
-          // and only send the raw underlying number, which the ₹/Cr text search would never match.
-          let found = r.find(c=>looksLikeMoney(c));
-          let ipoSizeDisplay;
-          if(found){
-            ipoSizeDisplay = /\[\s*\.?\s*\]/.test(found) ? 'Not announced yet' : found;
-          } else {
-            const rawNum = r.slice(2).find(c => c && /^[\d,]+(\.\d+)?$/.test(String(c).trim()));
-            if(rawNum){
-              const num = parseFloat(String(rawNum).replace(/,/g,''));
-              ipoSizeDisplay = isNaN(num) ? '—' : '₹'+num.toLocaleString('en-IN',{maximumFractionDigits:2})+' Cr.';
-            } else {
-              ipoSizeDisplay = '—';
-            }
+          const rawNum = r.slice(2).find(c => looksLikePlainNumber(c));
+          let ipoSizeDisplay = '—';
+          if(rawNum){
+            const num = parseFloat(String(rawNum).replace(/,/g,''));
+            if(!isNaN(num)) ipoSizeDisplay = '₹'+num.toLocaleString('en-IN',{maximumFractionDigits:2})+' Cr.';
           }
           return {company:r[0], ipoDate:r[1]||'—', ipoSize: ipoSizeDisplay};
         })
     : [];
-  if(mainboardIPO.length) console.log('[Mainboard IPO diagnostic] col A/B/C for each row:',
-    rows.slice(mbSearchStart, mbSearchEnd)
-      .filter(r => r[0] && r[0].trim() && clean(r[0])!=='company' && looksLikeDateRange(r[1]))
-      .map(r => ({A:r[0], B:r[1], C:r[2], C_type:typeof r[2]})));
 
   const tbadge = t => `<span class="bd ${/main/i.test(st(t))?'bd-a':'bd-g'}">${st(t)||'—'}</span>`;
 
@@ -1875,7 +1862,7 @@ function renderIPO(rows){
 
   // Mainboard IPO — Company / IPO Date / IPO Size table
   const mainboardBody = `<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse">
-    <thead><tr>${['Company','IPO Date','IPO Size']
+    <thead><tr>${['Company','IPO Date','IPO Size (₹ Cr.)']
       .map((h,i)=>`<th style="font-size:10px;font-weight:700;color:#6b6b6b;padding:7px 10px;border-bottom:1px solid var(--bdr);text-align:${i===0?'left':'center'};white-space:nowrap">${h}</th>`).join('')}</tr></thead>
     <tbody>${mainboardIPO.map((r,i)=>{
       const elId=`si-ipo-mainboard-${i}`;
