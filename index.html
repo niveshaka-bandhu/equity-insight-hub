@@ -1704,7 +1704,10 @@ function renderIPO(rows){
           // currency amount (₹ / Cr / Lakh) — more robust than assuming a fixed column, since this
           // kept coming up blank despite the sheet data looking correct in exports.
           const found = r.find(c=>looksLikeMoney(c));
-          return {company:r[0], ipoDate:r[1]||'—', ipoSize:found||'—'};
+          // Some rows have a formula that hasn't resolved yet (e.g. "₹[.] Cr." when the actual
+          // IPO size isn't announced) — show that clearly instead of the broken placeholder text.
+          const isPlaceholder = found && /\[\s*\.?\s*\]/.test(found);
+          return {company:r[0], ipoDate:r[1]||'—', ipoSize: isPlaceholder ? 'Not announced yet' : (found||'—')};
         })
     : [];
 
