@@ -1700,16 +1700,30 @@ function renderIPO(rows){
         .filter(r => r[0] && r[0].trim() && clean(r[0])!=='company' && clean(r[0])!=='ipo name' && looksLikeDateRange(r[1]))
         .filter(r => { const key=clean(r[0]); if(seenMB.has(key)) return false; seenMB.add(key); return true; })
         .map(r => {
-          // IPO Size: scan the WHOLE row (not just col C onward) for whichever cell looks like a
-          // currency amount (₹ / Cr / Lakh) — more robust than assuming a fixed column, since this
-          // kept coming up blank despite the sheet data looking correct in exports.
-          const found = r.find(c=>looksLikeMoney(c));
-          // Some rows have a formula that hasn't resolved yet (e.g. "₹[.] Cr." when the actual
-          // IPO size isn't announced) — show that clearly instead of the broken placeholder text.
-          const isPlaceholder = found && /\[\s*\.?\s*\]/.test(found);
-          return {company:r[0], ipoDate:r[1]||'—', ipoSize: isPlaceholder ? 'Not announced yet' : (found||'—')};
+          // IPO Size: first try to find a cell that already looks like currency text (₹ / Cr / Lakh).
+          // If that fails everywhere, fall back to the next plain unformatted NUMBER after the date —
+          // Google's gviz API can sometimes drop a cell's custom number format (e.g. "₹"0.00" Cr.")
+          // and only send the raw underlying number, which the ₹/Cr text search would never match.
+          let found = r.find(c=>looksLikeMoney(c));
+          let ipoSizeDisplay;
+          if(found){
+            ipoSizeDisplay = /\[\s*\.?\s*\]/.test(found) ? 'Not announced yet' : found;
+          } else {
+            const rawNum = r.slice(2).find(c => c && /^[\d,]+(\.\d+)?$/.test(String(c).trim()));
+            if(rawNum){
+              const num = parseFloat(String(rawNum).replace(/,/g,''));
+              ipoSizeDisplay = isNaN(num) ? '—' : '₹'+num.toLocaleString('en-IN',{maximumFractionDigits:2})+' Cr.';
+            } else {
+              ipoSizeDisplay = '—';
+            }
+          }
+          return {company:r[0], ipoDate:r[1]||'—', ipoSize: ipoSizeDisplay};
         })
     : [];
+  if(mainboardIPO.length) console.log('[Mainboard IPO diagnostic] col A/B/C for each row:',
+    rows.slice(mbSearchStart, mbSearchEnd)
+      .filter(r => r[0] && r[0].trim() && clean(r[0])!=='company' && looksLikeDateRange(r[1]))
+      .map(r => ({A:r[0], B:r[1], C:r[2], C_type:typeof r[2]})));
 
   const tbadge = t => `<span class="bd ${/main/i.test(st(t))?'bd-a':'bd-g'}">${st(t)||'—'}</span>`;
 
