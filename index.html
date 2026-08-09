@@ -280,6 +280,7 @@ footer a{color:var(--mc)}
 .bottom-nav{display:none}
 @media(max-width:768px){
   header nav{display:none} /* top nav replaced by bottom bar on mobile, avoids duplicate navigation */
+  header .logo{display:none} /* logo already shown in the bottom nav's center button on mobile */
   body{padding-bottom:64px} /* room for the fixed bottom bar */
   .bottom-nav{
     display:flex;align-items:flex-end;position:fixed;bottom:0;left:0;right:0;z-index:500;
@@ -1675,7 +1676,12 @@ function renderIPO(rows){
   const looksLikeDateRange = v => /\d{1,2}\s*[-–]\s*\d{1,2}\s*[A-Za-z]{3,}/.test(String(v||'').trim()) || /^\d{1,2}\s+[A-Za-z]{3,}/.test(String(v||'').trim());
 
   const isNotSME = r => !/sme/i.test(r[1]||'');
-  const listed = rows.slice(0, gmpStart > 0 ? gmpStart : 22)
+  // Find the actual header row instead of assuming it's always at index 0 — a fixed assumption
+  // here is exactly what caused the first real data row to go missing whenever the sheet's
+  // structure shifted even slightly (e.g. an extra row inserted above the table).
+  const listedHeaderIdx = rows.findIndex(r => clean(r[0]).toLowerCase()==='company name');
+  const listedStart = listedHeaderIdx >= 0 ? listedHeaderIdx+1 : 1;
+  const listed = rows.slice(listedStart, gmpStart > 0 ? gmpStart : 22)
                      .filter(r => r[0]&&r[0].trim()&&r[0]!=='Company Name')
                      .filter(isNotSME);
   const gmpEnd = rows.findIndex((r,i) => i > gmpStart && clean(r[0])==='company' && String(r[1]||'').toLowerCase().includes('issue date'));
@@ -2158,7 +2164,7 @@ async function loadAll(){
       const el=document.getElementById('equity-status');
       if(el){ el.textContent='Couldn\'t load ticker list — check the Equity sheet gid/sharing. See console for details.'; el.style.color='var(--red)'; }
     }),
-    fetchSheet2(CORP_GIDS.today).then(d=>{DATA['corp_today']=d;}).catch(e=>console.warn('corp_today',e.message)),
+    fetchFreshData(fetchSheet2, CORP_GIDS.today).then(d=>{DATA['corp_today']=d;}).catch(e=>console.warn('corp_today',e.message)),
     // Fetch market data for Dashboard widget but don't mark as LOADED so Movers tab still loads+renders properly
     fetchFreshData(fetchSheet, GIDS.market).then(d=>{
       DATA.market=d;
@@ -2193,7 +2199,7 @@ async function loadTab(key){
       stampUpdated('calculators');
     } else if(key==='corporate'){
       await Promise.allSettled(Object.entries(CORP_GIDS).map(async([k,gid])=>{
-        try{DATA['corp_'+k]=await fetchSheet2(gid);}catch(e){console.warn('corp_'+k,e.message);}
+        try{DATA['corp_'+k]=await fetchFreshData(fetchSheet2, gid);}catch(e){console.warn('corp_'+k,e.message);}
       }));
       renderCorporate();
       stampUpdated('corporate');
@@ -4305,20 +4311,14 @@ const NIFTY_RANGE_CONFIG={
 };
 
 /* Pure fetch — no DOM access, safe to call before the chart's HTML exists.
-   Races two CORS proxies so a slow/down one doesn't block the whole thing. */
+   Races two CORS proxies so a slow/down one doesn't block the whole thing.
+   No cross-reload caching here on purpose: sessionStorage caching was previously used to
+   speed up repeat visits, but that meant a page refresh could show data up to 2 minutes stale
+   instead of genuinely fresh — every real page load should fetch live. The in-memory
+   NIFTY_DATA_CACHE (see startNiftyFetch below) still avoids redundant fetches for the same
+   page session (e.g. switching between chart ranges and back). */
 async function fetchNiftyRaw(rangeKey){
   const cfg=NIFTY_RANGE_CONFIG[rangeKey]||NIFTY_RANGE_CONFIG['1d'];
-  const cacheKey=NIFTY_CACHE_KEY_PREFIX+rangeKey;
-  // Serve from session cache if fresh enough (instant on repeat visits within the session)
-  try{
-    const cached=sessionStorage.getItem(cacheKey);
-    if(cached){
-      const parsed=JSON.parse(cached);
-      if(Date.now()-parsed.ts < NIFTY_CACHE_TTL){
-        return {points:parsed.points.map(p=>({time:new Date(p.time),price:p.price})), prevClose:parsed.prevClose};
-      }
-    }
-  }catch(e){}
 
   const yahooUrl='https://query1.finance.yahoo.com/v8/finance/chart/%5ENSEI?range='+cfg.range+'&interval='+cfg.interval;
   const proxies=[
@@ -4344,13 +4344,6 @@ async function fetchNiftyRaw(rangeKey){
   }
   if(!points.length) throw new Error('No valid data points in response');
   const prevClose=meta.previousClose ?? meta.chartPreviousClose ?? points[0].price;
-
-  try{
-    sessionStorage.setItem(cacheKey, JSON.stringify({
-      ts:Date.now(), prevClose,
-      points:points.map(p=>({time:p.time.getTime(),price:p.price}))
-    }));
-  }catch(e){}
 
   return {points, prevClose};
 }
