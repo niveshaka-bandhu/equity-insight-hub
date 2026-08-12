@@ -348,42 +348,6 @@ footer a{color:var(--mc)}
 </head>
 <body>
 
-<div id="disclaimer-modal" style="position:fixed;inset:0;z-index:20000;background:rgba(58,45,127,.45);
-  backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center;padding:20px">
-  <div style="background:#fff;border-radius:16px;max-width:400px;width:100%;padding:26px 24px;
-    box-shadow:0 20px 60px rgba(58,45,127,.3);text-align:center">
-    
-    <div style="font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:700;color:#1a1a1a;margin-bottom:10px">Before you continue</div>
-    <div style="font-size:13px;color:#444444;line-height:1.6;margin-bottom:22px">
-      For investing purposes only. Not for active trading.<br/>
-      Data is for educational use and may not be real-time.
-    </div>
-    <button onclick="dismissDisclaimer()" style="width:100%;padding:12px;border:none;border-radius:10px;
-      background:var(--mc);color:#fff;font-weight:700;font-size:14px;cursor:pointer;font-family:'Inter',sans-serif">
-      I Understand, Continue
-    </button>
-  </div>
-</div>
-<script>
-  // Shows 5 seconds after page load (lets people see the app first) — but only once per session,
-  // so it doesn't interrupt every reload/tab click within the same visit.
-  try{
-    if(!sessionStorage.getItem('nb_disclaimer_seen')){
-      setTimeout(()=>{
-        if(!sessionStorage.getItem('nb_disclaimer_seen')){
-          const m=document.getElementById('disclaimer-modal');
-          if(m) m.style.display='flex';
-        }
-      }, 5000);
-    }
-  }catch(e){}
-  function dismissDisclaimer(){
-    const modal=document.getElementById('disclaimer-modal');
-    if(modal) modal.style.display='none';
-    try{ sessionStorage.setItem('nb_disclaimer_seen','1'); }catch(e){}
-  }
-</script>
-
 <div id="review-modal" style="position:fixed;inset:0;z-index:19999;background:rgba(58,45,127,.4);
   backdrop-filter:blur(5px);display:none;align-items:center;justify-content:center;padding:20px">
   <div style="background:#fff;border-radius:16px;max-width:380px;width:100%;padding:24px;box-shadow:0 20px 60px rgba(58,45,127,.3)">
@@ -458,6 +422,7 @@ footer a{color:var(--mc)}
       <button class="nb"     onclick="showTab('futures',this)">Futures</button>
       <button class="nb"     onclick="showTab('indian',this)">Indian</button>
       <button class="nb"     onclick="showTab('market',this)">Movers</button>
+      <button class="nb"     onclick="showTab('etf',this)">ETF</button>
       <button class="nb"     onclick="showTab('ipo',this)">IPO</button>
       <button class="nb"     onclick="showTab('currency',this)">Currencies</button>
       <button class="nb"     onclick="showTab('corporate',this)">Corporate Actions</button>
@@ -485,6 +450,7 @@ footer a{color:var(--mc)}
   <div class="more-sheet">
     <div class="more-sheet-title">More</div>
     <button class="more-sheet-item" data-tab="market" onclick="bottomNavGo('market',this)">Movers</button>
+    <button class="more-sheet-item" data-tab="etf" onclick="bottomNavGo('etf',this)">ETF</button>
     <button class="more-sheet-item" data-tab="futures" onclick="bottomNavGo('futures',this)">Futures</button>
     <button class="more-sheet-item" data-tab="indian" onclick="bottomNavGo('indian',this)">Indian Indices</button>
     <button class="more-sheet-item" data-tab="corporate" onclick="bottomNavGo('corporate',this)">Corporate Actions</button>
@@ -546,6 +512,12 @@ footer a{color:var(--mc)}
       <div class="skel-row"><div class="skel skel-avatar"></div><div class="skel-lines"><div class="skel skel-line-a"></div><div class="skel skel-line-b"></div></div><div class="skel skel-num"></div></div>
     </div>
   </div>
+  <div class="sec"    id="s-etf">
+    <div class="skel-tcw"><div class="skel-tch"><div class="skel"></div></div>
+      <div class="skel-row"><div class="skel skel-avatar"></div><div class="skel-lines"><div class="skel skel-line-a"></div><div class="skel skel-line-b"></div></div><div class="skel skel-num"></div></div>
+      <div class="skel-row"><div class="skel skel-avatar"></div><div class="skel-lines"><div class="skel skel-line-a"></div><div class="skel skel-line-b"></div></div><div class="skel skel-num"></div></div>
+    </div>
+  </div>
   <div class="sec"    id="s-ipo">
     <div class="skel-tcw"><div class="skel-tch"><div class="skel"></div></div>
       <div class="skel-row"><div class="skel skel-avatar"></div><div class="skel-lines"><div class="skel skel-line-a"></div><div class="skel skel-line-b"></div></div><div class="skel skel-num"></div></div>
@@ -580,7 +552,7 @@ footer a{color:var(--mc)}
 
 <script>
 const SID='1xoUJqge0b4SQmZSRLZyoBBcokXrUrFVt8fBFoef28NQ';
-const GIDS={dashboard:236316251,news:194974677,global:572014590,futures:2063758158,indian:139113774,market:1259430707,ipo:536891537,ipo2:536891537,currency:1847303228,equity:2048547148};
+const GIDS={dashboard:236316251,news:194974677,global:572014590,futures:2063758158,indian:139113774,market:1259430707,ipo:536891537,ipo2:536891537,currency:1847303228,equity:2048547148,etf:613934290};
 const SID2='1_7_7lctIPNdHjUd3wNp0hu6xMjqhG3Tw0fNJO_fxWJg';
 const CORP_GIDS={today:203302293,dividends:1718274952,bonus:1235071159,splits:1616300885};
 
@@ -1898,11 +1870,11 @@ function renderIPO(rows){
   clearSearchTab('ipo');
   $('s-ipo').innerHTML=`
     <div class="stitle">IPO Corner</div>
-    ${panel('','Recently Listed IPOs','Performance since listing date · Mainboard only',listed.length,'#1a7a4a',listedBody)}
+    ${panel('','Mainboard IPO','Upcoming open & close dates',mainboardIPO.length,'#555555',mainboardBody)}
     ${panel('','Grey Market Premium','Unofficial pre-listing market prices',gmp.length,'#0d47a1',gmpBody)}
     ${panel('','Expert\'s Advice','Analyst recommendations',experts.length,'#e07b00',expertsBody)}
     ${panel('','Subscription Status','Live subscription data · Mainboard only',subs.length,'#6a1b9a',subsBody)}
-    ${panel('','Mainboard IPO','Upcoming open & close dates',mainboardIPO.length,'#555555',mainboardBody)}
+    ${panel('','Recently Listed IPOs','Performance since listing date · Mainboard only',listed.length,'#1a7a4a',listedBody)}
   `;
 }
 
@@ -1910,6 +1882,100 @@ function renderIPO(rows){
    CURRENCY — same as before, working correctly
    Col: [1]=Currency [2]=RateINR [3]=Code | [5]=Symbol [6]=Last [7]=Chg [8]=Chg% [9]=Close [10]=High [11]=Low
 ══════════════════════════════════════════════ */
+/* ETF Screener — Company / Price / 1D Chg / NAV Diff / Volume / 1Y Return / Expense Ratio / AUM / Tracking Error.
+   REITs/InvITs deliberately excluded (separate columns further right in the same sheet, not needed here). */
+let ETF_DATA=[];
+let ETF_SORT={field:'name', dir:'asc'};
+function renderETF(rows){
+  // Header row detected dynamically (not a fixed index) — same reasoning as elsewhere in this
+  // file: a fixed row/column assumption breaks the moment the sheet shifts even slightly.
+  const headerIdx = rows.findIndex(r => clean(r[2]).toLowerCase()==='company');
+  const dataStart = headerIdx >= 0 ? headerIdx+1 : 2;
+  const parsed=[];
+  for(let i=dataStart;i<rows.length;i++){
+    const r=rows[i];
+    const name=r[2];
+    if(!name || !String(name).trim()) break; // ETF list ends at the first blank Company cell
+    parsed.push({
+      name: f(name),
+      price: f(r[4]),
+      chg1d: f(r[5]),
+      navDiff: f(r[6]),
+      volume: f(r[7]),
+      ret1y: f(r[8]),
+      expRatio: f(r[9]),
+      aum: f(r[10]),
+      trackErr: f(r[11])
+    });
+  }
+  ETF_DATA=parsed;
+  sortETF(); // initial render, using current/default sort
+}
+function sortETF(newField){
+  if(newField){
+    if(ETF_SORT.field===newField){ ETF_SORT.dir = ETF_SORT.dir==='asc' ? 'desc' : 'asc'; }
+    else { ETF_SORT.field=newField; ETF_SORT.dir='asc'; }
+  }
+  const numField = ['price','chg1d','navDiff','volume','ret1y','expRatio','aum','trackErr'].includes(ETF_SORT.field);
+  const sorted=[...ETF_DATA].sort((a,b)=>{
+    let av=a[ETF_SORT.field], bv=b[ETF_SORT.field];
+    if(numField){
+      av=parseFloat(String(av).replace(/[^\d.-]/g,''))||0;
+      bv=parseFloat(String(bv).replace(/[^\d.-]/g,''))||0;
+    } else {
+      av=String(av).toLowerCase(); bv=String(bv).toLowerCase();
+    }
+    if(av<bv) return ETF_SORT.dir==='asc'?-1:1;
+    if(av>bv) return ETF_SORT.dir==='asc'?1:-1;
+    return 0;
+  });
+
+  const sortLabels={name:'Name',price:'Price',chg1d:'1D Change',navDiff:'NAV Diff',volume:'Volume',ret1y:'1Y Return',expRatio:'Expense Ratio',aum:'AUM',trackErr:'Tracking Error'};
+  const arrow = ETF_SORT.dir==='asc' ? '▲' : '▼';
+
+  const rowsHtml = sorted.map((e,i)=>{
+    const posChg = !String(e.chg1d).trim().startsWith('-');
+    const posRet = !String(e.ret1y).trim().startsWith('-');
+    return `<tr id="si-etf-${i}" style="border-bottom:1px solid rgba(58,45,127,.20)">
+      <td style="padding:8px 10px;font-size:12px;text-align:left"><strong>${e.name}</strong></td>
+      <td style="padding:8px 10px;font-size:12px;text-align:center;font-family:'Space Grotesk',sans-serif">${e.price}</td>
+      <td style="padding:8px 10px;font-size:12px;text-align:center;font-weight:700;color:${posChg?'var(--green)':'var(--red)'}">${e.chg1d}</td>
+      <td style="padding:8px 10px;font-size:12px;text-align:center">${e.navDiff}</td>
+      <td style="padding:8px 10px;font-size:12px;text-align:center;font-family:'Space Grotesk',sans-serif">${e.volume}</td>
+      <td style="padding:8px 10px;font-size:12px;text-align:center;font-weight:700;color:${posRet?'var(--green)':'var(--red)'}">${e.ret1y}</td>
+      <td style="padding:8px 10px;font-size:12px;text-align:center">${e.expRatio}</td>
+      <td style="padding:8px 10px;font-size:12px;text-align:center">${e.aum}</td>
+      <td style="padding:8px 10px;font-size:12px;text-align:center">${e.trackErr}</td>
+    </tr>`;
+  }).join('');
+
+  clearSearchTab('etf');
+  sorted.forEach((e,i)=>pushSearch('etf','ETF',e.name,'Price '+e.price+' · 1Y Return '+e.ret1y,'si-etf-'+i));
+
+  $('s-etf').innerHTML = `
+    <div class="stitle">ETF Screener</div>
+    <div style="font-size:10px;color:#6b6b6b;margin-bottom:14px">Exchange-traded funds · Sorted by ${sortLabels[ETF_SORT.field]} (${ETF_SORT.dir==='asc'?'ascending':'descending'})</div>
+    <div style="background:var(--panel);border:1px solid var(--bdr);border-radius:14px;overflow:hidden">
+      <div style="padding:14px 18px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <label style="font-size:11px;font-weight:700;color:#6b6b6b;text-transform:uppercase;letter-spacing:.4px">Sort by</label>
+        <select id="etf-sort-select" onchange="sortETF(this.value)" style="padding:6px 10px;border:1px solid var(--bdr);border-radius:8px;font-size:12px;font-family:'Space Grotesk',sans-serif;color:#1a1a1a;background:#fff">
+          ${Object.entries(sortLabels).map(([k,label])=>`<option value="${k}" ${ETF_SORT.field===k?'selected':''}>${label}</option>`).join('')}
+        </select>
+        <button onclick="sortETF(ETF_SORT.field)" style="padding:6px 12px;border:1px solid var(--bdr);border-radius:8px;background:#fff;color:var(--mc);font-weight:700;font-size:12px;cursor:pointer">${arrow} ${ETF_SORT.dir==='asc'?'Ascending':'Descending'}</button>
+      </div>
+      <div style="overflow-x:auto">
+        <table style="width:100%;border-collapse:collapse">
+          <thead><tr>
+            ${Object.entries(sortLabels).map(([k,label],i)=>`<th onclick="sortETF('${k}')" style="cursor:pointer;padding:7px 10px;border-bottom:1px solid var(--bdr);text-align:${i===0?'left':'center'};white-space:nowrap;font-size:10px;font-weight:700;color:${ETF_SORT.field===k?'var(--mc)':'#6b6b6b'}">${label}${ETF_SORT.field===k?' '+arrow:''}</th>`).join('')}
+          </tr></thead>
+          <tbody>${rowsHtml || '<tr><td colspan="9" style="padding:20px;text-align:center;color:#999999;font-size:12px">No ETF data available</td></tr>'}</tbody>
+        </table>
+      </div>
+    </div>
+    <p style="font-size:10px;color:#999999;margin-top:10px">REITs/InvITs not included — ETF listings only. Tap any column header or the sort control above to re-sort.</p>
+  `;
+}
+
 function renderCurrency(rows){
   const curr=rows.filter(r=>r[1]&&r[1].trim()&&r[2]&&r[2].trim()&&r[1]!=='Currency');
   const comm=rows.filter(r=>r[5]&&r[5].trim()&&r[5]!=='Symbol'&&r[5]!=='#N/A'&&r[6]&&r[6].trim());
@@ -2220,6 +2286,7 @@ async function loadTab(key){
       if(key==='futures'){  renderFutures(DATA.futures||[]); stampUpdated('futures'); }
       if(key==='indian'){   renderIndian(DATA.indian||[]); stampUpdated('indian'); }
       if(key==='market'){   renderMarket(DATA.market||[]); stampUpdated('market'); }
+      if(key==='etf'){      renderETF(DATA.etf||[]); stampUpdated('etf'); }
       if(key==='ipo'){      renderIPO(patchIPOTypes((DATA.ipo||[]).concat(DATA.ipo2||[]), DATA.ipoTypes||[])); stampUpdated('ipo'); }
       if(key==='currency'){ renderCurrency(DATA.currency||[]); stampUpdated('currency'); }
     }
@@ -2267,6 +2334,7 @@ async function refreshAll(){
         if(k==='futures'){  renderFutures(DATA.futures||[]); stampUpdated('futures'); }
         if(k==='indian'){   renderIndian(DATA.indian||[]); stampUpdated('indian'); }
         if(k==='market'){   renderMarket(DATA.market||[]); stampUpdated('market'); }
+        if(k==='etf'){      renderETF(DATA.etf||[]); stampUpdated('etf'); }
         if(k==='ipo'){      renderIPO(patchIPOTypes((DATA.ipo||[]).concat(DATA.ipo2||[]), DATA.ipoTypes||[])); stampUpdated('ipo'); }
         if(k==='currency'){ renderCurrency(DATA.currency||[]); stampUpdated('currency'); }
       }
