@@ -1,48 +1,45 @@
-const CACHE_NAME = 'quant-verdict-v4';
-const ASSETS = [
-  './',
-  './index.html',
-  './manifest.json',
-  './css/quant.css',
-  './js/app.js',
-  './js/data.js',
-  './js/indicators.js',
-  './js/verdict.js',
-  './js/charts.js'
-];
+/* Service worker.
+   Static assets (logo, icons, fonts) — cache-first, since they never change and this makes
+   repeat visits noticeably faster (instant load from cache instead of a network round-trip).
+   Everything else — the HTML page itself, and ALL data fetches (Google Sheets, Yahoo Finance,
+   CORS proxies) — stays network-only. This app's data needs to be live and fresh on every
+   load, so nothing data-related is ever cached, only truly static files. */
 
-self.addEventListener('install', (e) => {
-  e.waitUntil(
-    caches.open(CACHE_NAME).then((cache) =>
-      // Cache each asset independently instead of cache.addAll(), which
-      // fails the ENTIRE install if even one URL 404s — across repeated
-      // redeploys that's an easy way to silently end up with no active
-      // service worker at all, which fails Chrome's installability check
-      // and demotes the site to a bare "Add to Home Screen" shortcut
-      // instead of the full app install prompt.
-      Promise.allSettled(
-        ASSETS.map((url) =>
-          fetch(url)
-            .then((res) => (res.ok ? cache.put(url, res) : null))
-            .catch(() => null)
-        )
-      )
-    )
-  );
+const STATIC_CACHE = 'nb-static-v1';
+const STATIC_EXTENSIONS = /\.(png|jpg|jpeg|svg|webp|ico|woff2?|ttf)$/i;
+
+self.addEventListener('install', (event) => {
   self.skipWaiting();
 });
 
-self.addEventListener('activate', (e) => {
-  e.waitUntil(
-    caches.keys().then((keys) =>
-      Promise.all(keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k)))
-    )
+self.addEventListener('activate', (event) => {
+  event.waitUntil(
+    caches.keys().then(names =>
+      Promise.all(names.filter(n => n !== STATIC_CACHE).map(n => caches.delete(n)))
+    ).then(() => self.clients.claim())
   );
-  self.clients.claim();
 });
 
-self.addEventListener('fetch', (e) => {
-  e.respondWith(
-    caches.match(e.request).then((cached) => cached || fetch(e.request))
-  );
+self.addEventListener('fetch', (event) => {
+  const url = new URL(event.request.url);
+  const isSameOrigin = url.origin === self.location.origin;
+  const isStaticAsset = isSameOrigin && STATIC_EXTENSIONS.test(url.pathname);
+
+  if (isStaticAsset) {
+    event.respondWith(
+      caches.open(STATIC_CACHE).then(cache =>
+        cache.match(event.request).then(cached => {
+          if (cached) return cached;
+          return fetch(event.request).then(response => {
+            if (response.ok) cache.put(event.request, response.clone());
+            return response;
+          }).catch(() => cached);
+        })
+      )
+    );
+    return;
+  }
+
+  // HTML page + every data fetch: always network, never cached.
+  event.respondWith(fetch(event.request));
 });
