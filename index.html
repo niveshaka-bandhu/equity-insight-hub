@@ -343,6 +343,11 @@ footer a{color:var(--mc)}
   html{background:#15141a}
   html{filter:invert(0.92) hue-rotate(180deg)}
   img, svg image, .bnb-center img{filter:invert(1) hue-rotate(180deg)}
+  /* The Nifty chart's axis text/gridlines were specifically tuned for its light theme (crisp
+     dark text on white) — the page-wide invert filter left them low-contrast and hard to read.
+     Counter-inverting the chart's own container keeps it looking exactly as designed regardless
+     of system dark/light mode, same technique already used for images/logo above. */
+  #nifty-chart-wrap{filter:invert(1) hue-rotate(180deg)}
 }
 </style>
 </head>
@@ -912,6 +917,24 @@ function renderDashboard(rows, newsRows){
           <div id="nifty-chart-status" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#999999;font-size:12px">Loading chart…</div>
         </div>
         <p id="nifty-chart-note" style="font-size:10px;color:#999999;margin-top:8px">5-min intraday · Data via Yahoo Finance (proxied) · May lag real-time by a few minutes; delayed after market close</p>
+
+        <div style="display:flex;gap:16px;margin-top:10px;padding-top:10px;border-top:1px solid var(--bdr)">
+          <label style="display:flex;align-items:center;gap:6px;font-size:11px;font-weight:600;color:#444444;cursor:pointer">
+            <input type="checkbox" id="nifty-show-50dma" onchange="toggleNiftyMA()" style="accent-color:var(--mc)"/>50-Day MA
+          </label>
+          <label style="display:flex;align-items:center;gap:6px;font-size:11px;font-weight:600;color:#444444;cursor:pointer">
+            <input type="checkbox" id="nifty-show-200dma" onchange="toggleNiftyMA()" style="accent-color:var(--mc)"/>200-Day MA
+          </label>
+        </div>
+      </div>
+
+      <!-- Technical Analysis report — hidden until opened, same collapsible style as the calculators -->
+      <div class="calc-head" onclick="toggleNiftyTA()" style="padding:14px 18px;border-top:1px solid var(--bdr);cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:10px">
+        <div style="font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:700;color:#1a1a1a">Nifty 50 Technical Analysis</div>
+        <span id="chev-nifty-ta-report" style="font-size:12px;color:var(--mc);transition:.2s;flex-shrink:0">+</span>
+      </div>
+      <div class="calc-body" data-owner="nifty-ta-report" id="nifty-ta-body" style="display:none;padding:16px 18px">
+        <div id="nifty-ta-content" style="font-size:12px;color:#444444;line-height:1.7">Loading technical analysis…</div>
       </div>
     </div>
 
@@ -1937,7 +1960,7 @@ function sortETF(newField){
     const posChg = !String(e.chg1d).trim().startsWith('-');
     const posRet = !String(e.ret1y).trim().startsWith('-');
     return `<tr id="si-etf-${i}" style="border-bottom:1px solid rgba(58,45,127,.20)">
-      <td style="padding:8px 10px;font-size:12px;text-align:left"><strong>${e.name}</strong></td>
+      <td style="padding:8px 10px;font-size:12px;text-align:left;position:sticky;left:0;background:#fff;z-index:1;box-shadow:2px 0 4px rgba(58,45,127,.08)"><strong>${e.name}</strong></td>
       <td style="padding:8px 10px;font-size:12px;text-align:center;font-family:'Space Grotesk',sans-serif">${e.price}</td>
       <td style="padding:8px 10px;font-size:12px;text-align:center;font-weight:700;color:${posChg?'var(--green)':'var(--red)'}">${e.chg1d}</td>
       <td style="padding:8px 10px;font-size:12px;text-align:center">${e.navDiff}</td>
@@ -1966,7 +1989,7 @@ function sortETF(newField){
       <div style="overflow-x:auto">
         <table style="width:100%;border-collapse:collapse">
           <thead><tr>
-            ${Object.entries(sortLabels).map(([k,label],i)=>`<th onclick="sortETF('${k}')" style="cursor:pointer;padding:7px 10px;border-bottom:1px solid var(--bdr);text-align:${i===0?'left':'center'};white-space:nowrap;font-size:10px;font-weight:700;color:${ETF_SORT.field===k?'var(--mc)':'#6b6b6b'}">${label}${ETF_SORT.field===k?' '+arrow:''}</th>`).join('')}
+            ${Object.entries(sortLabels).map(([k,label],i)=>`<th onclick="sortETF('${k}')" style="cursor:pointer;padding:7px 10px;border-bottom:1px solid var(--bdr);text-align:${i===0?'left':'center'};white-space:nowrap;font-size:10px;font-weight:700;color:${ETF_SORT.field===k?'var(--mc)':'#6b6b6b'};${i===0?'position:sticky;left:0;background:var(--panel);z-index:2;box-shadow:2px 0 4px rgba(58,45,127,.08)':''}">${label}${ETF_SORT.field===k?' '+arrow:''}</th>`).join('')}
           </tr></thead>
           <tbody>${rowsHtml || '<tr><td colspan="9" style="padding:20px;text-align:center;color:#999999;font-size:12px">No ETF data available</td></tr>'}</tbody>
         </table>
@@ -4416,6 +4439,168 @@ async function fetchNiftyRaw(rangeKey){
   return {points, prevClose};
 }
 
+/* Daily close history over ~13 months — fetched separately from the chart's own range data,
+   specifically so 200-Day MA has enough real trading days behind it (the chart's own "1Y" range
+   uses weekly intervals, which isn't enough resolution for a genuine 200-day average). */
+let NIFTY_DAILY_HISTORY=null;
+async function fetchNiftyDailyHistory(){
+  if(NIFTY_DAILY_HISTORY) return NIFTY_DAILY_HISTORY;
+  const yahooUrl='https://query1.finance.yahoo.com/v8/finance/chart/%5ENSEI?range=13mo&interval=1d';
+  const proxies=[
+    'https://api.allorigins.win/raw?url='+encodeURIComponent(yahooUrl),
+    'https://corsproxy.io/?url='+encodeURIComponent(yahooUrl)
+  ];
+  const data=await Promise.any(proxies.map(url=>fetch(url).then(res=>{
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    return res.json();
+  })));
+  const result=data?.chart?.result?.[0];
+  if(!result) throw new Error('No daily history returned');
+  const timestamps=result.timestamp||[];
+  const closes=result.indicators?.quote?.[0]?.close||[];
+  const dailyCloses=[];
+  for(let i=0;i<timestamps.length;i++){
+    if(closes[i]!=null) dailyCloses.push(closes[i]);
+  }
+  NIFTY_DAILY_HISTORY=dailyCloses;
+  return dailyCloses;
+}
+function computeSMA(closes, period){
+  if(closes.length<period) return null;
+  const slice=closes.slice(-period);
+  return slice.reduce((a,b)=>a+b,0)/period;
+}
+function computeRSI(closes, period){
+  if(closes.length<period+1) return null;
+  const slice=closes.slice(-(period+1));
+  let gains=0, losses=0;
+  for(let i=1;i<slice.length;i++){
+    const diff=slice[i]-slice[i-1];
+    if(diff>0) gains+=diff; else losses-=diff;
+  }
+  if(gains+losses===0) return 50;
+  const avgGain=gains/period, avgLoss=losses/period;
+  if(avgLoss===0) return 100;
+  const rs=avgGain/avgLoss;
+  return 100-(100/(1+rs));
+}
+let NIFTY_MA={sma50:null, sma200:null};
+async function loadNiftyTechnicalAnalysis(){
+  const content=document.getElementById('nifty-ta-content');
+  try{
+    const closes=await fetchNiftyDailyHistory();
+    if(!closes.length) throw new Error('No data');
+    const current=closes[closes.length-1];
+    const sma50=computeSMA(closes,50);
+    const sma200=computeSMA(closes,200);
+    NIFTY_MA={sma50, sma200};
+    const rsi14=computeRSI(closes,14);
+
+    const last20=closes.slice(-20);
+    const resistance=Math.max(...last20);
+    const support=Math.min(...last20);
+
+    const last30=closes.slice(-30);
+    const returns=[];
+    for(let i=1;i<last30.length;i++) returns.push((last30[i]-last30[i-1])/last30[i-1]);
+    const meanRet=returns.reduce((a,b)=>a+b,0)/returns.length;
+    const variance=returns.reduce((a,b)=>a+Math.pow(b-meanRet,2),0)/returns.length;
+    const volatility=Math.sqrt(variance)*Math.sqrt(252)*100; // annualized, %
+
+    let trendText, trendColor;
+    if(sma50 && sma200){
+      if(current>sma50 && sma50>sma200){ trendText='Bullish — price above both 50-DMA and 200-DMA, with 50-DMA above 200-DMA (Golden Cross structure)'; trendColor='var(--green)'; }
+      else if(current<sma50 && sma50<sma200){ trendText='Bearish — price below both 50-DMA and 200-DMA, with 50-DMA below 200-DMA (Death Cross structure)'; trendColor='var(--red)'; }
+      else if(current>sma200){ trendText='Mixed, longer-term positive — price above 200-DMA but the shorter-term trend is choppy'; trendColor='var(--mc)'; }
+      else { trendText='Mixed, longer-term cautious — price below 200-DMA'; trendColor='var(--mc)'; }
+    } else {
+      trendText='Not enough daily history yet to classify trend'; trendColor='#6b6b6b';
+    }
+
+    let rsiText, rsiColor;
+    if(rsi14==null){ rsiText='—'; rsiColor='#6b6b6b'; }
+    else if(rsi14>=70){ rsiText=rsi14.toFixed(1)+' — Overbought'; rsiColor='var(--red)'; }
+    else if(rsi14<=30){ rsiText=rsi14.toFixed(1)+' — Oversold'; rsiColor='var(--green)'; }
+    else { rsiText=rsi14.toFixed(1)+' — Neutral'; rsiColor='var(--mc)'; }
+
+    content.innerHTML=`
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+        <div style="background:rgba(58,45,127,.05);border-radius:10px;padding:10px 12px">
+          <div style="font-size:9px;color:#6b6b6b;text-transform:uppercase;letter-spacing:.4px">50-Day MA</div>
+          <div style="font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:700;color:#1a1a1a">${sma50?sma50.toFixed(2):'—'}</div>
+        </div>
+        <div style="background:rgba(58,45,127,.05);border-radius:10px;padding:10px 12px">
+          <div style="font-size:9px;color:#6b6b6b;text-transform:uppercase;letter-spacing:.4px">200-Day MA</div>
+          <div style="font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:700;color:#1a1a1a">${sma200?sma200.toFixed(2):'—'}</div>
+        </div>
+        <div style="background:rgba(58,45,127,.05);border-radius:10px;padding:10px 12px">
+          <div style="font-size:9px;color:#6b6b6b;text-transform:uppercase;letter-spacing:.4px">RSI (14-Day)</div>
+          <div style="font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:700;color:${rsiColor}">${rsiText}</div>
+        </div>
+        <div style="background:rgba(58,45,127,.05);border-radius:10px;padding:10px 12px">
+          <div style="font-size:9px;color:#6b6b6b;text-transform:uppercase;letter-spacing:.4px">30-Day Volatility (annualized)</div>
+          <div style="font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:700;color:#1a1a1a">${volatility.toFixed(1)}%</div>
+        </div>
+      </div>
+      <div style="margin-bottom:10px"><strong style="color:${trendColor}">Trend:</strong> ${trendText}</div>
+      <div style="margin-bottom:10px"><strong>Near-term Support:</strong> ${support.toFixed(2)} <span style="color:#999999">(20-day low)</span> &nbsp;·&nbsp; <strong>Near-term Resistance:</strong> ${resistance.toFixed(2)} <span style="color:#999999">(20-day high)</span></div>
+      <p style="font-size:10px;color:#999999;margin-top:10px">Computed from ~13 months of daily closing prices via Yahoo Finance. Support/resistance are simple 20-day range extremes, not formal pivot analysis. RSI uses a standard 14-day formula. Educational reference only — not investment advice.</p>
+    `;
+  }catch(e){
+    content.innerHTML='<span style="color:var(--red)">Couldn\'t load technical analysis — '+e.message+'. Try again shortly.</span>';
+  }
+}
+function toggleNiftyTA(){
+  const body=document.getElementById('nifty-ta-body');
+  const chev=document.getElementById('chev-nifty-ta-report');
+  if(!body) return;
+  const willOpen = body.style.display==='none' || !body.style.display;
+  body.style.display = willOpen ? 'block' : 'none';
+  if(chev) chev.textContent = willOpen ? '−' : '+';
+  if(willOpen && document.getElementById('nifty-ta-content').textContent.includes('Loading')){
+    loadNiftyTechnicalAnalysis();
+  }
+}
+function toggleNiftyMA(){
+  // Draws/removes horizontal reference lines on the chart for 50-DMA / 200-DMA, reusing whichever
+  // values are already computed (loads them quietly in the background if not fetched yet).
+  if(NIFTY_MA.sma50==null && NIFTY_MA.sma200==null){
+    loadNiftyTechnicalAnalysis().then(drawNiftyMAOverlay);
+  } else {
+    drawNiftyMAOverlay();
+  }
+}
+function drawNiftyMAOverlay(){
+  const svg=document.getElementById('nifty-chart-svg');
+  if(!svg) return;
+  svg.querySelectorAll('.ma-overlay-line, .ma-overlay-label').forEach(el=>el.remove());
+  const show50=document.getElementById('nifty-show-50dma')?.checked;
+  const show200=document.getElementById('nifty-show-200dma')?.checked;
+  const w=1000, h=280, bottomAxisH=22;
+  const yMin=parseFloat(svg.dataset.yMin), yMax=parseFloat(svg.dataset.yMax);
+  if(isNaN(yMin) || isNaN(yMax)) return;
+  const scaleY=v=>(h-bottomAxisH-8)-((v-yMin)/(yMax-yMin))*(h-bottomAxisH-22);
+  const svgNS='http://www.w3.org/2000/svg';
+  function addLine(value, color, label){
+    if(value==null || value<yMin || value>yMax) return;
+    const y=scaleY(value);
+    const line=document.createElementNS(svgNS,'line');
+    line.setAttribute('class','ma-overlay-line');
+    line.setAttribute('x1',0);line.setAttribute('x2',w);line.setAttribute('y1',y);line.setAttribute('y2',y);
+    line.setAttribute('stroke',color);line.setAttribute('stroke-width','1.4');line.setAttribute('stroke-dasharray','5,3');
+    svg.appendChild(line);
+    const text=document.createElementNS(svgNS,'text');
+    text.setAttribute('class','ma-overlay-label');
+    text.setAttribute('x',w-4);text.setAttribute('y',y-4);text.setAttribute('text-anchor','end');
+    text.setAttribute('font-size','10');text.setAttribute('font-family','Arial,Helvetica,sans-serif');
+    text.setAttribute('fill',color);text.setAttribute('font-weight','700');
+    text.textContent=label+' '+value.toFixed(0);
+    svg.appendChild(text);
+  }
+  if(show50) addLine(NIFTY_MA.sma50, '#8e44ad', '50DMA');
+  if(show200) addLine(NIFTY_MA.sma200, '#d35400', '200DMA');
+}
+
 /* Kicks off the fetch (called at the very top of loadAll, before any DOM exists, for the default 1D range).
    Reuses the in-flight/resolved promise only while it's still within the cache TTL —
    otherwise starts a fresh fetch, so the 5-min auto-refresh actually pulls new data
@@ -4544,6 +4729,7 @@ function renderNiftyIntradayChart(points, prevClose, rangeKey){
   let top=Math.ceil((maxV+rawRange*0.1)/step)*step;
   let bottom=Math.floor((minV-rawRange*0.1)/step)*step;
   if(top===bottom){ top+=step; bottom-=step; }
+  svg.dataset.yMin=bottom; svg.dataset.yMax=top; // read by drawNiftyMAOverlay() for the 50/200-DMA lines
 
   const scaleX=i=>(i/(n-1))*w;
   const scaleY=v=>(h-bottomAxisH-8)-((v-bottom)/(top-bottom))*(h-bottomAxisH-22);
@@ -4731,6 +4917,14 @@ function renderNiftyIntradayChart(points, prevClose, rangeKey){
   wrap.onmouseleave=handleHoverLeave;
   wrap.ontouchmove=e=>{ if(e.touches&&e.touches[0]) handleHoverMove(e.touches[0].clientX); };
   wrap.ontouchend=handleHoverLeave;
+
+  // Re-draw 50/200-DMA overlay lines if either checkbox is checked — the SVG was just rebuilt
+  // from scratch above, so any previous overlay lines are gone and need reapplying.
+  try{
+    if(document.getElementById('nifty-show-50dma')?.checked || document.getElementById('nifty-show-200dma')?.checked){
+      drawNiftyMAOverlay();
+    }
+  }catch(e){}
 }
 
 
