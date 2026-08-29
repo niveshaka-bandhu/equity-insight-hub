@@ -1661,7 +1661,7 @@ function renderIPO(rows){
   const looksLikeMoneyOnly = v => { const s=String(v||'').trim(); return s!==''&&s!=='—'&&!/[A-Za-z]/.test(s)&&/\d/.test(s); };
   const looksLikeDateRange = v => /\d{1,2}\s*[-–]\s*\d{1,2}\s*[A-Za-z]{3,}/.test(String(v||'').trim()) || /^\d{1,2}\s+[A-Za-z]{3,}/.test(String(v||'').trim());
 
-  const isNotSME = r => !/sme/i.test(r[0]||'');
+  const isNotSME = r => !/sme/i.test(r[1]||'');
   // Find the actual header row instead of assuming it's always at index 0 — a fixed assumption
   // here is exactly what caused the first real data row to go missing whenever the sheet's
   // structure shifted even slightly (e.g. an extra row inserted above the table).
