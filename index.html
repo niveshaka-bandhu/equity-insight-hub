@@ -428,6 +428,7 @@ footer a{color:var(--mc)}
       <button class="nb"     onclick="showTab('indian',this)">Indian</button>
       <button class="nb"     onclick="showTab('market',this)">Movers</button>
       <button class="nb"     onclick="showTab('etf',this)">ETF</button>
+      <button class="nb"     onclick="showTab('mf',this)">MF</button>
       <button class="nb"     onclick="showTab('ipo',this)">IPO</button>
       <button class="nb"     onclick="showTab('currency',this)">Currencies</button>
       <button class="nb"     onclick="showTab('corporate',this)">Corporate Actions</button>
@@ -456,6 +457,7 @@ footer a{color:var(--mc)}
     <div class="more-sheet-title">More</div>
     <button class="more-sheet-item" data-tab="market" onclick="bottomNavGo('market',this)">Movers</button>
     <button class="more-sheet-item" data-tab="etf" onclick="bottomNavGo('etf',this)">ETF</button>
+    <button class="more-sheet-item" data-tab="mf" onclick="bottomNavGo('mf',this)">MF</button>
     <button class="more-sheet-item" data-tab="futures" onclick="bottomNavGo('futures',this)">Futures</button>
     <button class="more-sheet-item" data-tab="indian" onclick="bottomNavGo('indian',this)">Indian Indices</button>
     <button class="more-sheet-item" data-tab="corporate" onclick="bottomNavGo('corporate',this)">Corporate Actions</button>
@@ -518,6 +520,12 @@ footer a{color:var(--mc)}
     </div>
   </div>
   <div class="sec"    id="s-etf">
+    <div class="skel-tcw"><div class="skel-tch"><div class="skel"></div></div>
+      <div class="skel-row"><div class="skel skel-avatar"></div><div class="skel-lines"><div class="skel skel-line-a"></div><div class="skel skel-line-b"></div></div><div class="skel skel-num"></div></div>
+      <div class="skel-row"><div class="skel skel-avatar"></div><div class="skel-lines"><div class="skel skel-line-a"></div><div class="skel skel-line-b"></div></div><div class="skel skel-num"></div></div>
+    </div>
+  </div>
+  <div class="sec"    id="s-mf">
     <div class="skel-tcw"><div class="skel-tch"><div class="skel"></div></div>
       <div class="skel-row"><div class="skel skel-avatar"></div><div class="skel-lines"><div class="skel skel-line-a"></div><div class="skel skel-line-b"></div></div><div class="skel skel-num"></div></div>
       <div class="skel-row"><div class="skel skel-avatar"></div><div class="skel-lines"><div class="skel skel-line-a"></div><div class="skel skel-line-b"></div></div><div class="skel skel-num"></div></div>
@@ -1665,7 +1673,7 @@ function renderIPO(rows){
   // Find the actual header row instead of assuming it's always at index 0 — a fixed assumption
   // here is exactly what caused the first real data row to go missing whenever the sheet's
   // structure shifted even slightly (e.g. an extra row inserted above the table).
-  const listedHeaderIdx = rows.findIndex(r => clean(r[0]).toLowerCase()==='company name');
+  const listedHeaderIdx = rows.findIndex(r => clean(r[0]).toLowerCase().includes('company name'));
   const listedStart = listedHeaderIdx >= 0 ? listedHeaderIdx+1 : 1;
   const listed = rows.slice(listedStart, gmpStart > 0 ? gmpStart : 22)
                      .filter(r => r[0]&&r[0].trim()&&r[0]!=='Company Name')
@@ -1786,6 +1794,24 @@ function renderIPO(rows){
   </div>`;
 
   // GMP — tinted cards grid
+  // Normalizes whatever raw date/time format the sheet happens to have into a consistent
+  // "29 Aug, 17:50" style — this directly fixes "the format keeps changing" by re-formatting
+  // ourselves instead of passing the raw sheet value straight through.
+  const fmtGmpUpdated = raw => {
+    const s=String(raw||'').trim();
+    if(!s || s==='—') return '—';
+    const d=new Date(s);
+    if(isNaN(d)) return s; // unparseable — show the raw text rather than nothing
+    return d.toLocaleDateString('en-IN',{day:'numeric',month:'short'})+', '+d.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',hour12:false});
+  };
+  const gmpStatusBadge = status => {
+    const s=String(status||'').trim().toLowerCase();
+    let bg='rgba(120,75,30,.10)', color='#6b6b6b';
+    if(s.includes('open')){ bg='rgba(47,158,94,.14)'; color='var(--green)'; }
+    else if(s.includes('upcoming')){ bg='rgba(58,45,127,.14)'; color='var(--mc)'; }
+    else if(s.includes('clos')){ bg='rgba(224,86,47,.14)'; color='var(--red)'; }
+    return `<span style="display:inline-block;padding:1px 7px;border-radius:5px;font-size:10px;font-weight:700;background:${bg};color:${color}">${st(status)}</span>`;
+  };
   const gmpBody = `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:8px">
     ${gmp.map((r,i)=>{
       const pos=!String(r[1]||'').trim().startsWith('-')&&parseFloat(String(r[1]).replace(/[^\d.-]/g,''))>0;
@@ -1793,6 +1819,9 @@ function renderIPO(rows){
       const bg=pos?'rgba(47,158,94,.07)':'rgba(224,86,47,.07)';
       const bc=pos?'rgba(47,158,94,.2)':'rgba(224,86,47,.2)';
       const elId=`si-ipo-gmp-${i}`;
+      // Column mapping (matches the actual sheet header row exactly:
+      // IPO Name, IPO GMP, Trend, Price Band, Est. Listing, Date, Status, Last Updated):
+      // r[0]=Name r[1]=GMP r[2]=Trend r[3]=PriceBand r[4]=EstListing r[5]=Date r[6]=Status r[7]=Updated
       pushSearch('ipo','IPO · GMP',r[0],'GMP '+st(r[1])+' · Est. listing '+st(r[4]),elId);
       // ipowatch.in URL pattern: lowercase company name, spaces -> hyphens, trailing "-ipo"
       const slug=String(r[0]||'').trim().toLowerCase().replace(/[^a-z0-9\s-]/g,'').replace(/\s+/g,'-');
@@ -1802,7 +1831,7 @@ function renderIPO(rows){
           white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;text-decoration:none"
           onmouseover="this.style.textDecoration='underline';this.style.color='var(--mc)'"
           onmouseout="this.style.textDecoration='none';this.style.color='#1a1a1a'">${st(r[0])}</a>
-        <div style="margin-bottom:8px">${tbadge(r[6]||'Mainboard')}</div>
+        <div style="margin-bottom:8px">${gmpStatusBadge(r[6])}</div>
         <div style="display:flex;justify-content:space-between;align-items:baseline">
           <div>
             <div style="font-size:9px;color:#6b6b6b;text-transform:uppercase;letter-spacing:.4px">GMP</div>
@@ -1814,7 +1843,8 @@ function renderIPO(rows){
           </div>
         </div>
         <div style="font-size:11px;font-weight:700;color:${color};margin-top:6px">${st(r[4])}</div>
-        <div style="font-size:10px;color:#999999;margin-top:3px">Updated: ${st(r[8])}</div>
+        <div style="font-size:10px;color:#6b6b6b;margin-top:6px">IPO Date: ${st(r[5])}</div>
+        <div style="font-size:10px;color:#999999;margin-top:3px">Updated: ${fmtGmpUpdated(r[7])}</div>
       </div>`;
     }).join('')}
   </div>`;
@@ -1924,6 +1954,95 @@ function renderETF(rows){
   }
   ETF_DATA=parsed;
   sortETF(); // initial render, using current/default sort
+}
+
+/* MF (Mutual Fund) Screener — lives in the same sheet/gid as ETF, at columns 15-22
+   (Fund Name / NAV / NAV Date / 1Y / 3Y / 5Y / Expense Ratio / AUM). */
+let MF_DATA=[];
+let MF_SORT={field:'name', dir:'asc'};
+function renderMF(rows){
+  const headerIdx = rows.findIndex(r => clean(r[15]).toLowerCase().includes('fund name'));
+  const dataStart = headerIdx >= 0 ? headerIdx+1 : 2;
+  const parsed=[];
+  for(let i=dataStart;i<rows.length;i++){
+    const r=rows[i];
+    const name=r[15];
+    if(!name || !String(name).trim()) break; // list ends at the first blank Fund Name cell
+    parsed.push({
+      name: f(name),
+      nav: f(r[16]),
+      navDate: f(r[17]),
+      ret1y: f(r[18]),
+      ret3y: f(r[19]),
+      ret5y: f(r[20]),
+      expRatio: f(r[21]),
+      aum: f(r[22])
+    });
+  }
+  MF_DATA=parsed;
+  sortMF();
+}
+function sortMF(newField){
+  if(newField){
+    if(MF_SORT.field===newField){ MF_SORT.dir = MF_SORT.dir==='asc' ? 'desc' : 'asc'; }
+    else { MF_SORT.field=newField; MF_SORT.dir='asc'; }
+  }
+  const numField = ['nav','ret1y','ret3y','ret5y','expRatio','aum'].includes(MF_SORT.field);
+  const sorted=[...MF_DATA].sort((a,b)=>{
+    let av=a[MF_SORT.field], bv=b[MF_SORT.field];
+    if(numField){
+      av=parseFloat(String(av).replace(/[^\d.-]/g,''))||0;
+      bv=parseFloat(String(bv).replace(/[^\d.-]/g,''))||0;
+    } else {
+      av=String(av).toLowerCase(); bv=String(bv).toLowerCase();
+    }
+    if(av<bv) return MF_SORT.dir==='asc'?-1:1;
+    if(av>bv) return MF_SORT.dir==='asc'?1:-1;
+    return 0;
+  });
+
+  const sortLabels={name:'Fund Name',nav:'NAV',navDate:'NAV Date',ret1y:'1Y',ret3y:'3Y',ret5y:'5Y',expRatio:'Expense Ratio',aum:'AUM'};
+  const arrow = MF_SORT.dir==='asc' ? '▲' : '▼';
+
+  const rowsHtml = sorted.map((e,i)=>{
+    const pos1y = !String(e.ret1y).trim().startsWith('-');
+    return `<tr id="si-mf-${i}" style="border-bottom:1px solid rgba(58,45,127,.20)">
+      <td style="padding:8px 10px;font-size:11.5px;line-height:1.3;text-align:left;position:sticky;left:0;background:#fff;z-index:1;box-shadow:2px 0 4px rgba(58,45,127,.08);width:110px;max-width:110px;min-width:110px;white-space:normal;word-break:break-word"><strong>${e.name}</strong></td>
+      <td style="padding:8px 10px;font-size:12px;text-align:center;font-family:'Space Grotesk',sans-serif">${e.nav}</td>
+      <td style="padding:8px 10px;font-size:11px;text-align:center;color:#6b6b6b">${e.navDate}</td>
+      <td style="padding:8px 10px;font-size:12px;text-align:center;font-weight:700;color:${pos1y?'var(--green)':'var(--red)'}">${e.ret1y}</td>
+      <td style="padding:8px 10px;font-size:12px;text-align:center">${e.ret3y}</td>
+      <td style="padding:8px 10px;font-size:12px;text-align:center">${e.ret5y}</td>
+      <td style="padding:8px 10px;font-size:12px;text-align:center">${e.expRatio}</td>
+      <td style="padding:8px 10px;font-size:12px;text-align:center">${e.aum}</td>
+    </tr>`;
+  }).join('');
+
+  clearSearchTab('mf');
+  sorted.forEach((e,i)=>pushSearch('mf','Mutual Fund',e.name,'NAV '+e.nav+' · 1Y '+e.ret1y,'si-mf-'+i));
+
+  $('s-mf').innerHTML = `
+    <div class="stitle">Mutual Fund Screener</div>
+    <div style="font-size:10px;color:#6b6b6b;margin-bottom:14px">Sorted by ${sortLabels[MF_SORT.field]} (${MF_SORT.dir==='asc'?'ascending':'descending'})</div>
+    <div style="background:var(--panel);border:1px solid var(--bdr);border-radius:14px;overflow:hidden">
+      <div style="padding:14px 18px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <label style="font-size:11px;font-weight:700;color:#6b6b6b;text-transform:uppercase;letter-spacing:.4px">Sort by</label>
+        <select id="mf-sort-select" onchange="sortMF(this.value)" style="padding:6px 10px;border:1px solid var(--bdr);border-radius:8px;font-size:12px;font-family:'Space Grotesk',sans-serif;color:#1a1a1a;background:#fff">
+          ${Object.entries(sortLabels).map(([k,label])=>`<option value="${k}" ${MF_SORT.field===k?'selected':''}>${label}</option>`).join('')}
+        </select>
+        <button onclick="sortMF(MF_SORT.field)" style="padding:6px 12px;border:1px solid var(--bdr);border-radius:8px;background:#fff;color:var(--mc);font-weight:700;font-size:12px;cursor:pointer">${arrow} ${MF_SORT.dir==='asc'?'Ascending':'Descending'}</button>
+      </div>
+      <div style="overflow-x:auto">
+        <table style="width:100%;border-collapse:collapse">
+          <thead><tr>
+            ${Object.entries(sortLabels).map(([k,label],i)=>`<th onclick="sortMF('${k}')" style="cursor:pointer;padding:7px 10px;border-bottom:1px solid var(--bdr);text-align:${i===0?'left':'center'};white-space:${i===0?'normal':'nowrap'};font-size:10px;font-weight:700;color:${MF_SORT.field===k?'var(--mc)':'#6b6b6b'};${i===0?'position:sticky;left:0;background:var(--panel);z-index:2;box-shadow:2px 0 4px rgba(58,45,127,.08);width:110px;max-width:110px;min-width:110px':''}">${label}${MF_SORT.field===k?' '+arrow:''}</th>`).join('')}
+          </tr></thead>
+          <tbody>${rowsHtml || '<tr><td colspan="8" style="padding:20px;text-align:center;color:#999999;font-size:12px">No mutual fund data available</td></tr>'}</tbody>
+        </table>
+      </div>
+    </div>
+    <p style="font-size:10px;color:#999999;margin-top:10px">Tap any column header or the sort control above to re-sort.</p>
+  `;
 }
 function sortETF(newField){
   if(newField){
@@ -2283,6 +2402,12 @@ async function loadTab(key){
       }));
       renderCorporate();
       stampUpdated('corporate');
+    } else if(key==='mf'){
+      // MF Screener shares the same sheet/gid as ETF (different columns within it) — reuse
+      // DATA.etf if the ETF tab already fetched it, otherwise fetch it now.
+      if(!DATA.etf){ try{ DATA.etf = await fetchFreshData(fetchSheet, GIDS.etf); }catch(e){ console.warn('mf(etf)',e.message); } }
+      renderMF(DATA.etf||[]);
+      stampUpdated('mf');
     } else if(GIDS[key]){
       if(key==='ipo'){
         try{
