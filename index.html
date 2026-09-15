@@ -1068,7 +1068,7 @@ function buildDashGMP(){
   const gmpEnd = rows.findIndex((r,i)=> i>gmpStart && clean(r[0])==='company' && String(r[1]||'').toLowerCase().includes('issue date'));
   const looksLikeMoneyOnly = v => { const s=String(v||'').trim(); return s!==''&&s!=='—'&&!/[A-Za-z]/.test(s)&&/\d/.test(s); };
   let gmp = gmpStart > 0
-    ? rows.slice(gmpStart+2, gmpEnd>0?gmpEnd:(expertsStart>0?expertsStart:gmpStart+20))
+    ? rows.slice(gmpStart+2, gmpEnd>0?gmpEnd:(expertsStart>0?expertsStart:gmpStart+25))
         .filter(r => r[0]&&r[0].trim()&&clean(r[0])!=='ipo name'&&looksLikeMoneyOnly(r[1]))
     : [];
   // Sort by GMP value descending for "top" GMP
@@ -1675,22 +1675,26 @@ function renderIPO(rows){
   // structure shifted even slightly (e.g. an extra row inserted above the table).
   const listedHeaderIdx = rows.findIndex(r => clean(r[0]).toLowerCase().includes('company name'));
   const listedStart = listedHeaderIdx >= 0 ? listedHeaderIdx+1 : 1;
+  // Don't require Company Name (col 0) itself to be non-blank to keep a row — the recurring
+  // array-formula-spill export issue has repeatedly hit exactly this cell on this table's first
+  // data row (name blank while date/price/gain columns still come through fine). Requiring r[0]
+  // silently dropped the whole row/IPO. Instead, keep the row if ANY other listing column has a
+  // value; the name renders as "—" via f() if still missing, which at least surfaces the gap
+  // instead of hiding the row entirely.
   const listed = rows.slice(listedStart, gmpStart > 0 ? gmpStart : 22)
-                     .filter(r => r[0]&&r[0].trim()&&r[0]!=='Company Name')
+                     .filter(r => r && clean(r[0])!=='company name')
+                     .filter(r => r.slice(1).some(c => c && String(c).trim()))
                      .filter(isNotSME);
   const gmpEnd = rows.findIndex((r,i) => i > gmpStart && clean(r[0])==='company' && String(r[1]||'').toLowerCase().includes('issue date'));
   const gmp    = gmpStart > 0
                // Content-validated: only rows whose GMP column is a pure money/number value are kept,
                // so date-range rows (Mainboard IPO) or rating rows (Expert's Advice) never leak in
                // even if the index window happens to reach that far.
-               ? rows.slice(gmpStart+2, gmpEnd > 0 ? gmpEnd : gmpStart+20)
+               ? rows.slice(gmpStart+2, gmpEnd > 0 ? gmpEnd : gmpStart+25)
                      .filter(r => r[0]&&r[0].trim()&&clean(r[0])!=='ipo name'&&looksLikeMoneyOnly(r[1]))
                : [];
-  const expertsEnd = subsStart > 0 ? subsStart : expertsStart + 25;
-  const experts = expertsStart > 0
-               ? rows.slice(expertsStart+2, expertsEnd)
-                     .filter(r => r[0]&&r[0].trim()&&clean(r[0])!=='company')
-               : [];
+  // Expert's Advice section removed from display (sheet source stopped updating) — expertsStart
+  // is still detected above purely as a boundary marker for the Mainboard IPO scan below.
   const subs = subsStart > 0
              ? rows.slice(subsStart+2)
                    .filter(r => r[0]&&r[0].trim()&&clean(r[0])!=='ipo')
@@ -1851,23 +1855,6 @@ function renderIPO(rows){
     }).join('')}
   </div>`;
 
-  // Expert's Advice — badge cards
-  const expertsBody = `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px">
-    ${experts.map((r,i)=>{
-      const elId=`si-ipo-expert-${i}`;
-      pushSearch('ipo','IPO · Expert Advice',r[0],'Analyst view',elId);
-      return `
-      <div id="${elId}" style="border:1px solid var(--bdr);border-radius:10px;padding:12px 14px;background:rgba(255,255,255,.55)">
-        <div style="font-size:12px;font-weight:700;color:#1a1a1a;margin-bottom:8px">${f(r[0])}</div>
-        <div style="display:flex;gap:5px;flex-wrap:wrap">
-          ${f(r[1])!=='—'?`<span style="font-size:10px;font-weight:700;padding:3px 8px;border-radius:6px;background:rgba(47,158,94,.12);color:var(--green)">Apply ${f(r[1])}</span>`:''}
-          ${f(r[3])!=='—'?`<span style="font-size:10px;font-weight:700;padding:3px 8px;border-radius:6px;background:rgba(58,45,127,.12);color:var(--mc)">Neutral ${f(r[3])}</span>`:''}
-          ${f(r[4])!=='—'?`<span style="font-size:10px;font-weight:700;padding:3px 8px;border-radius:6px;background:rgba(224,86,47,.12);color:var(--red)">Avoid ${f(r[4])}</span>`:''}
-          ${f(r[5])!=='—'?`<span style="font-size:10px;font-weight:700;padding:3px 8px;border-radius:6px;background:rgba(85,85,85,.09);color:#555">Not Rated ${f(r[5])}</span>`:''}
-        </div>
-      </div>`;}).join('')}
-  </div>`;
-
   // Subscription — card grid
   const subsBody = `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:8px">
     ${subs.map((r,i)=>{
@@ -1918,7 +1905,6 @@ function renderIPO(rows){
     <div class="stitle">IPO Corner</div>
     ${panel('','Mainboard IPO','Upcoming open & close dates',mainboardIPO.length,'#555555',mainboardBody)}
     ${panel('','Grey Market Premium','Unofficial pre-listing market prices',gmp.length,'#0d47a1',gmpBody)}
-    ${panel('','Expert\'s Advice','Analyst recommendations',experts.length,'#e07b00',expertsBody)}
     ${panel('','Subscription Status','Live subscription data · Mainboard only',subs.length,'#6a1b9a',subsBody)}
     ${panel('','Recently Listed IPOs','Performance since listing date · Mainboard only',listed.length,'#1a7a4a',listedBody)}
   `;
@@ -5097,7 +5083,7 @@ const SEARCH_INDEX=[
   {key:'futures',label:'Futures',kw:'gift nifty bank nifty futures dow nasdaq'},
   {key:'indian',label:'Indian Indices / Heatmap',kw:'nifty sensex nse bse sectoral heatmap'},
   {key:'market',label:'Movers',kw:'gainers losers advance decline nifty bank'},
-  {key:'ipo',label:'IPO Corner',kw:'gmp grey market premium listed subscription expert issue dates ipo'},
+  {key:'ipo',label:'IPO Corner',kw:'gmp grey market premium listed subscription issue dates ipo'},
   {key:'currency',label:'Currencies & Commodities',kw:'usd eur gbp mcx gold silver crude currency'},
   {key:'corporate',label:'Corporate Actions',kw:'dividend bonus split today events'},
   {key:'calculators',label:'Calculators',kw:'sip lumpsum emi reverse emi cagr fd rd ppf step-up inflation capital gains tax xirr swp systematic withdrawal retirement corpus pay off vs invest loan prepay ev ice electric vehicle total cost of ownership intrinsic value fair value future value graham formula pe valuation nps national pension rule of 72 114 home loan affordability real rate of return post tax comparator rent vs buy house calculator scss senior citizen ctc salary in-hand income tax hra exemption goal based'},
