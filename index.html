@@ -1804,14 +1804,6 @@ function renderIPO(rows){
     if(isNaN(d)) return s; // unparseable — show the raw text rather than nothing
     return d.toLocaleDateString('en-IN',{day:'numeric',month:'short'})+', '+d.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',hour12:false});
   };
-  const gmpStatusBadge = status => {
-    const s=String(status||'').trim().toLowerCase();
-    let bg='rgba(120,75,30,.10)', color='#6b6b6b';
-    if(s.includes('open')){ bg='rgba(47,158,94,.14)'; color='var(--green)'; }
-    else if(s.includes('upcoming')){ bg='rgba(58,45,127,.14)'; color='var(--mc)'; }
-    else if(s.includes('clos')){ bg='rgba(224,86,47,.14)'; color='var(--red)'; }
-    return `<span style="display:inline-block;padding:1px 7px;border-radius:5px;font-size:10px;font-weight:700;background:${bg};color:${color}">${st(status)}</span>`;
-  };
   const gmpBody = `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:8px">
     ${gmp.map((r,i)=>{
       const pos=!String(r[1]||'').trim().startsWith('-')&&parseFloat(String(r[1]).replace(/[^\d.-]/g,''))>0;
@@ -1826,12 +1818,20 @@ function renderIPO(rows){
       // ipowatch.in URL pattern: lowercase company name, spaces -> hyphens, trailing "-ipo"
       const slug=String(r[0]||'').trim().toLowerCase().replace(/[^a-z0-9\s-]/g,'').replace(/\s+/g,'-');
       const ipowatchUrl='https://ipowatch.in/'+slug+'-ipo/';
+      // "Last Updated" (col H) came through blank even though the sheet visibly has it — same
+      // array-formula-spill export issue seen with IPO Size. Same fix: if the expected column
+      // is blank, scan the rest of the row for a cell that's actually shaped like a date+time.
+      let updatedRaw=r[7];
+      if(!updatedRaw || !String(updatedRaw).trim() || String(updatedRaw).trim()==='—'){
+        const found=r.slice(8).find(c=>/\d{1,2}\s+[A-Za-z]{3,}.*\d{1,2}:\d{2}/.test(String(c||'')));
+        if(found) updatedRaw=found;
+      }
       return `<div id="${elId}" style="border:1px solid ${bc};background:${bg};border-radius:10px;padding:12px 14px">
-        <a href="${ipowatchUrl}" target="_blank" rel="noopener" style="font-size:12px;font-weight:700;color:#1a1a1a;margin-bottom:4px;
+        <div style="margin-bottom:6px">${tbadge('Mainboard')}</div>
+        <a href="${ipowatchUrl}" target="_blank" rel="noopener" style="font-size:12px;font-weight:700;color:#1a1a1a;margin-bottom:8px;
           white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;text-decoration:none"
           onmouseover="this.style.textDecoration='underline';this.style.color='var(--mc)'"
           onmouseout="this.style.textDecoration='none';this.style.color='#1a1a1a'">${st(r[0])}</a>
-        <div style="margin-bottom:8px">${gmpStatusBadge(r[6])}</div>
         <div style="display:flex;justify-content:space-between;align-items:baseline">
           <div>
             <div style="font-size:9px;color:#6b6b6b;text-transform:uppercase;letter-spacing:.4px">GMP</div>
@@ -1842,9 +1842,11 @@ function renderIPO(rows){
             <div style="font-size:12px;font-weight:600;color:#1a1a1a">${st(r[3])}</div>
           </div>
         </div>
-        <div style="font-size:11px;font-weight:700;color:${color};margin-top:6px">${st(r[4])}</div>
-        <div style="font-size:10px;color:#6b6b6b;margin-top:6px">IPO Date: ${st(r[5])}</div>
-        <div style="font-size:10px;color:#999999;margin-top:3px">Updated: ${fmtGmpUpdated(r[7])}</div>
+        <div style="display:flex;justify-content:space-between;align-items:baseline;margin-top:6px;gap:8px">
+          <span style="font-size:11px;font-weight:700;color:${color}">${st(r[4])}</span>
+          <span style="font-size:10px;color:#6b6b6b;white-space:nowrap">${st(r[5])}</span>
+        </div>
+        <div style="font-size:10px;color:#999999;margin-top:6px">Updated: ${fmtGmpUpdated(updatedRaw)}</div>
       </div>`;
     }).join('')}
   </div>`;
@@ -2451,10 +2453,14 @@ async function refreshAll(){
     try{
       if(k==='corporate'){
         await Promise.allSettled(Object.entries(CORP_GIDS).map(async([ck,gid])=>{
-          try{DATA['corp_'+ck]=await fetchSheet2(gid);}catch(e){}
+          try{DATA['corp_'+ck]=await fetchFreshData(fetchSheet2, gid);}catch(e){}
         }));
         renderCorporate();
         stampUpdated('corporate');
+      } else if(k==='mf'){
+        if(!DATA.etf){ try{ DATA.etf=await fetchFreshData(fetchSheet, GIDS.etf); }catch(e){} }
+        renderMF(DATA.etf||[]);
+        stampUpdated('mf');
       } else if(GIDS[k]){
         if(k==='ipo'){
           try{
