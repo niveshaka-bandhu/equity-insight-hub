@@ -1326,7 +1326,7 @@ function hmColorFor(pct){
 }
 function hmTextDark(pct){ return pct === 0 || hmBucket(Math.abs(pct)) <= 1; }
 
-function renderHeatmapSection(title, items){
+function renderHeatmapSection(title, items, sourceUrl, sourceLabel){
   if(!items.length) return `<div class="hm-section"><div class="hm-title">${title}</div><p style="color:#aaa;padding:12px 0">No data</p></div>`;
   // items: [name, pctChgNumber]
   const sorted = items.slice().sort((a,b)=>b[1]-a[1]);
@@ -1336,12 +1336,18 @@ function renderHeatmapSection(title, items){
   return `<div class="hm-section">
     <div class="hm-head">
       <div class="hm-title">${title}</div>
-      <div class="hm-legend">
-        <span style="color:var(--green);font-weight:700">▲ ${up}</span>
-        <span style="margin:0 4px">·</span>
-        <span style="color:#6b6b6b;font-weight:700">● ${flat}</span>
-        <span style="margin:0 4px">·</span>
-        <span style="color:var(--red);font-weight:700">▼ ${down}</span>
+      <div style="display:flex;align-items:center;gap:10px">
+        <div class="hm-legend">
+          <span style="color:var(--green);font-weight:700">▲ ${up}</span>
+          <span style="margin:0 4px">·</span>
+          <span style="color:#6b6b6b;font-weight:700">● ${flat}</span>
+          <span style="margin:0 4px">·</span>
+          <span style="color:var(--red);font-weight:700">▼ ${down}</span>
+        </div>
+        ${sourceUrl?`<a href="${sourceUrl}" target="_blank" rel="noopener"
+           style="flex-shrink:0;font-size:10px;font-weight:700;color:var(--mc);text-decoration:none;
+             white-space:nowrap;padding:4px 9px;border:1px solid var(--bdr);border-radius:7px;background:rgba(58,45,127,.05)"
+           title="If data below fails to load, check the live figures directly on ${sourceLabel||sourceUrl}">${sourceLabel||'Source ↗'}</a>`:''}
       </div>
     </div>
     <div class="hm-grid">
@@ -1382,10 +1388,10 @@ function renderIndian(rows){
     <div class="stitle">Indian Indices — Heatmap</div>
     <div class="hm-asof" style="margin-bottom:14px">As on ${new Date().toLocaleString('en-IN',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'})} IST</div>
 
-    ${renderHeatmapSection('NSE Sectoral Indices', nse)}
-    ${renderHeatmapSection('BSE Sectoral Indices', bse)}
-    ${renderHeatmapSection('BSE Sensex 30', sensex)}
-    ${renderHeatmapSection('Nifty 50 Constituents', nifty)}
+    ${renderHeatmapSection('NSE Sectoral Indices', nse, 'https://www.nseindia.com/', 'nseindia.com ↗')}
+    ${renderHeatmapSection('BSE Sectoral Indices', bse, 'https://www.bseindia.com/', 'bseindia.com ↗')}
+    ${renderHeatmapSection('BSE Sensex 30', sensex, 'https://www.bseindia.com/', 'bseindia.com ↗')}
+    ${renderHeatmapSection('Nifty 50 Constituents', nifty, 'https://www.nseindia.com/', 'nseindia.com ↗')}
     `;
 }
 
@@ -1593,7 +1599,7 @@ function renderMarket(rows){
     </div>`;
   };
 
-  const section = (title, gainers, losers, is3col) => {
+  const section = (title, gainers, losers, is3col, sourceUrl, sourceLabel) => {
     const slug=slugify(title);
     const gCards = gainers.map((r,i) => {
       const elId=`si-mv-${slug}-g-${i}`;
@@ -1612,6 +1618,10 @@ function renderMarket(rows){
         color:#1a1a1a;margin-bottom:10px;display:flex;align-items:center;gap:10px">
         ${title}
         <div style="flex:1;height:1px;background:var(--bdr)"></div>
+        ${sourceUrl?`<a href="${sourceUrl}" target="_blank" rel="noopener"
+           style="flex-shrink:0;font-size:10px;font-weight:700;color:var(--mc);text-decoration:none;
+             white-space:nowrap;padding:4px 9px;border:1px solid var(--bdr);border-radius:7px;background:rgba(58,45,127,.05)"
+           title="If data below fails to load, check the live figures directly on ${sourceLabel||sourceUrl}">${sourceLabel||'Source ↗'}</a>`:''}
       </div>
       <div class="g2">
         <div>
@@ -1647,11 +1657,11 @@ function renderMarket(rows){
       <div class="adbox"><div class="adlbl">NSE Declines</div><div class="adnum dn">${nseDec}</div></div>
     </div>
 
-    ${section('Nifty 50', n50g, n50l, false)}
-    ${section('All NSE', nseG, nseL, false)}
-    ${section('Sensex 30', s30g, s30l, false)}
-    ${section('All BSE', bseG, bseL, true)}
-    ${section('Nifty Bank', bankG, bankL, false)}`;
+    ${section('Nifty 50', n50g, n50l, false, 'https://www.nseindia.com/', 'nseindia.com ↗')}
+    ${section('All NSE', nseG, nseL, false, 'https://www.nseindia.com/', 'nseindia.com ↗')}
+    ${section('Sensex 30', s30g, s30l, false, 'https://www.bseindia.com/', 'bseindia.com ↗')}
+    ${section('All BSE', bseG, bseL, true, 'https://www.bseindia.com/', 'bseindia.com ↗')}
+    ${section('Nifty Bank', bankG, bankL, false, 'https://www.nseindia.com/', 'nseindia.com ↗')}`;
 }
 
 /* ══════════════════════════════════════════════
@@ -1772,13 +1782,19 @@ function renderIPO(rows){
   const tbadge = t => `<span class="bd ${/main/i.test(st(t))?'bd-a':'bd-g'}">${st(t)||'—'}</span>`;
 
   // Section panel builder
-  const panel = (icon, title, subtitle, count, color, body) => `
+  const panel = (icon, title, subtitle, count, color, body, sourceUrl, sourceLabel) => `
     <div style="background:var(--panel);border:1px solid var(--bdr);border-radius:14px;
       margin-bottom:12px;overflow:hidden">
       <div style="padding:14px 18px;
-        border-bottom:1px solid var(--bdr)">
-        <div style="font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:700;color:#1a1a1a">${title}</div>
-        <div style="font-size:10px;color:#6b6b6b;margin-top:1px">${subtitle}</div>
+        border-bottom:1px solid var(--bdr);display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
+        <div>
+          <div style="font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:700;color:#1a1a1a">${title}</div>
+          <div style="font-size:10px;color:#6b6b6b;margin-top:1px">${subtitle}</div>
+        </div>
+        ${sourceUrl?`<a href="${sourceUrl}" target="_blank" rel="noopener"
+           style="flex-shrink:0;font-size:10px;font-weight:700;color:var(--mc);text-decoration:none;
+             white-space:nowrap;padding:4px 9px;border:1px solid var(--bdr);border-radius:7px;background:rgba(58,45,127,.05)"
+           title="If data below fails to load, check the live figures directly on ${sourceLabel||sourceUrl}">${sourceLabel||'Source ↗'}</a>`:''}
       </div>
       <div style="padding:14px 18px">${body}</div>
     </div>`;
@@ -1942,10 +1958,10 @@ function renderIPO(rows){
   clearSearchTab('ipo');
   $('s-ipo').innerHTML=`
     <div class="stitle">IPO Corner</div>
-    ${panel('','Mainboard IPO','Upcoming open & close dates',mainboardIPO.length,'#555555',mainboardBody)}
-    ${panel('','Grey Market Premium','Unofficial pre-listing market prices',gmp.length,'#0d47a1',gmpBody)}
-    ${panel('','Subscription Status','Live subscription data · Mainboard only',subs.length,'#6a1b9a',subsBody)}
-    ${panel('','Recently Listed IPOs','Performance since listing date · Mainboard only',listed.length,'#1a7a4a',listedBody)}
+    ${panel('','Mainboard IPO','Upcoming open & close dates',mainboardIPO.length,'#555555',mainboardBody,'https://ipowatch.in','ipowatch.in ↗')}
+    ${panel('','Grey Market Premium','Unofficial pre-listing market prices',gmp.length,'#0d47a1',gmpBody,'https://ipowatch.in/ipo-grey-market-premium-latest-ipo-gmp/','ipowatch.in ↗')}
+    ${panel('','Subscription Status','Live subscription data · Mainboard only',subs.length,'#6a1b9a',subsBody,'https://ipowatch.in/ipo-subscription-status-today/','ipowatch.in ↗')}
+    ${panel('','Recently Listed IPOs','Performance since listing date · Mainboard only',listed.length,'#1a7a4a',listedBody,'https://www.moneycontrol.com/ipo/listed-ipos/mainline/','moneycontrol.com ↗')}
   `;
 }
 
@@ -2175,9 +2191,21 @@ function renderCurrency(rows){
 
   $('s-currency').innerHTML=`
     <div class="stitle">Currencies &amp; Commodities</div>
-    <div class="stitle-sm" style="margin-bottom:10px">MCX Commodities</div>
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+      <div class="stitle-sm" style="margin-bottom:0">MCX Commodities</div>
+      <a href="https://www.mcxindia.com/" target="_blank" rel="noopener"
+         style="flex-shrink:0;font-size:10px;font-weight:700;color:var(--mc);text-decoration:none;
+           white-space:nowrap;padding:4px 9px;border:1px solid var(--bdr);border-radius:7px;background:rgba(58,45,127,.05)"
+         title="If data below fails to load, check the live figures directly on mcxindia.com">mcxindia.com ↗</a>
+    </div>
     <div class="hm-grid" style="margin-bottom:24px">${commHeatmap}</div>
-    <div class="stitle-sm" style="margin-bottom:10px">Global Currencies vs ₹ INR</div>
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+      <div class="stitle-sm" style="margin-bottom:0">Global Currencies vs ₹ INR</div>
+      <a href="https://www.xe.com/" target="_blank" rel="noopener"
+         style="flex-shrink:0;font-size:10px;font-weight:700;color:var(--mc);text-decoration:none;
+           white-space:nowrap;padding:4px 9px;border:1px solid var(--bdr);border-radius:7px;background:rgba(58,45,127,.05)"
+         title="If data below fails to load, check the live figures directly on xe.com">xe.com ↗</a>
+    </div>
     <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px">
       ${currCards}
     </div>`;
@@ -2218,13 +2246,17 @@ function renderCorporate(){
   const bonusData=parseCards(DATA['corp_bonus']||[],5);
   const splitData=parseCards(DATA['corp_splits']||[],5);
 
-  const panel=(title,subtitle,count,color,body)=>`
+  const panel=(title,subtitle,count,color,body,sourceUrl,sourceLabel)=>`
     <div style="background:var(--panel);border:1px solid var(--bdr);border-radius:14px;margin-bottom:12px;overflow:hidden">
       <div style="padding:14px 18px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--bdr)">
         <div style="flex:1">
           <div style="font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:700;color:#1a1a1a">${title}</div>
           <div style="font-size:10px;color:#6b6b6b;margin-top:1px">${subtitle}</div>
         </div>
+        ${sourceUrl?`<a href="${sourceUrl}" target="_blank" rel="noopener"
+           style="flex-shrink:0;font-size:10px;font-weight:700;color:var(--mc);text-decoration:none;
+             white-space:nowrap;padding:4px 9px;border:1px solid var(--bdr);border-radius:7px;background:rgba(58,45,127,.05)"
+           title="If data below fails to load, check the live figures directly on ${sourceLabel||sourceUrl}">${sourceLabel||'Source ↗'}</a>`:''}
       </div>
       <div style="padding:14px 18px">${body}</div>
     </div>`;
@@ -2278,10 +2310,10 @@ function renderCorporate(){
   $('s-corporate').innerHTML=
     '<div class="stitle">Corporate Actions</div>'+
     '<div style="font-size:10px;color:#6b6b6b;margin-bottom:14px">Source: Niveshaka-bandhu Corporate Actions Sheet &middot; Auto-refreshes every 5 min</div>'+
-    panel("Today's Events",'Corporate actions effective today',todayData.length,'#555555',todayBody)+
-    panel('Dividends','Upcoming dividend declarations',divData.length,'#1a7a4a',makeCards(divData,'Dividend &#8377;','var(--green)','div'))+
-    panel('Bonus Issues','Bonus share allotments',bonusData.length,'#0d47a1',makeCards(bonusData,'Bonus Ratio','#0d47a1','bonus'))+
-    panel('Stock Splits','Share split announcements',splitData.length,'#e07b00',makeCards(splitData,'Split Ratio','var(--mc)','split'));
+    panel("Today's Events",'Corporate actions effective today',todayData.length,'#555555',todayBody,'https://www.moneycontrol.com/markets/corporate-action/','moneycontrol.com ↗')+
+    panel('Dividends','Upcoming dividend declarations',divData.length,'#1a7a4a',makeCards(divData,'Dividend &#8377;','var(--green)','div'),'https://www.moneycontrol.com/markets/corporate-action/','moneycontrol.com ↗')+
+    panel('Bonus Issues','Bonus share allotments',bonusData.length,'#0d47a1',makeCards(bonusData,'Bonus Ratio','#0d47a1','bonus'),'https://www.moneycontrol.com/markets/corporate-action/','moneycontrol.com ↗')+
+    panel('Stock Splits','Share split announcements',splitData.length,'#e07b00',makeCards(splitData,'Split Ratio','var(--mc)','split'),'https://www.moneycontrol.com/markets/corporate-action/','moneycontrol.com ↗');
 }
 
 
