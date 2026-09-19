@@ -2480,7 +2480,6 @@ const LOADED={'dashboard':true,'global':true,'futures':true};
 
 async function loadTab(key){
   if(LOADED[key]) return; // already loaded
-  LOADED[key]=true;
   const div=$('s-'+key);
   div.innerHTML='<div class="loading"><div class="spin"></div>Loading…</div>';
 
@@ -2521,7 +2520,21 @@ async function loadTab(key){
       if(key==='ipo'){      renderIPO(patchIPOTypes((DATA.ipo||[]).concat(DATA.ipo2||[]), DATA.ipoTypes||[])); stampUpdated('ipo'); }
       if(key==='currency'){ renderCurrency(DATA.currency||[]); stampUpdated('currency'); }
     }
-  } catch(e){ console.error(key,e); }
+    // Only mark this tab loaded once everything above actually succeeded — marking it earlier
+    // (before the fetch/render even ran) meant a single transient failure left the tab blank
+    // FOREVER for the rest of the session, since every later switch back would just see
+    // LOADED[key]===true and return immediately without ever retrying.
+    LOADED[key]=true;
+  } catch(e){
+    console.error(key,e);
+    LOADED[key]=false; // let switching back to this tab retry instead of staying blank forever
+    div.innerHTML=`<div style="text-align:center;padding:50px 20px;color:#6b6b6b">
+      <p style="font-size:13px;margin-bottom:14px">Couldn't load this tab — the data source didn't respond.</p>
+      <button onclick="loadTab('${key}')"
+        style="font-size:12px;font-weight:700;color:#fff;background:var(--mc);border:none;
+          padding:9px 18px;border-radius:8px;cursor:pointer">⟳ Retry</button>
+    </div>`;
+  }
 }
 
 async function refreshAll(){
@@ -4861,7 +4874,12 @@ function startNiftyFetch(rangeKey){
   const entry=NIFTY_DATA_CACHE[rangeKey];
   const stale = !entry || (Date.now()-entry.ts > NIFTY_CACHE_TTL);
   if(stale){
-    NIFTY_DATA_CACHE[rangeKey]={ts:Date.now(), promise:fetchNiftyRaw(rangeKey)};
+    const promise=fetchNiftyRaw(rangeKey);
+    NIFTY_DATA_CACHE[rangeKey]={ts:Date.now(), promise};
+    // Don't let a failed fetch squat on the cache for the full TTL — a rejected promise being
+    // "reused" for 2 minutes meant a single hiccup left the chart blank until the TTL expired
+    // on its own. On failure, evict immediately so the very next call retries right away.
+    promise.catch(()=>{ if(NIFTY_DATA_CACHE[rangeKey]?.promise===promise) delete NIFTY_DATA_CACHE[rangeKey]; });
   }
   return NIFTY_DATA_CACHE[rangeKey].promise;
 }
@@ -4897,10 +4915,14 @@ function extractMMIScore(obj){
   return found;
 }
 function classifyMMIZone(score){
-  if(score<30) return {label:'Extreme Fear', color:'#c0392b'};
-  if(score<50) return {label:'Fear',         color:'#e07b00'};
-  if(score<70) return {label:'Greed',        color:'#2f9e5e'};
-  return                {label:'Extreme Greed', color:'#1a7a4a'};
+  if(score<30) return {label:'Extreme Fear', color:'var(--green)', light:'rgba(47,158,94,.08)',
+    explain:'The market has likely been sold off hard and may be oversold. Historically, this zone has been closer to a bottom than a top — some investors see it as a reasonable window to start building fresh positions rather than a moment to panic further.'};
+  if(score<50) return {label:'Fear', color:'#e07b00', light:'rgba(224,123,0,.08)',
+    explain:'Investors are turning cautious, but what to do about it depends on direction. If sentiment is sliding from Greed toward here, it may be worth waiting for Extreme Fear before acting. If it\'s recovering up from Extreme Fear, the worst of the pessimism may already be behind it.'};
+  if(score<70) return {label:'Greed', color:'#e07b00', light:'rgba(224,123,0,.08)',
+    explain:'Investors are getting optimistic, bordering on complacent. If sentiment is climbing up into this zone, it\'s worth being more selective about new positions. If it\'s cooling off from Extreme Greed, a little patience before chasing fresh opportunities is usually wise.'};
+  return {label:'Extreme Greed', color:'var(--red)', light:'rgba(224,86,47,.08)',
+    explain:'The market has likely run up quickly and may be overbought. Sentiment this euphoric has historically preceded pullbacks more often than not — many investors treat this zone as a cue for caution rather than for chasing further gains.'};
 }
 
 async function fetchMMIRaw(){
@@ -4915,25 +4937,68 @@ async function fetchMMIRaw(){
   })));
 }
 
-function renderMMIWidget(score, zone){
+/* Builds the semicircular gauge SVG matching Tickertape's own MMI dial: a ~255° sweep
+   (leaving a gap at the bottom), colored green at the Extreme Fear end and red at the
+   Extreme Greed end, plain track through Fear/Greed in between, with a needle and a
+   light pie-wash from the start of the sweep up to the current score. */
+function buildMMIGaugeSVG(score, zone){
+  const cx=150, cy=148, r=92, trackW=15;
+  const START=145, SWEEP=255; // degrees; 0°=3 o'clock, 90°=6 o'clock (clockwise, SVG y-down)
+  const angleAt = s => START + (Math.max(0,Math.min(100,s))/100)*SWEEP;
+  const polar = (rad, deg) => { const t=deg*Math.PI/180; return {x:cx+rad*Math.cos(t), y:cy+rad*Math.sin(t)}; };
+  const arc = (rad, a0, a1) => {
+    const p0=polar(rad,a0), p1=polar(rad,a1);
+    const large = (a1-a0) > 180 ? 1 : 0;
+    return `M ${p0.x.toFixed(2)} ${p0.y.toFixed(2)} A ${rad} ${rad} 0 ${large} 1 ${p1.x.toFixed(2)} ${p1.y.toFixed(2)}`;
+  };
+  const a30=angleAt(30), a50=angleAt(50), a70=angleAt(70), aEnd=angleAt(100), aNow=angleAt(score);
+  const tick = deg => { const p0=polar(r-trackW/2-2,deg), p1=polar(r+trackW/2+2,deg);
+    return `<line x1="${p0.x.toFixed(2)}" y1="${p0.y.toFixed(2)}" x2="${p1.x.toFixed(2)}" y2="${p1.y.toFixed(2)}" stroke="#cfcfcf" stroke-width="2"/>`; };
+  const label = (rad, deg, text, color) => { const p=polar(rad,deg);
+    return `<text x="${p.x.toFixed(2)}" y="${p.y.toFixed(2)}" text-anchor="middle" dominant-baseline="middle"
+      font-size="10" font-weight="700" fill="${color}" letter-spacing=".4">${text}</text>`; };
+  const needleTip = polar(66, aNow);
+  const wedge = `M ${cx} ${cy} L ${polar(r,START).x.toFixed(2)} ${polar(r,START).y.toFixed(2)} ` +
+    `A ${r} ${r} 0 ${(aNow-START)>180?1:0} 1 ${polar(r,aNow).x.toFixed(2)} ${polar(r,aNow).y.toFixed(2)} Z`;
+  return `<svg viewBox="0 0 300 230" style="width:100%;max-width:340px;display:block;margin:0 auto">
+    <path d="${arc(r, START, aEnd)}" fill="none" stroke="#ececec" stroke-width="${trackW}" stroke-linecap="round"/>
+    <path d="${arc(r, START, a30)}"  fill="none" stroke="var(--green)" stroke-width="${trackW}" stroke-linecap="round"/>
+    <path d="${arc(r, a70, aEnd)}"   fill="none" stroke="var(--red)"   stroke-width="${trackW}" stroke-linecap="round"/>
+    <path d="${wedge}" fill="${zone.color}" opacity=".08"/>
+    ${tick(a30)}${tick(a50)}${tick(a70)}
+    ${label(r+13, START+SWEEP*0.20, 'FEAR', '#e07b00')}
+    ${label(r+13, START+SWEEP*0.80, 'GREED', '#e07b00')}
+    ${label(r+15, START+SWEEP*0.045, 'EXTREME', 'var(--green)')}
+    ${label(r+26, START+SWEEP*0.045, 'FEAR', 'var(--green)')}
+    ${label(r+15, START+SWEEP*0.955, 'EXTREME', 'var(--red)')}
+    ${label(r+26, START+SWEEP*0.955, 'GREED', 'var(--red)')}
+    <circle cx="${cx}" cy="${cy}" r="7" fill="${zone.color}"/>
+    <line x1="${cx}" y1="${cy}" x2="${needleTip.x.toFixed(2)}" y2="${needleTip.y.toFixed(2)}"
+      stroke="${zone.color}" stroke-width="5" stroke-linecap="round"/>
+  </svg>`;
+}
+
+function renderMMIWidget(score, zone, updatedAgo){
   const wrap = document.getElementById('mmi-widget');
   if(!wrap) return;
-  const pct = Math.max(0, Math.min(100, score));
   wrap.innerHTML = `
-    <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:14px">
-      <span style="font-family:'Space Grotesk',sans-serif;font-size:32px;font-weight:700;color:${zone.color}">${score.toFixed(1)}</span>
-      <span style="font-size:14px;font-weight:700;color:${zone.color}">${zone.label}</span>
+    ${buildMMIGaugeSVG(score, zone)}
+    <div style="text-align:center;margin-top:6px">
+      <div style="font-family:'Space Grotesk',sans-serif;font-size:34px;font-weight:700;color:${zone.color};line-height:1.1">${score.toFixed(2)}</div>
+      <div style="font-size:11px;color:#999999">${updatedAgo||'Live'}</div>
     </div>
-    <div style="position:relative;height:10px;border-radius:6px;margin-bottom:6px;
-      background:linear-gradient(90deg,#c0392b 0%,#c0392b 30%,#e07b00 30%,#e07b00 50%,#2f9e5e 50%,#2f9e5e 70%,#1a7a4a 70%,#1a7a4a 100%)">
-      <div style="position:absolute;top:-4px;left:${pct}%;transform:translateX(-50%);width:2px;height:18px;background:#1a1a1a;border-radius:1px"></div>
-      <div style="position:absolute;top:-13px;left:${pct}%;transform:translateX(-50%);width:0;height:0;
-        border-left:5px solid transparent;border-right:5px solid transparent;border-top:6px solid #1a1a1a"></div>
+    <div style="margin-top:16px;padding:13px 15px;border-radius:10px;background:${zone.light};border:1px solid ${zone.color}33">
+      <div style="font-size:12px;font-weight:700;color:${zone.color};margin-bottom:6px">${zone.label} — what this usually means</div>
+      <p style="font-size:12px;color:#444444;line-height:1.6;margin:0 0 8px">${zone.explain}</p>
+      <a href="https://www.tickertape.in/market-mood-index?ref=homepage_mmi_section" target="_blank" rel="noopener"
+         style="font-size:11px;font-weight:700;color:var(--mc);text-decoration:none">Learn more about MMI zones ↗</a>
     </div>
-    <div style="display:flex;justify-content:space-between;font-size:10px;color:#999999;font-weight:600">
-      <span>Extreme Fear</span><span>Fear</span><span>Greed</span><span>Extreme Greed</span>
-    </div>
-    <p style="font-size:10px;color:#999999;margin-top:12px">Sentiment gauge, not a trade signal · Sourced live from Tickertape</p>`;
+    <blockquote style="margin:16px 2px 2px;padding-left:14px;border-left:3px solid var(--bdr);
+      font-size:12px;font-style:italic;color:#6b6b6b;line-height:1.6">
+      "Be fearful when others are greedy &amp; greedy when others are fearful"
+      <div style="margin-top:4px;font-style:normal;font-weight:700;font-size:11px;color:#999999">— Warren Buffett</div>
+    </blockquote>
+    <p style="font-size:10px;color:#999999;margin-top:12px;text-align:center">Sentiment gauge, not a trade signal · Sourced live from Tickertape</p>`;
 }
 function renderMMIError(){
   const wrap = document.getElementById('mmi-widget');
@@ -4947,7 +5012,11 @@ function renderMMIError(){
 async function loadMMI(){
   try{
     const stale = !MMI_CACHE || (Date.now()-MMI_CACHE.ts > MMI_CACHE_TTL);
-    if(stale) MMI_CACHE = {ts:Date.now(), promise:fetchMMIRaw()};
+    if(stale){
+      const promise=fetchMMIRaw();
+      MMI_CACHE = {ts:Date.now(), promise};
+      promise.catch(()=>{ if(MMI_CACHE?.promise===promise) MMI_CACHE=null; });
+    }
     const raw = await MMI_CACHE.promise;
     const score = extractMMIScore(raw);
     if(score===null){ console.warn('[MMI] Could not locate a score in response shape:', raw); renderMMIError(); return; }
