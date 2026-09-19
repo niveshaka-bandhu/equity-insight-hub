@@ -2557,7 +2557,10 @@ function toggleCalc(id){
       const willOpen = b.style.display==='none';
       b.style.display = willOpen ? 'block' : 'none';
       if(chevron) chevron.textContent = willOpen ? '−' : '+';
-      if(willOpen) b.scrollIntoView({behavior:'smooth',block:'nearest'});
+      if(willOpen){
+        b.scrollIntoView({behavior:'smooth',block:'nearest'});
+        trackFeature('calc-'+id);
+      }
     } else {
       b.style.display='none';
       if(chevron) chevron.textContent='+';
@@ -4590,8 +4593,10 @@ const NIFTY_RANGE_CONFIG={
 async function fetchNiftyRaw(rangeKey){
   const cfg=NIFTY_RANGE_CONFIG[rangeKey]||NIFTY_RANGE_CONFIG['1d'];
 
-  const yahooUrl='https://query1.finance.yahoo.com/v8/finance/chart/%5ENSEI?range='+cfg.range+'&interval='+cfg.interval;
+  const yahooPath='/v8/finance/chart/%5ENSEI?range='+cfg.range+'&interval='+cfg.interval;
+  const yahooUrl='https://query1.finance.yahoo.com'+yahooPath;
   const proxies=[
+    'https://yahoo-chart-proxy.vritramitra.workers.dev'+yahooPath,
     'https://api.allorigins.win/raw?url='+encodeURIComponent(yahooUrl),
     'https://corsproxy.io/?url='+encodeURIComponent(yahooUrl)
   ];
@@ -4624,8 +4629,10 @@ async function fetchNiftyRaw(rangeKey){
 let NIFTY_DAILY_HISTORY=null;
 async function fetchNiftyDailyHistory(){
   if(NIFTY_DAILY_HISTORY) return NIFTY_DAILY_HISTORY;
-  const yahooUrl='https://query1.finance.yahoo.com/v8/finance/chart/%5ENSEI?range=13mo&interval=1d';
+  const yahooPath='/v8/finance/chart/%5ENSEI?range=13mo&interval=1d';
+  const yahooUrl='https://query1.finance.yahoo.com'+yahooPath;
   const proxies=[
+    'https://yahoo-chart-proxy.vritramitra.workers.dev'+yahooPath,
     'https://api.allorigins.win/raw?url='+encodeURIComponent(yahooUrl),
     'https://corsproxy.io/?url='+encodeURIComponent(yahooUrl)
   ];
@@ -5392,6 +5399,44 @@ function openChartLookup(){
   }
   animParallax();
 })();
+</script>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     CLOUDFLARE WEB ANALYTICS — privacy-friendly visit/pageview tracking.
+     No cookies, no consent banner needed, works on GitHub Pages regardless
+     of whether the domain is proxied through Cloudflare.
+
+     SETUP (one-time, in the Cloudflare dashboard):
+       1. dash.cloudflare.com → left sidebar → Analytics & Logs → Web Analytics
+       2. "Add a site" → enter your GitHub Pages domain (works even though
+          it's not on Cloudflare's DNS — Web Analytics supports "JS-only" sites)
+       3. Cloudflare gives you a snippet with a unique "token" (a long hex string)
+       4. Paste that token below, replacing YOUR_CF_BEACON_TOKEN
+     Until you do that, this script tag is inert (Cloudflare just ignores
+     an invalid token) — it won't error or break anything.
+
+     Once live, the dashboard automatically shows visits/pageviews per URL —
+     including every tab switch, since showTab() already changes the URL hash
+     via history.pushState, which this beacon listens for. Calculator opens
+     are tracked separately below via trackFeature(), since toggling a
+     calculator open doesn't change the URL on its own.
+     ═══════════════════════════════════════════════════════════════════ -->
+<script defer src='https://static.cloudflareinsights.com/beacon.min.js'
+  data-cf-beacon='{"token": "YOUR_CF_BEACON_TOKEN"}'></script>
+
+<script>
+/* Records a feature-level usage event (e.g. a specific calculator being opened) in
+   Cloudflare Web Analytics, which only auto-tracks real page/URL changes. The trick:
+   briefly push a synthetic "/e/<name>" URL so Cloudflare's route-change listener logs
+   it as a page view, then immediately replace it back to the real URL in the same tick
+   — so the address bar never visibly changes and the back button isn't affected. */
+function trackFeature(name){
+  try{
+    const real = location.pathname + location.search + location.hash;
+    history.pushState(null, '', '/e/' + encodeURIComponent(name));
+    history.replaceState(null, '', real);
+  }catch(e){ /* analytics failing silently should never break the app */ }
+}
 </script>
 </body>
 </html>
