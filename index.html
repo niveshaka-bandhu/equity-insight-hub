@@ -938,20 +938,6 @@ function renderDashboard(rows, newsRows){
       </div>
     </div>
 
-    <!-- MARKET MOOD INDEX (Tickertape) — reverse-engineered keyless endpoint, proxied client-side -->
-    <div class="tcw">
-      <div class="tch" style="color:#6a1b9a;display:flex;justify-content:space-between;align-items:center">
-        <span>Market Mood Index</span>
-        <a href="https://www.tickertape.in/market-mood-index?ref=homepage_mmi_section" target="_blank" rel="noopener"
-           style="font-size:10px;font-weight:700;color:var(--mc);text-decoration:none;white-space:nowrap;
-             padding:4px 9px;border:1px solid var(--bdr);border-radius:7px;background:rgba(58,45,127,.05)"
-           title="View the live gauge on Tickertape">tickertape.in ↗</a>
-      </div>
-      <div style="padding:16px 18px" id="mmi-widget">
-        <div id="mmi-status" style="text-align:center;color:#999999;font-size:12px;padding:20px 0">Loading market mood…</div>
-      </div>
-    </div>
-
     <!-- FUTURES + GLOBAL WATCHLIST WIDGET -->
     ${buildDashFuturesGlobal()}
 
@@ -992,7 +978,6 @@ function renderDashboard(rows, newsRows){
   `;
   try{ drawCandlestickBG(); }catch(e){}
   try{ loadNiftyChart(); }catch(e){}
-  try{ loadMMI(); }catch(e){}
 }
 
 /* ── Dashboard widget: Watchlist of specific Futures + Global indices ── */
@@ -2036,6 +2021,28 @@ function renderETF(rows){
    (Fund Name / NAV / NAV Date / 1Y / 3Y / 5Y / Expense Ratio / AUM). */
 let MF_DATA=[];
 let MF_SORT={field:'name', dir:'asc'};
+let MF_SUBTAB='groww';
+function switchMFSubtab(key){
+  if(MF_SUBTAB===key) return;
+  MF_SUBTAB=key;
+  renderMFShell();
+}
+function renderMFShell(){
+  const tabBtn = (key,label) => `<button onclick="switchMFSubtab('${key}')"
+    style="flex:1;padding:9px;border:1px solid var(--mc);border-radius:9px;font-size:12px;font-weight:700;cursor:pointer;
+      background:${MF_SUBTAB===key?'var(--mc)':'#fff'};color:${MF_SUBTAB===key?'#fff':'var(--mc)'}">${label}</button>`;
+  $('s-mf').innerHTML = `
+    <div class="stitle">Mutual Funds</div>
+    <div style="display:flex;gap:8px;margin-bottom:14px">
+      ${tabBtn('groww','Groww MF')}
+      ${tabBtn('amfi','AMFI MF')}
+    </div>
+    <div id="mf-subtab-content"></div>
+  `;
+  if(MF_SUBTAB==='groww') renderGrowwMFContent();
+  else loadAMFIMF();
+}
+
 function renderMF(rows){
   const headerIdx = rows.findIndex(r => clean(r[15]).toLowerCase().includes('fund name'));
   const dataStart = headerIdx >= 0 ? headerIdx+1 : 2;
@@ -2056,13 +2063,18 @@ function renderMF(rows){
     });
   }
   MF_DATA=parsed;
-  sortMF();
+  renderMFShell();
 }
 function sortMF(newField){
   if(newField){
     if(MF_SORT.field===newField){ MF_SORT.dir = MF_SORT.dir==='asc' ? 'desc' : 'asc'; }
     else { MF_SORT.field=newField; MF_SORT.dir='asc'; }
   }
+  renderGrowwMFContent();
+}
+function renderGrowwMFContent(){
+  const container=document.getElementById('mf-subtab-content');
+  if(!container) return;
   const numField = ['nav','ret1y','ret3y','ret5y','expRatio','aum'].includes(MF_SORT.field);
   const sorted=[...MF_DATA].sort((a,b)=>{
     let av=a[MF_SORT.field], bv=b[MF_SORT.field];
@@ -2095,10 +2107,9 @@ function sortMF(newField){
   }).join('');
 
   clearSearchTab('mf');
-  sorted.forEach((e,i)=>pushSearch('mf','Mutual Fund',e.name,'NAV '+e.nav+' · 1Y '+e.ret1y,'si-mf-'+i));
+  sorted.forEach((e,i)=>pushSearch('mf','Mutual Fund (Groww)',e.name,'NAV '+e.nav+' · 1Y '+e.ret1y,'si-mf-'+i));
 
-  $('s-mf').innerHTML = `
-    <div class="stitle">Mutual Fund Screener</div>
+  container.innerHTML = `
     <div style="font-size:10px;color:#6b6b6b;margin-bottom:14px">Sorted by ${sortLabels[MF_SORT.field]} (${MF_SORT.dir==='asc'?'ascending':'descending'})</div>
     <div style="background:var(--panel);border:1px solid var(--bdr);border-radius:14px;overflow:hidden">
       <div style="padding:14px 18px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;gap:10px;flex-wrap:wrap">
@@ -2117,7 +2128,117 @@ function sortMF(newField){
         </table>
       </div>
     </div>
-    <p style="font-size:10px;color:#999999;margin-top:10px">Tap any column header or the sort control above to re-sort.</p>
+    <p style="font-size:10px;color:#999999;margin-top:10px">Tap any column header or the sort control above to re-sort. Data from Groww's mutual fund sheet.</p>
+  `;
+}
+
+/* ══════════════════════════════════════════════
+   AMFI MF — real NAV data straight from AMFI's own public daily text file.
+   No key, no auth, no anti-bot handshake needed (unlike Tickertape's MMI) —
+   this is a plain government-mandated public disclosure file, refreshed once
+   daily after market close. Still routed through the same CORS proxies as
+   everything else, since amfiindia.com itself doesn't set CORS headers for
+   direct browser fetches.
+   ══════════════════════════════════════════════ */
+let AMFI_PARSED=null, AMFI_CACHE_TS=0, AMFI_SEARCH='';
+const AMFI_CACHE_TTL = 6*60*60*1000; // NAVs update once/day — no need to refetch more than every few hours
+
+/* AMFI's NAVAll.txt has no fixed row count/position per fund house — each AMC's block starts with
+   a plain heading line (its name, no semicolons), followed by scheme rows ("code;isin;isin;name;nav;date").
+   Rather than assume a fixed structure, this just classifies each line by shape: 6+ semicolon fields
+   with a numeric code and a parseable NAV is a scheme row, anything else (that isn't the repeated
+   column-header line) becomes the "current AMC" label attached to the rows that follow it. */
+function parseAMFINav(text){
+  const lines=text.split(/\r?\n/);
+  let currentAMC='';
+  const rows=[];
+  for(const raw of lines){
+    const line=raw.trim();
+    if(!line) continue;
+    const parts=line.split(';');
+    if(parts.length>=6){
+      const code=parts[0].trim(), name=parts[3].trim(), nav=parseFloat(parts[4]), date=parts[5].trim();
+      if(/^\d+$/.test(code) && !isNaN(nav) && name){
+        rows.push({code, name, nav, date, amc:currentAMC});
+        continue;
+      }
+    }
+    if(!/scheme\s*code/i.test(line) && /mutual fund/i.test(line)) currentAMC=line;
+    // Anything else that isn't a data row (category subheaders like "Open Ended Schemes(Growth)",
+    // the repeated column-header line) is skipped rather than mistaken for a new AMC — AMC names
+    // in this file conventionally end in "Mutual Fund", category lines don't.
+  }
+  return rows;
+}
+async function fetchAMFIRaw(){
+  const targetUrl='https://www.amfiindia.com/spages/NAVAll.txt';
+  const proxies=[
+    'https://api.allorigins.win/raw?url='+encodeURIComponent(targetUrl),
+    'https://corsproxy.io/?url='+encodeURIComponent(targetUrl)
+  ];
+  const attempts=proxies.map(url=>withTimeout(fetch(url,{cache:'no-store'}),15000)
+    .then(res=>{ if(!res.ok) throw new Error('HTTP '+res.status); return res.text(); })
+    .catch(e=>{
+      let host; try{host=new URL(url).host;}catch(_){host=url;}
+      console.warn('[AMFI source failed]', host, '-', (e&&e.message)||e);
+      throw e;
+    }));
+  return Promise.any(attempts);
+}
+async function loadAMFIMF(force){
+  const container=document.getElementById('mf-subtab-content');
+  if(!container) return;
+  const stale = force || !AMFI_PARSED || (Date.now()-AMFI_CACHE_TS > AMFI_CACHE_TTL);
+  if(!stale){ renderAMFIList(); return; }
+  container.innerHTML=`<div class="loading"><div class="spin"></div>Loading AMFI NAV data — this file covers every scheme in India, may take a few seconds…</div>`;
+  try{
+    const text=await fetchAMFIRaw();
+    const parsed=parseAMFINav(text);
+    if(!parsed.length) throw new Error('Parsed 0 scheme rows — response shape may have changed');
+    AMFI_PARSED=parsed;
+    AMFI_CACHE_TS=Date.now();
+    renderAMFIList();
+  }catch(e){
+    console.error('[AMFI]',e);
+    container.innerHTML=`<div style="text-align:center;padding:40px 20px;color:#6b6b6b">
+      <p style="font-size:13px;margin-bottom:14px">Couldn't load AMFI NAV data — the data source didn't respond.</p>
+      <button onclick="loadAMFIMF(true)" style="font-size:12px;font-weight:700;color:#fff;background:var(--mc);border:none;padding:9px 18px;border-radius:8px;cursor:pointer">⟳ Retry</button>
+    </div>`;
+  }
+}
+function renderAMFIList(){
+  const container=document.getElementById('mf-subtab-content');
+  if(!container || !AMFI_PARSED) return;
+  const q=AMFI_SEARCH.trim().toLowerCase();
+  const filtered = q ? AMFI_PARSED.filter(r=>r.name.toLowerCase().includes(q)||r.amc.toLowerCase().includes(q)) : [];
+  const list = filtered.slice(0,80);
+
+  clearSearchTab('mf');
+  list.forEach((e,i)=>pushSearch('mf','Mutual Fund (AMFI)',e.name,e.amc+' · NAV ₹'+e.nav.toFixed(4),'si-amfi-'+i));
+
+  const latestDate = AMFI_PARSED[0]?.date || '';
+  container.innerHTML = `
+    <input id="amfi-search" type="text" placeholder="Search by fund or AMC name… e.g. 'HDFC Flexi Cap'"
+      value="${AMFI_SEARCH.replace(/"/g,'&quot;')}"
+      oninput="AMFI_SEARCH=this.value; renderAMFIList();"
+      style="width:100%;padding:10px 12px;border:1px solid var(--bdr);border-radius:10px;font-size:13px;box-sizing:border-box;margin-bottom:8px">
+    <p style="font-size:10px;color:#999999;margin-bottom:12px">${AMFI_PARSED.length.toLocaleString('en-IN')} schemes loaded directly from AMFI${latestDate?' · as of '+latestDate:''}</p>
+    ${!q
+      ? `<p style="text-align:center;color:#999999;font-size:12px;padding:30px 10px">Type a fund or AMC name above to search — there are too many schemes to list all at once.</p>`
+      : filtered.length===0
+        ? `<p style="text-align:center;color:#999999;font-size:12px;padding:30px 10px">No schemes matching "${AMFI_SEARCH}".</p>`
+        : `${filtered.length>80?`<p style="font-size:10px;color:#999999;margin-bottom:8px">Showing first 80 of ${filtered.length} matches — refine your search for more precise results.</p>`:''}
+           ${list.map((e,i)=>`
+            <div id="si-amfi-${i}" style="padding:12px 14px;border:1px solid var(--bdr);border-radius:10px;margin-bottom:8px;background:var(--panel)">
+              <div style="font-size:12.5px;font-weight:700;color:#1a1a1a;line-height:1.35">${e.name}</div>
+              <div style="font-size:10px;color:#999999;margin:2px 0 8px">${e.amc||'—'}</div>
+              <div style="display:flex;justify-content:space-between;align-items:baseline">
+                <span style="font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:700;color:var(--mc)">₹${e.nav.toFixed(4)}</span>
+                <span style="font-size:10px;color:#999999">as of ${e.date}</span>
+              </div>
+            </div>`).join('')}`
+    }
+    <p style="font-size:10px;color:#999999;margin-top:10px">Sourced live from AMFI's public daily NAV file · updates once per day after market close.</p>
   `;
 }
 function sortETF(newField){
@@ -4898,146 +5019,6 @@ function startNiftyFetch(rangeKey){
     promise.catch(()=>{ if(NIFTY_DATA_CACHE[rangeKey]?.promise===promise) delete NIFTY_DATA_CACHE[rangeKey]; });
   }
   return NIFTY_DATA_CACHE[rangeKey].promise;
-}
-
-/* ══════════════════════════════════════════════
-   MARKET MOOD INDEX (Tickertape) — reverse-engineered keyless JSON endpoint.
-   This is not an official/documented API, so we don't hardcode a response
-   path (e.g. data.currentValue) — instead we scan the parsed JSON for a
-   plausible 0–100 numeric value under a key name that suggests it's the
-   score. Same "detect the shape, don't assume a fixed path" approach this
-   project already uses for flaky Google Sheets exports — if Tickertape
-   quietly reshapes the response, this degrades gracefully instead of
-   breaking outright.
-   ══════════════════════════════════════════════ */
-const MMI_CACHE_TTL = 5*60*1000; // 5 min — MMI barely moves intraday, no need to hit it harder
-let MMI_CACHE = null;
-
-function extractMMIScore(obj){
-  const KEY_HINTS = /value|score|mmi|now|current/i;
-  let found = null;
-  (function walk(o, depth){
-    if(found!==null || !o || typeof o!=='object' || depth>6) return;
-    for(const k in o){
-      const v = o[k];
-      if(typeof v==='number' && v>=0 && v<=100 && KEY_HINTS.test(k)){ found=v; return; }
-    }
-    for(const k in o){
-      if(found!==null) return;
-      const v = o[k];
-      if(v && typeof v==='object') walk(v, depth+1);
-    }
-  })(obj, 0);
-  return found;
-}
-function classifyMMIZone(score){
-  if(score<30) return {label:'Extreme Fear', color:'var(--green)', light:'rgba(47,158,94,.08)',
-    explain:'The market has likely been sold off hard and may be oversold. Historically, this zone has been closer to a bottom than a top — some investors see it as a reasonable window to start building fresh positions rather than a moment to panic further.'};
-  if(score<50) return {label:'Fear', color:'#e07b00', light:'rgba(224,123,0,.08)',
-    explain:'Investors are turning cautious, but what to do about it depends on direction. If sentiment is sliding from Greed toward here, it may be worth waiting for Extreme Fear before acting. If it\'s recovering up from Extreme Fear, the worst of the pessimism may already be behind it.'};
-  if(score<70) return {label:'Greed', color:'#e07b00', light:'rgba(224,123,0,.08)',
-    explain:'Investors are getting optimistic, bordering on complacent. If sentiment is climbing up into this zone, it\'s worth being more selective about new positions. If it\'s cooling off from Extreme Greed, a little patience before chasing fresh opportunities is usually wise.'};
-  return {label:'Extreme Greed', color:'var(--red)', light:'rgba(224,86,47,.08)',
-    explain:'The market has likely run up quickly and may be overbought. Sentiment this euphoric has historically preceded pullbacks more often than not — many investors treat this zone as a cue for caution rather than for chasing further gains.'};
-}
-
-async function fetchMMIRaw(){
-  const targetUrl = 'https://api.tickertape.in/mmi/now';
-  const proxies = [
-    'https://api.allorigins.win/raw?url='+encodeURIComponent(targetUrl),
-    'https://corsproxy.io/?url='+encodeURIComponent(targetUrl)
-  ];
-  return raceJsonSources(proxies, 'MMI');
-}
-
-/* Builds the semicircular gauge SVG matching Tickertape's own MMI dial: a ~255° sweep
-   (leaving a gap at the bottom), colored green at the Extreme Fear end and red at the
-   Extreme Greed end, plain track through Fear/Greed in between, with a needle and a
-   light pie-wash from the start of the sweep up to the current score. */
-function buildMMIGaugeSVG(score, zone){
-  const cx=150, cy=148, r=92, trackW=15;
-  const START=145, SWEEP=255; // degrees; 0°=3 o'clock, 90°=6 o'clock (clockwise, SVG y-down)
-  const angleAt = s => START + (Math.max(0,Math.min(100,s))/100)*SWEEP;
-  const polar = (rad, deg) => { const t=deg*Math.PI/180; return {x:cx+rad*Math.cos(t), y:cy+rad*Math.sin(t)}; };
-  const arc = (rad, a0, a1) => {
-    const p0=polar(rad,a0), p1=polar(rad,a1);
-    const large = (a1-a0) > 180 ? 1 : 0;
-    return `M ${p0.x.toFixed(2)} ${p0.y.toFixed(2)} A ${rad} ${rad} 0 ${large} 1 ${p1.x.toFixed(2)} ${p1.y.toFixed(2)}`;
-  };
-  const a30=angleAt(30), a50=angleAt(50), a70=angleAt(70), aEnd=angleAt(100), aNow=angleAt(score);
-  const tick = deg => { const p0=polar(r-trackW/2-2,deg), p1=polar(r+trackW/2+2,deg);
-    return `<line x1="${p0.x.toFixed(2)}" y1="${p0.y.toFixed(2)}" x2="${p1.x.toFixed(2)}" y2="${p1.y.toFixed(2)}" stroke="#cfcfcf" stroke-width="2"/>`; };
-  const label = (rad, deg, text, color) => { const p=polar(rad,deg);
-    return `<text x="${p.x.toFixed(2)}" y="${p.y.toFixed(2)}" text-anchor="middle" dominant-baseline="middle"
-      font-size="10" font-weight="700" fill="${color}" letter-spacing=".4">${text}</text>`; };
-  const needleTip = polar(66, aNow);
-  const wedge = `M ${cx} ${cy} L ${polar(r,START).x.toFixed(2)} ${polar(r,START).y.toFixed(2)} ` +
-    `A ${r} ${r} 0 ${(aNow-START)>180?1:0} 1 ${polar(r,aNow).x.toFixed(2)} ${polar(r,aNow).y.toFixed(2)} Z`;
-  return `<svg viewBox="0 0 300 230" style="width:100%;max-width:340px;display:block;margin:0 auto">
-    <path d="${arc(r, START, aEnd)}" fill="none" stroke="#ececec" stroke-width="${trackW}" stroke-linecap="round"/>
-    <path d="${arc(r, START, a30)}"  fill="none" stroke="var(--green)" stroke-width="${trackW}" stroke-linecap="round"/>
-    <path d="${arc(r, a70, aEnd)}"   fill="none" stroke="var(--red)"   stroke-width="${trackW}" stroke-linecap="round"/>
-    <path d="${wedge}" fill="${zone.color}" opacity=".08"/>
-    ${tick(a30)}${tick(a50)}${tick(a70)}
-    ${label(r+13, START+SWEEP*0.20, 'FEAR', '#e07b00')}
-    ${label(r+13, START+SWEEP*0.80, 'GREED', '#e07b00')}
-    ${label(r+15, START+SWEEP*0.045, 'EXTREME', 'var(--green)')}
-    ${label(r+26, START+SWEEP*0.045, 'FEAR', 'var(--green)')}
-    ${label(r+15, START+SWEEP*0.955, 'EXTREME', 'var(--red)')}
-    ${label(r+26, START+SWEEP*0.955, 'GREED', 'var(--red)')}
-    <circle cx="${cx}" cy="${cy}" r="7" fill="${zone.color}"/>
-    <line x1="${cx}" y1="${cy}" x2="${needleTip.x.toFixed(2)}" y2="${needleTip.y.toFixed(2)}"
-      stroke="${zone.color}" stroke-width="5" stroke-linecap="round"/>
-  </svg>`;
-}
-
-function renderMMIWidget(score, zone, updatedAgo){
-  const wrap = document.getElementById('mmi-widget');
-  if(!wrap) return;
-  wrap.innerHTML = `
-    ${buildMMIGaugeSVG(score, zone)}
-    <div style="text-align:center;margin-top:6px">
-      <div style="font-family:'Space Grotesk',sans-serif;font-size:34px;font-weight:700;color:${zone.color};line-height:1.1">${score.toFixed(2)}</div>
-      <div style="font-size:11px;color:#999999">${updatedAgo||'Live'}</div>
-    </div>
-    <div style="margin-top:16px;padding:13px 15px;border-radius:10px;background:${zone.light};border:1px solid ${zone.color}33">
-      <div style="font-size:12px;font-weight:700;color:${zone.color};margin-bottom:6px">${zone.label} — what this usually means</div>
-      <p style="font-size:12px;color:#444444;line-height:1.6;margin:0 0 8px">${zone.explain}</p>
-      <a href="https://www.tickertape.in/market-mood-index?ref=homepage_mmi_section" target="_blank" rel="noopener"
-         style="font-size:11px;font-weight:700;color:var(--mc);text-decoration:none">Learn more about MMI zones ↗</a>
-    </div>
-    <blockquote style="margin:16px 2px 2px;padding-left:14px;border-left:3px solid var(--bdr);
-      font-size:12px;font-style:italic;color:#6b6b6b;line-height:1.6">
-      "Be fearful when others are greedy &amp; greedy when others are fearful"
-      <div style="margin-top:4px;font-style:normal;font-weight:700;font-size:11px;color:#999999">— Warren Buffett</div>
-    </blockquote>
-    <p style="font-size:10px;color:#999999;margin-top:12px;text-align:center">Sentiment gauge, not a trade signal · Sourced live from Tickertape</p>`;
-}
-function renderMMIError(){
-  const wrap = document.getElementById('mmi-widget');
-  if(!wrap) return;
-  wrap.innerHTML = `<div style="text-align:center;padding:14px 0">
-    <p style="font-size:12px;color:#999999;margin-bottom:8px">Couldn't load the live gauge right now.</p>
-    <a href="https://www.tickertape.in/market-mood-index?ref=homepage_mmi_section" target="_blank" rel="noopener"
-       style="font-size:12px;font-weight:700;color:var(--mc);text-decoration:none">View it on Tickertape ↗</a>
-  </div>`;
-}
-async function loadMMI(){
-  try{
-    const stale = !MMI_CACHE || (Date.now()-MMI_CACHE.ts > MMI_CACHE_TTL);
-    if(stale){
-      const promise=fetchMMIRaw();
-      MMI_CACHE = {ts:Date.now(), promise};
-      promise.catch(()=>{ if(MMI_CACHE?.promise===promise) MMI_CACHE=null; });
-    }
-    const raw = await MMI_CACHE.promise;
-    const score = extractMMIScore(raw);
-    if(score===null){ console.warn('[MMI] Could not locate a score in response shape:', raw); renderMMIError(); return; }
-    renderMMIWidget(score, classifyMMIZone(score));
-  }catch(e){
-    console.error('[MMI]', e);
-    renderMMIError();
-  }
 }
 
 /* Renders into the chart's DOM. Dashboard's HTML (including this chart's elements) gets
