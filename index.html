@@ -938,6 +938,20 @@ function renderDashboard(rows, newsRows){
       </div>
     </div>
 
+    <!-- MARKET MOOD INDEX (Tickertape) — reverse-engineered keyless endpoint, proxied client-side -->
+    <div class="tcw">
+      <div class="tch" style="color:#6a1b9a;display:flex;justify-content:space-between;align-items:center">
+        <span>Market Mood Index</span>
+        <a href="https://www.tickertape.in/market-mood-index?ref=homepage_mmi_section" target="_blank" rel="noopener"
+           style="font-size:10px;font-weight:700;color:var(--mc);text-decoration:none;white-space:nowrap;
+             padding:4px 9px;border:1px solid var(--bdr);border-radius:7px;background:rgba(58,45,127,.05)"
+           title="View the live gauge on Tickertape">tickertape.in ↗</a>
+      </div>
+      <div style="padding:16px 18px" id="mmi-widget">
+        <div id="mmi-status" style="text-align:center;color:#999999;font-size:12px;padding:20px 0">Loading market mood…</div>
+      </div>
+    </div>
+
     <!-- FUTURES + GLOBAL WATCHLIST WIDGET -->
     ${buildDashFuturesGlobal()}
 
@@ -978,6 +992,7 @@ function renderDashboard(rows, newsRows){
   `;
   try{ drawCandlestickBG(); }catch(e){}
   try{ loadNiftyChart(); }catch(e){}
+  try{ loadMMI(); }catch(e){}
 }
 
 /* ── Dashboard widget: Watchlist of specific Futures + Global indices ── */
@@ -4849,6 +4864,98 @@ function startNiftyFetch(rangeKey){
     NIFTY_DATA_CACHE[rangeKey]={ts:Date.now(), promise:fetchNiftyRaw(rangeKey)};
   }
   return NIFTY_DATA_CACHE[rangeKey].promise;
+}
+
+/* ══════════════════════════════════════════════
+   MARKET MOOD INDEX (Tickertape) — reverse-engineered keyless JSON endpoint.
+   This is not an official/documented API, so we don't hardcode a response
+   path (e.g. data.currentValue) — instead we scan the parsed JSON for a
+   plausible 0–100 numeric value under a key name that suggests it's the
+   score. Same "detect the shape, don't assume a fixed path" approach this
+   project already uses for flaky Google Sheets exports — if Tickertape
+   quietly reshapes the response, this degrades gracefully instead of
+   breaking outright.
+   ══════════════════════════════════════════════ */
+const MMI_CACHE_TTL = 5*60*1000; // 5 min — MMI barely moves intraday, no need to hit it harder
+let MMI_CACHE = null;
+
+function extractMMIScore(obj){
+  const KEY_HINTS = /value|score|mmi|now|current/i;
+  let found = null;
+  (function walk(o, depth){
+    if(found!==null || !o || typeof o!=='object' || depth>6) return;
+    for(const k in o){
+      const v = o[k];
+      if(typeof v==='number' && v>=0 && v<=100 && KEY_HINTS.test(k)){ found=v; return; }
+    }
+    for(const k in o){
+      if(found!==null) return;
+      const v = o[k];
+      if(v && typeof v==='object') walk(v, depth+1);
+    }
+  })(obj, 0);
+  return found;
+}
+function classifyMMIZone(score){
+  if(score<30) return {label:'Extreme Fear', color:'#c0392b'};
+  if(score<50) return {label:'Fear',         color:'#e07b00'};
+  if(score<70) return {label:'Greed',        color:'#2f9e5e'};
+  return                {label:'Extreme Greed', color:'#1a7a4a'};
+}
+
+async function fetchMMIRaw(){
+  const targetUrl = 'https://api.tickertape.in/mmi/now';
+  const proxies = [
+    'https://api.allorigins.win/raw?url='+encodeURIComponent(targetUrl),
+    'https://corsproxy.io/?url='+encodeURIComponent(targetUrl)
+  ];
+  return Promise.any(proxies.map(u => fetch(u).then(r => {
+    if(!r.ok) throw new Error('MMI proxy bad status '+r.status);
+    return r.json();
+  })));
+}
+
+function renderMMIWidget(score, zone){
+  const wrap = document.getElementById('mmi-widget');
+  if(!wrap) return;
+  const pct = Math.max(0, Math.min(100, score));
+  wrap.innerHTML = `
+    <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:14px">
+      <span style="font-family:'Space Grotesk',sans-serif;font-size:32px;font-weight:700;color:${zone.color}">${score.toFixed(1)}</span>
+      <span style="font-size:14px;font-weight:700;color:${zone.color}">${zone.label}</span>
+    </div>
+    <div style="position:relative;height:10px;border-radius:6px;margin-bottom:6px;
+      background:linear-gradient(90deg,#c0392b 0%,#c0392b 30%,#e07b00 30%,#e07b00 50%,#2f9e5e 50%,#2f9e5e 70%,#1a7a4a 70%,#1a7a4a 100%)">
+      <div style="position:absolute;top:-4px;left:${pct}%;transform:translateX(-50%);width:2px;height:18px;background:#1a1a1a;border-radius:1px"></div>
+      <div style="position:absolute;top:-13px;left:${pct}%;transform:translateX(-50%);width:0;height:0;
+        border-left:5px solid transparent;border-right:5px solid transparent;border-top:6px solid #1a1a1a"></div>
+    </div>
+    <div style="display:flex;justify-content:space-between;font-size:10px;color:#999999;font-weight:600">
+      <span>Extreme Fear</span><span>Fear</span><span>Greed</span><span>Extreme Greed</span>
+    </div>
+    <p style="font-size:10px;color:#999999;margin-top:12px">Sentiment gauge, not a trade signal · Sourced live from Tickertape</p>`;
+}
+function renderMMIError(){
+  const wrap = document.getElementById('mmi-widget');
+  if(!wrap) return;
+  wrap.innerHTML = `<div style="text-align:center;padding:14px 0">
+    <p style="font-size:12px;color:#999999;margin-bottom:8px">Couldn't load the live gauge right now.</p>
+    <a href="https://www.tickertape.in/market-mood-index?ref=homepage_mmi_section" target="_blank" rel="noopener"
+       style="font-size:12px;font-weight:700;color:var(--mc);text-decoration:none">View it on Tickertape ↗</a>
+  </div>`;
+}
+async function loadMMI(){
+  try{
+    const stale = !MMI_CACHE || (Date.now()-MMI_CACHE.ts > MMI_CACHE_TTL);
+    if(stale) MMI_CACHE = {ts:Date.now(), promise:fetchMMIRaw()};
+    const raw = await MMI_CACHE.promise;
+    const score = extractMMIScore(raw);
+    if(score===null){ console.warn('[MMI] Could not locate a score in response shape:', raw); renderMMIError(); return; }
+    renderMMIWidget(score, classifyMMIZone(score));
+  }catch(e){
+    console.error('[MMI]', e);
+    renderMMIError();
+  }
 }
 
 /* Renders into the chart's DOM. Dashboard's HTML (including this chart's elements) gets
