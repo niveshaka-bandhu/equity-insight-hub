@@ -4664,21 +4664,40 @@ const NIFTY_RANGE_CONFIG={
    instead of genuinely fresh — every real page load should fetch live. The in-memory
    NIFTY_DATA_CACHE (see startNiftyFetch below) still avoids redundant fetches for the same
    page session (e.g. switching between chart ranges and back). */
+/* Races a set of candidate URLs for JSON data (direct + CORS proxies + your own Worker) and
+   returns the first that succeeds. Every candidate gets its own timeout (so one hung proxy can't
+   silently stall the whole race) and its own console.warn on failure — host + reason — instead of
+   only ever surfacing the last error once everything's exhausted. Without this, "not loading"
+   gives zero information about which of the N sources actually failed or why. */
+function withTimeout(promise, ms){
+  return Promise.race([
+    promise,
+    new Promise((_,rej)=>setTimeout(()=>rej(new Error('timeout after '+ms+'ms')), ms))
+  ]);
+}
+function raceJsonSources(urls, label){
+  const attempts = urls.map(url => withTimeout(fetch(url,{cache:'no-store'}), 8000)
+    .then(res => { if(!res.ok) throw new Error('HTTP '+res.status); return res.json(); })
+    .catch(e => {
+      let host; try{ host=new URL(url).host; }catch(_){ host=url; }
+      console.warn('['+label+' source failed]', host, '-', (e&&e.message)||e);
+      throw e;
+    })
+  );
+  return Promise.any(attempts);
+}
+
 async function fetchNiftyRaw(rangeKey){
   const cfg=NIFTY_RANGE_CONFIG[rangeKey]||NIFTY_RANGE_CONFIG['1d'];
 
   const yahooPath='/v8/finance/chart/%5ENSEI?range='+cfg.range+'&interval='+cfg.interval;
   const yahooUrl='https://query1.finance.yahoo.com'+yahooPath;
   const proxies=[
-    'https://yahoo-chart-proxy.vritramitra.workers.dev'+yahooPath,
+    'https://yahoo-chart-proxy.vritramitra.workers.dev/?url='+encodeURIComponent(yahooUrl),
     'https://api.allorigins.win/raw?url='+encodeURIComponent(yahooUrl),
     'https://corsproxy.io/?url='+encodeURIComponent(yahooUrl)
   ];
-  const attempts=proxies.map(url=>fetch(url).then(res=>{
-    if(!res.ok) throw new Error('HTTP '+res.status);
-    return res.json();
-  }));
-  const data=await Promise.any(attempts);
+  const data=await raceJsonSources(proxies, 'Nifty chart');
 
   const result=data?.chart?.result?.[0];
   if(!result) throw new Error('No chart data returned');
@@ -4706,14 +4725,11 @@ async function fetchNiftyDailyHistory(){
   const yahooPath='/v8/finance/chart/%5ENSEI?range=13mo&interval=1d';
   const yahooUrl='https://query1.finance.yahoo.com'+yahooPath;
   const proxies=[
-    'https://yahoo-chart-proxy.vritramitra.workers.dev'+yahooPath,
+    'https://yahoo-chart-proxy.vritramitra.workers.dev/?url='+encodeURIComponent(yahooUrl),
     'https://api.allorigins.win/raw?url='+encodeURIComponent(yahooUrl),
     'https://corsproxy.io/?url='+encodeURIComponent(yahooUrl)
   ];
-  const data=await Promise.any(proxies.map(url=>fetch(url).then(res=>{
-    if(!res.ok) throw new Error('HTTP '+res.status);
-    return res.json();
-  })));
+  const data=await raceJsonSources(proxies, 'Nifty daily history');
   const result=data?.chart?.result?.[0];
   if(!result) throw new Error('No daily history returned');
   const timestamps=result.timestamp||[];
@@ -4931,10 +4947,7 @@ async function fetchMMIRaw(){
     'https://api.allorigins.win/raw?url='+encodeURIComponent(targetUrl),
     'https://corsproxy.io/?url='+encodeURIComponent(targetUrl)
   ];
-  return Promise.any(proxies.map(u => fetch(u).then(r => {
-    if(!r.ok) throw new Error('MMI proxy bad status '+r.status);
-    return r.json();
-  })));
+  return raceJsonSources(proxies, 'MMI');
 }
 
 /* Builds the semicircular gauge SVG matching Tickertape's own MMI dial: a ~255° sweep
