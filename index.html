@@ -1980,7 +1980,52 @@ function renderIPO(rows){
     ${panel('','Grey Market Premium','Unofficial pre-listing market prices',gmp.length,'#0d47a1',gmpBody,'https://ipowatch.in/ipo-grey-market-premium-latest-ipo-gmp/','ipowatch.in ↗')}
     ${panel('','Subscription Status','Live subscription data · Mainboard only',subs.length,'#6a1b9a',subsBody,'https://ipowatch.in/ipo-subscription-status-today/','ipowatch.in ↗')}
     ${panel('','Recently Listed IPOs','Performance since listing date · Mainboard only',listed.length,'#1a7a4a',listedBody,'https://www.moneycontrol.com/ipo/listed-ipos/mainline/','moneycontrol.com ↗')}
+    ${buildIPOApplyGuide()}
   `;
+}
+
+/* Collapsible "how to apply" guide, same <details>-based pattern as the MF/ETF guides — placed
+   at the end of the IPO Corner tab rather than as its own sub-tab, since IPO application is a
+   single self-contained process (unlike MF/ETF which each have their own screener + guide split). */
+function buildIPOApplyGuide(){
+  return `<div style="margin-top:6px">
+    <div style="font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:700;color:#1a1a1a;margin-bottom:10px">How to Apply for an IPO</div>
+    <p style="font-size:11px;color:#999999;margin-bottom:14px">The actual application process via UPI, and the small details that most often trip people up.</p>
+
+    ${guideSection('1. How an IPO application actually works', `
+      Applying for an IPO doesn't debit your money right away — it uses <strong>ASBA</strong> (Application Supported by Blocked Amount). Your bank <strong>blocks</strong> the bid amount in your account (you can still see it, just can't spend it), and it's only actually debited if you get allotted shares. If you're not allotted (fully or partially), the block is released automatically — no separate refund process to chase.
+    `, true)}
+
+    ${guideSection('2. Step-by-step: applying via UPI mandate', `
+      ${guideList([
+        'Open your broker or bank\'s IPO application section and select the IPO.',
+        'Enter the <strong>quantity</strong> (in lots, not individual shares) and your <strong>bid price</strong> — most retail investors simply select <strong>"Cut-off price"</strong> instead of guessing a price, so the bid isn\'t rejected for pricing below the eventual issue price.',
+        'Enter your <strong>UPI ID</strong> (the one linked to the bank account that actually holds the funds).',
+        'Submit the application — this sends a <strong>mandate request</strong> to your UPI app (Google Pay, PhonePe, etc.), it doesn\'t debit anything yet.',
+        'Open your UPI app and <strong>approve the mandate request</strong>. This is the step people most often forget — an unapproved mandate means your application doesn\'t count, even though you "applied".',
+        'Once approved, the bid amount is <strong>blocked</strong> (not debited) in your bank account until allotment is finalized.'
+      ])}
+    `)}
+
+    ${guideSection('3. Before you submit — small things worth checking', `
+      ${guideList([
+        '<strong>Approve the UPI mandate well before the deadline</strong> — usually by 5 PM on the IPO\'s closing day, but banks/UPI apps can slow down badly on the last day, so approving a day early is much safer than cutting it close.',
+        '<strong>One PAN, one application</strong> — submitting multiple applications for the same IPO under the same PAN (even across different brokers) usually gets all of them rejected, not just the extras.',
+        '<strong>Retail investment limit</strong> — the retail category is generally capped around ₹2 lakh per application; check the specific IPO\'s category limits before bidding.',
+        '<strong>Correct, funded UPI ID</strong> — make sure the UPI ID you enter is actually linked to an account with sufficient balance to cover the blocked amount, or the mandate approval will fail.',
+        '<strong>Category selection</strong> — Retail Individual Investor (RII), Non-Institutional (NII/HNI), etc. each have different allotment rules; make sure you\'re applying under the right one for your bid size.'
+      ])}
+    `)}
+
+    ${guideSection('4. What happens after you apply', `
+      ${guideList([
+        '<strong>Basis of Allotment</strong> is finalized a couple of days after the IPO closes — this is when it\'s decided who gets shares (often via lottery for oversubscribed retail categories).',
+        'If allotted: the blocked amount is <strong>debited</strong>, and shares are credited to your Demat account before listing day.',
+        'If not allotted (or partially allotted): the <strong>unused blocked amount is released</strong> back to your account automatically — nothing to claim manually.',
+        'You can track your application status directly on the registrar\'s site (e.g. KFintech or Link Intime — check which one the specific IPO uses) or via your broker\'s app.'
+      ])}
+    `)}
+  </div>`;
 }
 
 /* ══════════════════════════════════════════════
