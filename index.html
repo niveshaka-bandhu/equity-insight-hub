@@ -639,6 +639,22 @@ function toRows(data){
 /* ── Helpers ── */
 const $=id=>document.getElementById(id);
 
+/* Keeps --sticky-header-h in sync with the actual rendered height of the site's own sticky
+   <header>, so anything else that needs to sit "just below the header" (like a table's frozen
+   header row) can use top:var(--sticky-header-h) instead of a guessed pixel value. Needed because
+   .hdr's height isn't a fixed constant — it switches to height:auto with flex-wrap on mobile, so a
+   hardcoded offset would misalign or overlap depending on screen width. */
+function syncStickyHeaderHeight(){
+  const h=document.querySelector('header');
+  if(h) document.documentElement.style.setProperty('--sticky-header-h', h.offsetHeight+'px');
+}
+window.addEventListener('resize', syncStickyHeaderHeight);
+window.addEventListener('load', syncStickyHeaderHeight);
+syncStickyHeaderHeight();
+// Re-check shortly after load too — web fonts/images finishing can still shift header height
+// after the initial synchronous measurement.
+setTimeout(syncStickyHeaderHeight, 500);
+
 /* Stamps a small "Updated HH:MM" badge next to a section's .stitle heading */
 function stampUpdated(key){
   // "Updated X min ago" badges removed per request — kept as a no-op so existing
@@ -2269,10 +2285,10 @@ function renderGrowwMFContent(){
         </select>
         <button onclick="sortMF(MF_SORT.field)" style="padding:6px 12px;border:1px solid var(--bdr);border-radius:8px;background:#fff;color:var(--mc);font-weight:700;font-size:12px;cursor:pointer">${arrow} ${MF_SORT.dir==='asc'?'Ascending':'Descending'}</button>
       </div>
-      <div style="overflow-x:auto">
+      <div style="overflow-x:auto;overflow-y:visible">
         <table style="width:100%;border-collapse:collapse">
           <thead><tr>
-            ${Object.entries(sortLabels).map(([k,label],i)=>`<th onclick="sortMF('${k}')" style="cursor:pointer;padding:7px 10px;border-bottom:1px solid var(--bdr);text-align:${i===0?'left':'center'};white-space:${i===0?'normal':'nowrap'};font-size:10px;font-weight:700;color:${MF_SORT.field===k?'var(--mc)':'#6b6b6b'};${i===0?'position:sticky;left:0;background:var(--panel);z-index:2;box-shadow:2px 0 4px rgba(58,45,127,.08);width:110px;max-width:110px;min-width:110px':''}">${label}${MF_SORT.field===k?' '+arrow:''}</th>`).join('')}
+            ${Object.entries(sortLabels).map(([k,label],i)=>`<th onclick="sortMF('${k}')" style="cursor:pointer;padding:7px 10px;border-bottom:1px solid var(--bdr);text-align:${i===0?'left':'center'};white-space:${i===0?'normal':'nowrap'};font-size:10px;font-weight:700;color:${MF_SORT.field===k?'var(--mc)':'#6b6b6b'};position:sticky;top:var(--sticky-header-h,54px);background:var(--panel);${i===0?'left:0;z-index:4;box-shadow:2px 0 4px rgba(58,45,127,.08);width:110px;max-width:110px;min-width:110px':'z-index:3'}">${label}${MF_SORT.field===k?' '+arrow:''}</th>`).join('')}
           </tr></thead>
           <tbody>${rowsHtml || '<tr><td colspan="8" style="padding:20px;text-align:center;color:#999999;font-size:12px">No mutual fund data available</td></tr>'}</tbody>
         </table>
@@ -2338,10 +2354,10 @@ function renderETFScreenerContent(){
         </select>
         <button onclick="sortETF(ETF_SORT.field)" style="padding:6px 12px;border:1px solid var(--bdr);border-radius:8px;background:#fff;color:var(--mc);font-weight:700;font-size:12px;cursor:pointer">${arrow} ${ETF_SORT.dir==='asc'?'Ascending':'Descending'}</button>
       </div>
-      <div style="overflow-x:auto">
+      <div style="overflow-x:auto;overflow-y:visible">
         <table style="width:100%;border-collapse:collapse">
           <thead><tr>
-            ${Object.entries(sortLabels).map(([k,label],i)=>`<th onclick="sortETF('${k}')" style="cursor:pointer;padding:7px 10px;border-bottom:1px solid var(--bdr);text-align:${i===0?'left':'center'};white-space:${i===0?'normal':'nowrap'};font-size:10px;font-weight:700;color:${ETF_SORT.field===k?'var(--mc)':'#6b6b6b'};${i===0?'position:sticky;left:0;background:var(--panel);z-index:2;box-shadow:2px 0 4px rgba(58,45,127,.08);width:110px;max-width:110px;min-width:110px':''}">${label}${ETF_SORT.field===k?' '+arrow:''}</th>`).join('')}
+            ${Object.entries(sortLabels).map(([k,label],i)=>`<th onclick="sortETF('${k}')" style="cursor:pointer;padding:7px 10px;border-bottom:1px solid var(--bdr);text-align:${i===0?'left':'center'};white-space:${i===0?'normal':'nowrap'};font-size:10px;font-weight:700;color:${ETF_SORT.field===k?'var(--mc)':'#6b6b6b'};position:sticky;top:var(--sticky-header-h,54px);background:var(--panel);${i===0?'left:0;z-index:4;box-shadow:2px 0 4px rgba(58,45,127,.08);width:110px;max-width:110px;min-width:110px':'z-index:3'}">${label}${ETF_SORT.field===k?' '+arrow:''}</th>`).join('')}
           </tr></thead>
           <tbody>${rowsHtml || '<tr><td colspan="9" style="padding:20px;text-align:center;color:#999999;font-size:12px">No ETF data available</td></tr>'}</tbody>
         </table>
@@ -2812,6 +2828,47 @@ async function refreshAll(){
 
 /* Calculators are collapsed by default; clicking a title opens it and closes any other
    currently-open one, so only one calculator is expanded at a time. */
+/* "Most Used" calculators — tracked locally per device (localStorage, since there's no login/
+   backend to tie usage to an account). Purely a convenience re-ordering aid: it never hides or
+   removes any calculator, just surfaces a quick-jump shortcut row above the full categorized list
+   for whichever ones this particular visitor actually opens most. */
+function getCalcUsage(){
+  try{ return JSON.parse(localStorage.getItem('calc_usage_v1')||'{}'); }
+  catch(e){ return {}; } // private browsing / storage disabled — usage tracking just no-ops
+}
+function bumpCalcUsage(id){
+  try{
+    const usage=getCalcUsage();
+    usage[id]=(usage[id]||0)+1;
+    localStorage.setItem('calc_usage_v1', JSON.stringify(usage));
+  }catch(e){}
+}
+function buildMostUsedCalcsBar(){
+  const usage=getCalcUsage();
+  const entries=Object.entries(usage).filter(([,c])=>c>0).sort((a,b)=>b[1]-a[1]).slice(0,5);
+  if(!entries.length) return '';
+  const items=entries.map(([id,count])=>{
+    const el=document.getElementById(id);
+    if(!el) return ''; // a calculator recorded in old usage data may have since been renamed/removed
+    const title=el.getAttribute('data-calc-title')||id;
+    return `<button onclick="jumpToCalc('${id}')" style="padding:8px 14px;border-radius:20px;border:1px solid var(--mc);
+      background:rgba(58,45,127,.06);color:var(--mc);font-size:11.5px;font-weight:700;cursor:pointer;white-space:nowrap;flex-shrink:0">
+      ${title} <span style="opacity:.6;font-weight:600">· ${count}×</span></button>`;
+  }).filter(Boolean).join('');
+  if(!items) return '';
+  return `<div style="margin:16px 0 22px">
+    <div style="font-size:10px;font-weight:700;color:#999999;text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px">⭐ Your Most Used</div>
+    <div style="display:flex;gap:8px;overflow-x:auto;padding-bottom:2px">${items}</div>
+  </div>`;
+}
+function jumpToCalc(id){
+  const el=document.getElementById(id);
+  if(!el) return;
+  const body=el.querySelector('.calc-body');
+  if(body && body.style.display==='none') toggleCalc(id);
+  setTimeout(()=>el.scrollIntoView({behavior:'smooth',block:'start'}), 60); // small delay lets the expand happen first
+}
+
 function toggleCalc(id){
   document.querySelectorAll('#s-calculators .calc-body').forEach(b=>{
     const owner=b.dataset.owner;
@@ -2823,6 +2880,9 @@ function toggleCalc(id){
       if(willOpen){
         b.scrollIntoView({behavior:'smooth',block:'nearest'});
         trackFeature('calc-'+id);
+        bumpCalcUsage(id);
+        const mostUsedSlot=$('calc-most-used-slot');
+        if(mostUsedSlot) mostUsedSlot.innerHTML=buildMostUsedCalcsBar();
       }
     } else {
       b.style.display='none';
@@ -2875,6 +2935,7 @@ function renderCalculators(){
 
   $('s-calculators').innerHTML=`
     <div class="stitle">Financial Calculators</div>
+    <div id="calc-most-used-slot"></div>
 
     <div style="display:flex;align-items:center;gap:10px;margin:22px 0 12px">
       <div style="font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:800;color:var(--mc);text-transform:uppercase;letter-spacing:.6px">Growth & Investment Planning</div>
@@ -3538,6 +3599,11 @@ function renderCalculators(){
   document.querySelectorAll('#s-calculators [data-calc-title]').forEach(el=>{
     pushSearch('calculators','Calculator', el.getAttribute('data-calc-title'), 'Financial Calculator', el.id);
   });
+  // "Most Used" quick-access bar, built from real usage recorded locally on this device (see
+  // bumpCalcUsage in toggleCalc) — has to run after the innerHTML above, since it needs the
+  // calculator cards to already exist in the DOM to look up their titles by id.
+  const mostUsedSlot=$('calc-most-used-slot');
+  if(mostUsedSlot) mostUsedSlot.innerHTML=buildMostUsedCalcsBar();
   // Set default for CG period dropdown and run once
   calcRun();
 }
