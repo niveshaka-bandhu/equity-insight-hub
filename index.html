@@ -639,22 +639,6 @@ function toRows(data){
 /* ── Helpers ── */
 const $=id=>document.getElementById(id);
 
-/* Keeps --sticky-header-h in sync with the actual rendered height of the site's own sticky
-   <header>, so anything else that needs to sit "just below the header" (like a table's frozen
-   header row) can use top:var(--sticky-header-h) instead of a guessed pixel value. Needed because
-   .hdr's height isn't a fixed constant — it switches to height:auto with flex-wrap on mobile, so a
-   hardcoded offset would misalign or overlap depending on screen width. */
-function syncStickyHeaderHeight(){
-  const h=document.querySelector('header');
-  if(h) document.documentElement.style.setProperty('--sticky-header-h', h.offsetHeight+'px');
-}
-window.addEventListener('resize', syncStickyHeaderHeight);
-window.addEventListener('load', syncStickyHeaderHeight);
-syncStickyHeaderHeight();
-// Re-check shortly after load too — web fonts/images finishing can still shift header height
-// after the initial synchronous measurement.
-setTimeout(syncStickyHeaderHeight, 500);
-
 /* Stamps a small "Updated HH:MM" badge next to a section's .stitle heading */
 function stampUpdated(key){
   // "Updated X min ago" badges removed per request — kept as a no-op so existing
@@ -2285,10 +2269,15 @@ function renderGrowwMFContent(){
         </select>
         <button onclick="sortMF(MF_SORT.field)" style="padding:6px 12px;border:1px solid var(--bdr);border-radius:8px;background:#fff;color:var(--mc);font-weight:700;font-size:12px;cursor:pointer">${arrow} ${MF_SORT.dir==='asc'?'Ascending':'Descending'}</button>
       </div>
-      <div style="overflow-x:auto;overflow-y:visible">
+      <!-- Self-contained scroll viewport (own overflow:auto + max-height), not overflow-x:auto
+           alone: per the CSS overflow spec, overflow-x:auto forces overflow-y to auto too, which
+           silently makes THIS div a scroll container — meaning a sticky header inside sticks
+           relative to this div, not the page. Giving it its own real scrollable frame (this
+           comment + the div right below) is what makes top:0/left:0 resolve correctly. -->
+      <div style="overflow:auto;max-height:65vh;border-radius:0 0 12px 12px">
         <table style="width:100%;border-collapse:collapse">
           <thead><tr>
-            ${Object.entries(sortLabels).map(([k,label],i)=>`<th onclick="sortMF('${k}')" style="cursor:pointer;padding:7px 10px;border-bottom:1px solid var(--bdr);text-align:${i===0?'left':'center'};white-space:${i===0?'normal':'nowrap'};font-size:10px;font-weight:700;color:${MF_SORT.field===k?'var(--mc)':'#6b6b6b'};position:sticky;top:var(--sticky-header-h,54px);background:var(--panel);${i===0?'left:0;z-index:4;box-shadow:2px 0 4px rgba(58,45,127,.08);width:110px;max-width:110px;min-width:110px':'z-index:3'}">${label}${MF_SORT.field===k?' '+arrow:''}</th>`).join('')}
+            ${Object.entries(sortLabels).map(([k,label],i)=>`<th onclick="sortMF('${k}')" style="cursor:pointer;padding:7px 10px;border-bottom:1px solid var(--bdr);text-align:${i===0?'left':'center'};white-space:${i===0?'normal':'nowrap'};font-size:10px;font-weight:700;color:${MF_SORT.field===k?'var(--mc)':'#6b6b6b'};position:sticky;top:0;background:var(--panel);${i===0?'left:0;z-index:4;box-shadow:2px 0 4px rgba(58,45,127,.08);width:110px;max-width:110px;min-width:110px':'z-index:3'}">${label}${MF_SORT.field===k?' '+arrow:''}</th>`).join('')}
           </tr></thead>
           <tbody>${rowsHtml || '<tr><td colspan="8" style="padding:20px;text-align:center;color:#999999;font-size:12px">No mutual fund data available</td></tr>'}</tbody>
         </table>
@@ -2354,10 +2343,12 @@ function renderETFScreenerContent(){
         </select>
         <button onclick="sortETF(ETF_SORT.field)" style="padding:6px 12px;border:1px solid var(--bdr);border-radius:8px;background:#fff;color:var(--mc);font-weight:700;font-size:12px;cursor:pointer">${arrow} ${ETF_SORT.dir==='asc'?'Ascending':'Descending'}</button>
       </div>
-      <div style="overflow-x:auto;overflow-y:visible">
+      <!-- Same fixed-height scroll viewport as the MF table above — see comment there for why
+           this can't just be overflow-x:auto. -->
+      <div style="overflow:auto;max-height:65vh;border-radius:0 0 12px 12px">
         <table style="width:100%;border-collapse:collapse">
           <thead><tr>
-            ${Object.entries(sortLabels).map(([k,label],i)=>`<th onclick="sortETF('${k}')" style="cursor:pointer;padding:7px 10px;border-bottom:1px solid var(--bdr);text-align:${i===0?'left':'center'};white-space:${i===0?'normal':'nowrap'};font-size:10px;font-weight:700;color:${ETF_SORT.field===k?'var(--mc)':'#6b6b6b'};position:sticky;top:var(--sticky-header-h,54px);background:var(--panel);${i===0?'left:0;z-index:4;box-shadow:2px 0 4px rgba(58,45,127,.08);width:110px;max-width:110px;min-width:110px':'z-index:3'}">${label}${ETF_SORT.field===k?' '+arrow:''}</th>`).join('')}
+            ${Object.entries(sortLabels).map(([k,label],i)=>`<th onclick="sortETF('${k}')" style="cursor:pointer;padding:7px 10px;border-bottom:1px solid var(--bdr);text-align:${i===0?'left':'center'};white-space:${i===0?'normal':'nowrap'};font-size:10px;font-weight:700;color:${ETF_SORT.field===k?'var(--mc)':'#6b6b6b'};position:sticky;top:0;background:var(--panel);${i===0?'left:0;z-index:4;box-shadow:2px 0 4px rgba(58,45,127,.08);width:110px;max-width:110px;min-width:110px':'z-index:3'}">${label}${ETF_SORT.field===k?' '+arrow:''}</th>`).join('')}
           </tr></thead>
           <tbody>${rowsHtml || '<tr><td colspan="9" style="padding:20px;text-align:center;color:#999999;font-size:12px">No ETF data available</td></tr>'}</tbody>
         </table>
