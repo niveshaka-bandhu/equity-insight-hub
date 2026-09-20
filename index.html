@@ -2133,113 +2133,100 @@ function renderGrowwMFContent(){
 }
 
 /* ══════════════════════════════════════════════
-   AMFI MF — real NAV data straight from AMFI's own public daily text file.
-   No key, no auth, no anti-bot handshake needed (unlike Tickertape's MMI) —
-   this is a plain government-mandated public disclosure file, refreshed once
-   daily after market close. Still routed through the same CORS proxies as
-   everything else, since amfiindia.com itself doesn't set CORS headers for
-   direct browser fetches.
+   AMFI MF — real per-scheme NAV via api.mfapi.in, a free community wrapper around AMFI's own
+   daily data (confirmed to work with direct in-browser fetches, no CORS proxy needed — unlike
+   Tickertape's endpoint and unlike routing amfiindia.com's raw multi-MB NAV file through a
+   generic proxy, which choked on the file size). Search-driven rather than a full list: the
+   search endpoint alone returns matches, then each match's own /latest endpoint gives the real
+   NAV, fund house and category cleanly — no manual text parsing needed at all.
    ══════════════════════════════════════════════ */
-let AMFI_PARSED=null, AMFI_CACHE_TS=0, AMFI_SEARCH='';
-const AMFI_CACHE_TTL = 6*60*60*1000; // NAVs update once/day — no need to refetch more than every few hours
+let AMFI_SEARCH='', AMFI_SEQ=0, AMFI_DEBOUNCE=null;
 
-/* AMFI's NAVAll.txt has no fixed row count/position per fund house — each AMC's block starts with
-   a plain heading line (its name, no semicolons), followed by scheme rows ("code;isin;isin;name;nav;date").
-   Rather than assume a fixed structure, this just classifies each line by shape: 6+ semicolon fields
-   with a numeric code and a parseable NAV is a scheme row, anything else (that isn't the repeated
-   column-header line) becomes the "current AMC" label attached to the rows that follow it. */
-function parseAMFINav(text){
-  const lines=text.split(/\r?\n/);
-  let currentAMC='';
-  const rows=[];
-  for(const raw of lines){
-    const line=raw.trim();
-    if(!line) continue;
-    const parts=line.split(';');
-    if(parts.length>=6){
-      const code=parts[0].trim(), name=parts[3].trim(), nav=parseFloat(parts[4]), date=parts[5].trim();
-      if(/^\d+$/.test(code) && !isNaN(nav) && name){
-        rows.push({code, name, nav, date, amc:currentAMC});
-        continue;
-      }
-    }
-    if(!/scheme\s*code/i.test(line) && /mutual fund/i.test(line)) currentAMC=line;
-    // Anything else that isn't a data row (category subheaders like "Open Ended Schemes(Growth)",
-    // the repeated column-header line) is skipped rather than mistaken for a new AMC — AMC names
-    // in this file conventionally end in "Mutual Fund", category lines don't.
+function onAMFISearchInput(val){
+  AMFI_SEARCH=val;
+  clearTimeout(AMFI_DEBOUNCE);
+  AMFI_DEBOUNCE=setTimeout(runAMFISearch, 400); // debounce so every keystroke doesn't fire a request
+}
+async function runAMFISearch(){
+  const q=AMFI_SEARCH.trim();
+  const seq=++AMFI_SEQ;
+  if(q.length<2){ renderAMFIList({state:'idle'}); return; }
+  renderAMFIList({state:'loading'});
+  try{
+    const searchRes=await withTimeout(fetch('https://api.mfapi.in/mf/search?q='+encodeURIComponent(q)), 8000);
+    if(!searchRes.ok) throw new Error('HTTP '+searchRes.status);
+    const matches=await searchRes.json();
+    if(seq!==AMFI_SEQ) return; // a newer keystroke's search has already superseded this one
+    if(!Array.isArray(matches) || !matches.length){ renderAMFIList({state:'empty'}); return; }
+
+    const capped=matches.slice(0,20);
+    const details=await Promise.all(capped.map(m =>
+      withTimeout(fetch('https://api.mfapi.in/mf/'+m.schemeCode+'/latest'), 8000)
+        .then(r => r.ok ? r.json() : null)
+        .catch(e => { console.warn('[AMFI detail failed]', m.schemeCode, '-', e.message||e); return null; })
+    ));
+    if(seq!==AMFI_SEQ) return;
+
+    const rows=details.filter(Boolean).map(d=>({
+      name: d.meta?.scheme_name || '',
+      amc: d.meta?.fund_house || '',
+      category: d.meta?.scheme_category || '',
+      nav: d.data?.[0]?.nav!=null ? parseFloat(d.data[0].nav) : null,
+      date: d.data?.[0]?.date || ''
+    })).filter(r=>r.name && r.nav!=null);
+
+    renderAMFIList({state:'results', rows, total:matches.length});
+  }catch(e){
+    console.error('[AMFI]', e);
+    if(seq===AMFI_SEQ) renderAMFIList({state:'error'});
   }
-  return rows;
 }
-async function fetchAMFIRaw(){
-  const targetUrl='https://www.amfiindia.com/spages/NAVAll.txt';
-  const proxies=[
-    'https://api.allorigins.win/raw?url='+encodeURIComponent(targetUrl),
-    'https://corsproxy.io/?url='+encodeURIComponent(targetUrl)
-  ];
-  const attempts=proxies.map(url=>withTimeout(fetch(url,{cache:'no-store'}),15000)
-    .then(res=>{ if(!res.ok) throw new Error('HTTP '+res.status); return res.text(); })
-    .catch(e=>{
-      let host; try{host=new URL(url).host;}catch(_){host=url;}
-      console.warn('[AMFI source failed]', host, '-', (e&&e.message)||e);
-      throw e;
-    }));
-  return Promise.any(attempts);
-}
-async function loadAMFIMF(force){
+function renderAMFIList(result){
   const container=document.getElementById('mf-subtab-content');
   if(!container) return;
-  const stale = force || !AMFI_PARSED || (Date.now()-AMFI_CACHE_TS > AMFI_CACHE_TTL);
-  if(!stale){ renderAMFIList(); return; }
-  container.innerHTML=`<div class="loading"><div class="spin"></div>Loading AMFI NAV data — this file covers every scheme in India, may take a few seconds…</div>`;
-  try{
-    const text=await fetchAMFIRaw();
-    const parsed=parseAMFINav(text);
-    if(!parsed.length) throw new Error('Parsed 0 scheme rows — response shape may have changed');
-    AMFI_PARSED=parsed;
-    AMFI_CACHE_TS=Date.now();
-    renderAMFIList();
-  }catch(e){
-    console.error('[AMFI]',e);
-    container.innerHTML=`<div style="text-align:center;padding:40px 20px;color:#6b6b6b">
-      <p style="font-size:13px;margin-bottom:14px">Couldn't load AMFI NAV data — the data source didn't respond.</p>
-      <button onclick="loadAMFIMF(true)" style="font-size:12px;font-weight:700;color:#fff;background:var(--mc);border:none;padding:9px 18px;border-radius:8px;cursor:pointer">⟳ Retry</button>
+  const q=AMFI_SEARCH;
+
+  let body;
+  if(result.state==='idle'){
+    body=`<p style="text-align:center;color:#999999;font-size:12px;padding:30px 10px">Type at least 2 characters of a fund or AMC name to search — e.g. "HDFC Flexi Cap" or "Parag Parikh".</p>`;
+  } else if(result.state==='loading'){
+    body=`<div class="loading"><div class="spin"></div>Searching…</div>`;
+  } else if(result.state==='error'){
+    body=`<div style="text-align:center;padding:30px 10px;color:#6b6b6b">
+      <p style="font-size:13px;margin-bottom:14px">Couldn't reach the NAV data source right now.</p>
+      <button onclick="runAMFISearch()" style="font-size:12px;font-weight:700;color:#fff;background:var(--mc);border:none;padding:9px 18px;border-radius:8px;cursor:pointer">⟳ Retry</button>
     </div>`;
+  } else if(result.state==='empty' || (result.state==='results' && !result.rows.length)){
+    body=`<p style="text-align:center;color:#999999;font-size:12px;padding:30px 10px">No schemes matching "${q}".</p>`;
+  } else {
+    clearSearchTab('mf');
+    result.rows.forEach((e,i)=>pushSearch('mf','Mutual Fund (AMFI)',e.name,e.amc+' · NAV ₹'+e.nav.toFixed(4),'si-amfi-'+i));
+    body = (result.total>result.rows.length ? `<p style="font-size:10px;color:#999999;margin-bottom:8px">Showing top ${result.rows.length} of ${result.total} matches — refine your search for more precise results.</p>` : '')
+      + result.rows.map((e,i)=>`
+        <div id="si-amfi-${i}" style="padding:12px 14px;border:1px solid var(--bdr);border-radius:10px;margin-bottom:8px;background:var(--panel)">
+          <div style="font-size:12.5px;font-weight:700;color:#1a1a1a;line-height:1.35">${e.name}</div>
+          <div style="font-size:10px;color:#999999;margin:2px 0 8px">${e.amc||'—'}${e.category?' · '+e.category:''}</div>
+          <div style="display:flex;justify-content:space-between;align-items:baseline">
+            <span style="font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:700;color:var(--mc)">₹${e.nav.toFixed(4)}</span>
+            <span style="font-size:10px;color:#999999">as of ${e.date}</span>
+          </div>
+        </div>`).join('');
   }
-}
-function renderAMFIList(){
-  const container=document.getElementById('mf-subtab-content');
-  if(!container || !AMFI_PARSED) return;
-  const q=AMFI_SEARCH.trim().toLowerCase();
-  const filtered = q ? AMFI_PARSED.filter(r=>r.name.toLowerCase().includes(q)||r.amc.toLowerCase().includes(q)) : [];
-  const list = filtered.slice(0,80);
 
-  clearSearchTab('mf');
-  list.forEach((e,i)=>pushSearch('mf','Mutual Fund (AMFI)',e.name,e.amc+' · NAV ₹'+e.nav.toFixed(4),'si-amfi-'+i));
-
-  const latestDate = AMFI_PARSED[0]?.date || '';
   container.innerHTML = `
     <input id="amfi-search" type="text" placeholder="Search by fund or AMC name… e.g. 'HDFC Flexi Cap'"
-      value="${AMFI_SEARCH.replace(/"/g,'&quot;')}"
-      oninput="AMFI_SEARCH=this.value; renderAMFIList();"
-      style="width:100%;padding:10px 12px;border:1px solid var(--bdr);border-radius:10px;font-size:13px;box-sizing:border-box;margin-bottom:8px">
-    <p style="font-size:10px;color:#999999;margin-bottom:12px">${AMFI_PARSED.length.toLocaleString('en-IN')} schemes loaded directly from AMFI${latestDate?' · as of '+latestDate:''}</p>
-    ${!q
-      ? `<p style="text-align:center;color:#999999;font-size:12px;padding:30px 10px">Type a fund or AMC name above to search — there are too many schemes to list all at once.</p>`
-      : filtered.length===0
-        ? `<p style="text-align:center;color:#999999;font-size:12px;padding:30px 10px">No schemes matching "${AMFI_SEARCH}".</p>`
-        : `${filtered.length>80?`<p style="font-size:10px;color:#999999;margin-bottom:8px">Showing first 80 of ${filtered.length} matches — refine your search for more precise results.</p>`:''}
-           ${list.map((e,i)=>`
-            <div id="si-amfi-${i}" style="padding:12px 14px;border:1px solid var(--bdr);border-radius:10px;margin-bottom:8px;background:var(--panel)">
-              <div style="font-size:12.5px;font-weight:700;color:#1a1a1a;line-height:1.35">${e.name}</div>
-              <div style="font-size:10px;color:#999999;margin:2px 0 8px">${e.amc||'—'}</div>
-              <div style="display:flex;justify-content:space-between;align-items:baseline">
-                <span style="font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:700;color:var(--mc)">₹${e.nav.toFixed(4)}</span>
-                <span style="font-size:10px;color:#999999">as of ${e.date}</span>
-              </div>
-            </div>`).join('')}`
-    }
-    <p style="font-size:10px;color:#999999;margin-top:10px">Sourced live from AMFI's public daily NAV file · updates once per day after market close.</p>
+      value="${q.replace(/"/g,'&quot;')}"
+      oninput="onAMFISearchInput(this.value)"
+      style="width:100%;padding:10px 12px;border:1px solid var(--bdr);border-radius:10px;font-size:13px;box-sizing:border-box;margin-bottom:12px">
+    ${body}
+    <p style="font-size:10px;color:#999999;margin-top:10px">Sourced live from AMFI's daily NAV data via api.mfapi.in · updates once per day after market close.</p>
   `;
+}
+/* Called by renderMFShell() when the AMFI sub-tab becomes active — just paints the search box
+   in whatever state the current search is already in (idle on first visit). */
+function loadAMFIMF(){
+  renderAMFIList(AMFI_SEARCH.trim().length>=2 ? {state:'loading'} : {state:'idle'});
+  if(AMFI_SEARCH.trim().length>=2) runAMFISearch();
 }
 function sortETF(newField){
   if(newField){
