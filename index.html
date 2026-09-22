@@ -1912,7 +1912,7 @@ function renderIPO(rows){
       // Column mapping (matches the actual sheet header row exactly:
       // IPO Name, IPO GMP, Trend, Price Band, Est. Listing, Date, Status, Last Updated):
       // r[0]=Name r[1]=GMP r[2]=Trend r[3]=PriceBand r[4]=EstListing r[5]=Date r[6]=Status r[7]=Updated
-      pushSearch('ipo','IPO · GMP',r[0],'GMP '+st(r[1])+' · Est. listing '+st(r[4]),elId);
+      pushSearch('ipo','IPO · GMP',r[0],'GMP '+st(r[1])+' · '+st(r[6])+' · Est. listing '+st(r[4]),elId);
       // ipowatch.in URL pattern: lowercase company name, spaces -> hyphens, trailing "-ipo"
       const slug=String(r[0]||'').trim().toLowerCase().replace(/[^a-z0-9\s-]/g,'').replace(/\s+/g,'-');
       const ipowatchUrl='https://ipowatch.in/'+slug+'-ipo/';
@@ -1924,8 +1924,18 @@ function renderIPO(rows){
         const found=r.slice(8).find(c=>/\d{1,2}\s+[A-Za-z]{3,}.*\d{1,2}:\d{2}/.test(String(c||'')));
         if(found) updatedRaw=found;
       }
+      // Status (Upcoming / Open / Closed) — col G, already in the sheet, just not shown until now.
+      // Matched loosely (case-insensitive substring) rather than an exact enum, since the sheet's
+      // exact wording ("Open Now" vs "Open", etc.) isn't guaranteed to stay perfectly consistent.
+      const statusRaw=st(r[6]);
+      const statusL=statusRaw.toLowerCase();
+      const statusColor = statusL.includes('open') ? 'var(--green)' : statusL.includes('upcoming') ? '#e07b00' : '#6b6b6b';
+      const statusBg    = statusL.includes('open') ? 'rgba(47,158,94,.12)' : statusL.includes('upcoming') ? 'rgba(224,123,0,.12)' : 'rgba(107,107,107,.12)';
       return `<div id="${elId}" style="border:1px solid ${bc};background:${bg};border-radius:10px;padding:12px 14px">
-        <div style="margin-bottom:6px">${tbadge('Mainboard')}</div>
+        <div style="margin-bottom:6px;display:flex;gap:5px;flex-wrap:wrap">
+          ${tbadge('Mainboard')}
+          ${statusRaw!=='—'?`<span style="font-size:9px;font-weight:700;padding:2px 7px;border-radius:5px;background:${statusBg};color:${statusColor};text-transform:uppercase;letter-spacing:.3px">${statusRaw}</span>`:''}
+        </div>
         <a href="${ipowatchUrl}" target="_blank" rel="noopener" style="font-size:12px;font-weight:700;color:#1a1a1a;margin-bottom:8px;
           white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;text-decoration:none"
           onmouseover="this.style.textDecoration='underline';this.style.color='var(--mc)'"
@@ -2001,6 +2011,7 @@ function renderIPO(rows){
     ${panel('','Grey Market Premium','Unofficial pre-listing market prices',gmp.length,'#0d47a1',gmpBody,'https://ipowatch.in/ipo-grey-market-premium-latest-ipo-gmp/','ipowatch.in ↗')}
     ${panel('','Subscription Status','Live subscription data · Mainboard only',subs.length,'#6a1b9a',subsBody,'https://ipowatch.in/ipo-subscription-status-today/','ipowatch.in ↗')}
     ${panel('','Recently Listed IPOs','Performance since listing date · Mainboard only',listed.length,'#1a7a4a',listedBody,'https://www.moneycontrol.com/ipo/listed-ipos/mainline/','moneycontrol.com ↗')}
+    ${buildIPORegistrarsSection()}
     ${buildIPOApplyGuide()}
   `;
 }
@@ -2008,6 +2019,32 @@ function renderIPO(rows){
 /* Collapsible "how to apply" guide, same <details>-based pattern as the MF/ETF guides — placed
    at the end of the IPO Corner tab rather than as its own sub-tab, since IPO application is a
    single self-contained process (unlike MF/ETF which each have their own screener + guide split). */
+/* Static reference list — registrar sites don't change often enough to justify fetching them,
+   and each IPO uses only ONE specific registrar (named in its own prospectus/listing details),
+   so this is a directory to check the right one, not live per-IPO data. */
+function buildIPORegistrarsSection(){
+  const registrars = [
+    {name:'KFin Technologies (KFintech)', url:'https://ipostatus.kfintech.com/'},
+    {name:'MUFG Intime', url:'https://in.mpms.mufg.com/Initial_Offer/public-issues.html'},
+    {name:'Bigshare Services', url:'https://ipo.bigshareonline.com/'},
+    {name:'Maashitla Securities', url:'https://maashitla.com/allotment-status/public-issues'},
+    {name:'Skyline Financial Services', url:'https://www.skylinerta.com/ipo.php'},
+  ];
+  return `<div style="margin-top:6px;margin-bottom:22px">
+    <div style="font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:700;color:#1a1a1a;margin-bottom:6px">IPO Registrars in India — Check Allotment Status</div>
+    <p style="font-size:11px;color:#999999;margin-bottom:12px">Each IPO is handled by exactly one of these registrars — check the specific IPO's own listing details for which one applies, then use that link to check your allotment status directly.</p>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:10px">
+      ${registrars.map(r=>`
+        <a href="${r.url}" target="_blank" rel="noopener"
+           style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:12px 14px;border:1px solid var(--bdr);border-radius:10px;
+             background:rgba(255,255,255,.55);text-decoration:none;color:#1a1a1a;font-size:12.5px;font-weight:700;transition:.15s"
+           onmouseover="this.style.borderColor='var(--mc)'" onmouseout="this.style.borderColor='var(--bdr)'">
+          <span>${r.name}</span><span style="color:var(--mc);font-size:11px;flex-shrink:0">↗</span>
+        </a>`).join('')}
+    </div>
+  </div>`;
+}
+
 function buildIPOApplyGuide(){
   return `<div style="margin-top:6px">
     <div style="font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:700;color:#1a1a1a;margin-bottom:10px">How to Apply for an IPO</div>
