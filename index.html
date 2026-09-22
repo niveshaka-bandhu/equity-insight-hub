@@ -895,6 +895,9 @@ function renderDashboard(rows, newsRows){
       <p id="equity-status" style="font-size:10px;color:#999999;margin-top:8px">Loading ticker list…</p>
     </div>
 
+    <!-- UNIFIED "TODAY" VIEW — IPOs + corporate actions + market-holiday check, one glance -->
+    ${buildDashToday()}
+
     <!-- NIFTY 50 TODAY'S INTRADAY CHART (real data via Yahoo Finance) -->
     <div class="tcw">
       <div class="tch" style="color:#0d47a1">
@@ -1718,8 +1721,86 @@ function patchIPOTypes(rows, typeRows, dateRows){
   });
 }
 
-function renderIPO(rows){
-  const st = v => String(v||'').replace(/\*/g,'').trim() || '—';
+/* All of the IPO sheet's section-detection/parsing logic, pulled out of renderIPO so both the
+   full IPO Corner tab AND the Dashboard's "Today" widget can share exactly one implementation —
+   two independent copies of this fragile content-shape parsing is exactly how "one table fails,
+   its data leaks into another" bugs happen (see the comments below on mainboardIPO/gmp/listed). */
+/* ── Fuzzy company-name matching ──
+   The IPO sheet's different sections (Mainboard IPO, GMP, Subscription) are each populated from a
+   different source site, so the SAME company can be spelled slightly differently across them
+   ("Tata Capital Ltd" vs "Tata Capital Limited" vs "Tata Capital"). An exact string match would
+   silently fail to correlate them. Instead: strip common suffixes/punctuation, then match on the
+   first 1–2 significant words — company names are almost always distinctive by their first word
+   or two, so this is a much more forgiving and reliable join key than the raw string. */
+function normalizeCompanyName(name){
+  return String(name||'')
+    .toLowerCase()
+    .replace(/\./g,'')
+    .replace(/\b(ltd|limited|pvt|private|inc|incorporated|co|corp|corporation|ipo)\b/g,'')
+    .replace(/[^a-z0-9\s]/g,' ')
+    .replace(/\s+/g,' ')
+    .trim();
+}
+/* Compares on min(wordsA, wordsB, 2) significant words rather than always trying a 2-word key
+   then independently falling back to a 1-word key on each side — a fixed 1-word fallback is what
+   let "Reliance Industries" match "Reliance Jio" in testing (many Indian conglomerates have
+   several genuinely distinct listed entities sharing a first word: Tata, Bajaj, Aditya Birla,
+   Reliance...). Only actually short names (like "Groww") fall back to a 1-word compare this way;
+   two multi-word names always get compared on their first two words.
+   Known remaining edge case: this can't distinguish two different arms of the SAME group when the
+   group name itself is two words (e.g. "Aditya Birla Sun Life" vs "Aditya Birla Fashion" would
+   both match on "aditya birla") — fixing that needs a hardcoded list of known multi-word group
+   prefixes, which felt like more complexity than this feature (a best-effort cross-source
+   correlation, not a unique identifier) actually calls for. */
+function fuzzyNameMatch(a, b){
+  if(!a || !b) return false;
+  const wordsA = normalizeCompanyName(a).split(' ').filter(w=>w.length>1);
+  const wordsB = normalizeCompanyName(b).split(' ').filter(w=>w.length>1);
+  if(!wordsA.length || !wordsB.length) return false;
+  const n = Math.min(wordsA.length, wordsB.length, 2);
+  return wordsA.slice(0,n).join(' ') === wordsB.slice(0,n).join(' ');
+}
+
+/* ── IPO date-range parsing ──
+   The Mainboard IPO sheet stores open/close as ONE free-text field like "30-3 August" rather than
+   two separate date columns — inherently ambiguous (is that "30 Jul – 3 Aug" or "3–30 Aug"?). This
+   makes a best-effort guess (if the first number is bigger than the second, the range spans across
+   a month boundary, so the first number belongs to the previous month) rather than a bad one:
+   whenever the parse is genuinely uncertain, it returns nulls instead of a confidently wrong date,
+   since a wrong "IPO closes today" claim is worse than the section just not appearing at all. */
+function parseIPODateRange(str, refDate){
+  const s = String(str||'').trim();
+  const ref = refDate || new Date();
+  const MONTHS = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'];
+  const monthIdx = name => MONTHS.findIndex(m => name.toLowerCase().startsWith(m));
+
+  const rangeMatch = s.match(/^(\d{1,2})\s*[-–]\s*(\d{1,2})\s+([A-Za-z]{3,})/);
+  if(rangeMatch){
+    const d1=+rangeMatch[1], d2=+rangeMatch[2], mIdx=monthIdx(rangeMatch[3]);
+    if(mIdx<0) return {start:null, end:null};
+    let year = ref.getFullYear();
+    if(d1<=d2){
+      return {start:new Date(year,mIdx,d1), end:new Date(year,mIdx,d2)};
+    }
+    // d1 > d2 — the range crosses a month boundary; d1 belongs to the month before mIdx.
+    const prevMonth = mIdx===0 ? 11 : mIdx-1;
+    const prevYear = mIdx===0 ? year-1 : year;
+    return {start:new Date(prevYear,prevMonth,d1), end:new Date(year,mIdx,d2)};
+  }
+  const singleMatch = s.match(/^(\d{1,2})\s+([A-Za-z]{3,})/);
+  if(singleMatch){
+    const d=+singleMatch[1], mIdx=monthIdx(singleMatch[2]);
+    if(mIdx<0) return {start:null, end:null};
+    const dt = new Date(ref.getFullYear(), mIdx, d);
+    return {start:dt, end:dt}; // single date given — treat as both open and close
+  }
+  return {start:null, end:null};
+}
+function isSameDate(a,b){
+  return a && b && a.getFullYear()===b.getFullYear() && a.getMonth()===b.getMonth() && a.getDate()===b.getDate();
+}
+
+function extractIPOSections(rows){
   const findIdx = (keyword, col=1) => rows.findIndex(r => String(r[col]||'').toLowerCase().includes(keyword.toLowerCase()));
   const clean = v => String(v||'').replace(/\*/g,'').trim().toLowerCase();
 
@@ -1796,6 +1877,14 @@ function renderIPO(rows){
           return {company:r[0], ipoDate:r[1]||'—', ipoSize: ipoSizeDisplay};
         })
     : [];
+
+  return {mainboardIPO, gmp, subs, listed};
+}
+
+function renderIPO(rows){
+  const st = v => String(v||'').replace(/\*/g,'').trim() || '—';
+  const clean = v => String(v||'').replace(/\*/g,'').trim().toLowerCase();
+  const {mainboardIPO, gmp, subs, listed} = extractIPOSections(rows);
 
   const tbadge = t => `<span class="bd ${/main/i.test(st(t))?'bd-a':'bd-g'}">${st(t)||'—'}</span>`;
 
@@ -4836,6 +4925,99 @@ setInterval(loadAll,5*60*1000);
 <script>
 /* ── MARKET COUNTDOWN + STATUS ── */
 function getIST(){return new Date(new Date().toLocaleString('en-US',{timeZone:'Asia/Kolkata'}));}
+
+/* NSE/BSE 2026 trading holidays (weekday closures only — commodity segment has a couple of extra
+   evening-session-only closures not listed here, and this list should be re-verified each year
+   since exchanges publish it fresh annually). Source: NSE's own published 2026 holiday list. */
+const NSE_HOLIDAYS_2026 = [
+  {date:'2026-01-15', name:'Municipal Corporation Election – Maharashtra'},
+  {date:'2026-01-26', name:'Republic Day'},
+  {date:'2026-03-03', name:'Holi'},
+  {date:'2026-03-26', name:'Shri Ram Navami'},
+  {date:'2026-03-31', name:'Shri Mahavir Jayanti'},
+  {date:'2026-04-03', name:'Good Friday'},
+  {date:'2026-04-14', name:'Dr. Baba Saheb Ambedkar Jayanti'},
+  {date:'2026-05-01', name:'Maharashtra Day'},
+  {date:'2026-05-28', name:'Bakri Id'},
+  {date:'2026-06-26', name:'Muharram'},
+  {date:'2026-09-14', name:'Ganesh Chaturthi'},
+  {date:'2026-10-02', name:'Mahatma Gandhi Jayanti'},
+  {date:'2026-10-20', name:'Dussehra'},
+  {date:'2026-11-10', name:'Diwali – Balipratipada'},
+  {date:'2026-11-24', name:'Prakash Gurpurb Sri Guru Nanak Dev'},
+  {date:'2026-12-25', name:'Christmas'},
+];
+function getTodayHoliday(){
+  const ist = getIST();
+  const key = ist.getFullYear()+'-'+String(ist.getMonth()+1).padStart(2,'0')+'-'+String(ist.getDate()).padStart(2,'0');
+  if(ist.getDay()===0 || ist.getDay()===6) return {name: ist.getDay()===0?'Sunday':'Saturday', weekend:true};
+  return NSE_HOLIDAYS_2026.find(h=>h.date===key) || null;
+}
+
+/* ── Dashboard widget: Unified "Today" view ──
+   Merges IPOs opening/closing today, today's corporate actions, and a market-holiday check into
+   one glance, instead of the person having to check three separate tabs. Reuses DATA.ipo/ipo2 and
+   DATA['corp_today'] that are already fetched during the initial dashboard load (see loadAll) —
+   no extra network calls needed. IPO/GMP correlation uses fuzzyNameMatch since those two sections
+   come from different source sites and don't always spell the same company identically. */
+function buildDashToday(){
+  const holiday = getTodayHoliday();
+  const todayIST = getIST();
+  const todayLabel = todayIST.toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long'});
+
+  if(holiday){
+    return `<div class="tcw">
+      <div class="tch" style="color:#6a1b9a">Today — ${todayLabel}</div>
+      <div style="padding:16px 18px;text-align:center">
+        <div style="font-size:13px;font-weight:700;color:var(--red);margin-bottom:4px">🔒 Markets Closed Today</div>
+        <div style="font-size:11px;color:#6b6b6b">${holiday.name}${holiday.weekend?'':' · NSE/BSE trading holiday'}</div>
+      </div>
+    </div>`;
+  }
+
+  const {mainboardIPO, gmp} = extractIPOSections((DATA.ipo||[]).concat(DATA.ipo2||[]));
+  const ipoToday = mainboardIPO.map(ipo=>{
+    const {start,end} = parseIPODateRange(ipo.ipoDate, todayIST);
+    const opensToday = isSameDate(start, todayIST);
+    const closesToday = isSameDate(end, todayIST);
+    if(!opensToday && !closesToday) return null;
+    const gmpMatch = gmp.find(g => fuzzyNameMatch(g[0], ipo.company));
+    return {...ipo, opensToday, closesToday, gmpValue: gmpMatch ? f(gmpMatch[1]) : null};
+  }).filter(Boolean);
+
+  const corpToday = (DATA['corp_today']||[]).filter(r=>{
+    const headerWords=['company','event','type','announced'];
+    return !headerWords.some(w=>(r[0]||'').toLowerCase().includes(w));
+  }).filter(r=>r[0]&&r[0].trim()&&r[0].toLowerCase().trim()!=='no data found').slice(0,5);
+
+  const hasAnything = ipoToday.length || corpToday.length;
+
+  return `<div class="tcw">
+    <div class="tch" style="color:#6a1b9a">Today — ${todayLabel}</div>
+    <div style="padding:14px 18px">
+      ${!hasAnything ? `<p style="text-align:center;color:#999999;font-size:12px;padding:10px 0">Nothing scheduled today — check back tomorrow.</p>` : ''}
+      ${ipoToday.length ? `
+        <div style="font-size:10px;font-weight:700;color:#999999;text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px">IPO Activity</div>
+        ${ipoToday.map(ipo=>`
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--bdr)">
+            <div>
+              <div style="font-size:12.5px;font-weight:700;color:#1a1a1a">${f(ipo.company)}</div>
+              <div style="font-size:10px;color:#6b6b6b">${ipo.opensToday?'Opens today':''}${ipo.opensToday&&ipo.closesToday?' · ':''}${ipo.closesToday?'Closes today':''}</div>
+            </div>
+            ${ipo.gmpValue?`<span style="font-size:12px;font-weight:700;color:var(--green)">GMP ${ipo.gmpValue}</span>`:''}
+          </div>`).join('')}
+      ` : ''}
+      ${corpToday.length ? `
+        <div style="font-size:10px;font-weight:700;color:#999999;text-transform:uppercase;letter-spacing:.4px;margin:${ipoToday.length?'14px':'0'} 0 8px">Corporate Actions</div>
+        ${corpToday.map(r=>`
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--bdr)">
+            <div style="font-size:12.5px;font-weight:700;color:#1a1a1a">${f(r[0])}</div>
+            <span style="font-size:11px;color:#6b6b6b">${f(r[1])}</span>
+          </div>`).join('')}
+      ` : ''}
+    </div>
+  </div>`;
+}
 function mktTick(){
   const ist=getIST();
   const day=ist.getDay(),h=ist.getHours(),m=ist.getMinutes(),s=ist.getSeconds();
