@@ -201,8 +201,23 @@ tbody tr{border-bottom:1px solid rgba(58,45,127,.20)}
 tbody tr:hover{background:rgba(58,45,127,.06)}
 tbody td{font-size:12px;color:#6b5340;padding:8px 10px;white-space:nowrap}
 .cp{color:var(--green);font-weight:600}.cn{color:var(--red);font-weight:600}
-.bd{display:inline-block;padding:1px 7px;border-radius:5px;font-size:10px;font-weight:700}
-.bd-g{background:rgba(47,158,94,.14);color:var(--green)}.bd-a{background:rgba(224,113,34,.14);color:var(--orange)}
+/* ═══ Unified badge/pill system — one shape, one weight, color = meaning ═══
+   Replaces several independently-styled badges (Mainboard/SME tags, IPO status, source-type
+   labels) that had each grown their own slightly different padding/radius/case as they were
+   built at different times. .badge is the shared shape; the color modifiers carry meaning
+   consistently everywhere: green=positive/open, red=negative/closed, orange=caution/upcoming,
+   purple=brand/neutral-info, gray=neutral/inactive. */
+.badge{display:inline-flex;align-items:center;font-weight:700;font-size:10px;padding:3px 9px;
+  border-radius:6px;letter-spacing:.2px;line-height:1.3;white-space:nowrap}
+.badge-green{background:rgba(31,138,76,.12);color:var(--green)}
+.badge-red{background:rgba(233,31,43,.12);color:var(--red)}
+.badge-orange{background:rgba(224,113,34,.14);color:var(--orange)}
+.badge-purple{background:var(--bgh);color:var(--mc)}
+.badge-gray{background:rgba(107,107,107,.14);color:#6b6b6b}
+/* .bd / .bd-a / .bd-g kept as aliases so existing call sites (tbadge()) don't need to change —
+   just redefined to match the unified shape/weight above instead of their own bespoke styling. */
+.bd{display:inline-flex;align-items:center;padding:3px 9px;border-radius:6px;font-size:10px;font-weight:700;letter-spacing:.2px;line-height:1.3}
+.bd-g{background:rgba(107,107,107,.14);color:#6b6b6b}.bd-a{background:var(--bgh);color:var(--mc)}
 
 /* INDEX CARDS */
 .igrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(185px,1fr));gap:10px;margin-bottom:12px}
@@ -2044,12 +2059,11 @@ function renderIPO(rows){
       // exact wording ("Open Now" vs "Open", etc.) isn't guaranteed to stay perfectly consistent.
       const statusRaw=st(r[6]);
       const statusL=statusRaw.toLowerCase();
-      const statusColor = statusL.includes('open') ? 'var(--green)' : statusL.includes('upcoming') ? '#e07b00' : '#6b6b6b';
-      const statusBg    = statusL.includes('open') ? 'rgba(47,158,94,.12)' : statusL.includes('upcoming') ? 'rgba(224,123,0,.12)' : 'rgba(107,107,107,.12)';
+      const statusClass = statusL.includes('open') ? 'badge-green' : statusL.includes('upcoming') ? 'badge-orange' : 'badge-gray';
       return `<div id="${elId}" style="border:1px solid ${bc};background:${bg};border-radius:10px;padding:12px 14px">
         <div style="margin-bottom:6px;display:flex;gap:5px;flex-wrap:wrap">
           ${tbadge('Mainboard')}
-          ${statusRaw!=='—'?`<span style="font-size:9px;font-weight:700;padding:2px 7px;border-radius:5px;background:${statusBg};color:${statusColor};text-transform:uppercase;letter-spacing:.3px">${statusRaw}</span>`:''}
+          ${statusRaw!=='—'?`<span class="badge ${statusClass}" style="text-transform:uppercase">${statusRaw}</span>`:''}
         </div>
         <a href="${ipowatchUrl}" target="_blank" rel="noopener" style="font-size:12px;font-weight:700;color:#1a1a1a;margin-bottom:8px;
           white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;text-decoration:none"
@@ -2452,7 +2466,7 @@ function renderGrowwMFContent(){
           <thead><tr>
             ${Object.entries(sortLabels).map(([k,label],i)=>`<th onclick="sortMF('${k}')" style="cursor:pointer;padding:7px 10px;border-bottom:1px solid var(--bdr);text-align:${i===0?'left':'center'};white-space:${i===0?'normal':'nowrap'};font-size:10px;font-weight:700;color:${MF_SORT.field===k?'var(--mc)':'#6b6b6b'};position:sticky;top:0;background:var(--panel);${i===0?'left:0;z-index:4;box-shadow:2px 0 4px rgba(58,45,127,.08);width:110px;max-width:110px;min-width:110px':'z-index:3'}">${label}${MF_SORT.field===k?' '+arrow:''}</th>`).join('')}
           </tr></thead>
-          <tbody>${rowsHtml || '<tr><td colspan="8" style="padding:20px;text-align:center;color:#999999;font-size:12px">No mutual fund data available</td></tr>'}</tbody>
+          <tbody>${rowsHtml || `<tr><td colspan="8">${emptyStateHTML('No mutual fund data available','Check back once the sheet refreshes','📄')}</td></tr>`}</tbody>
         </table>
       </div>
     </div>
@@ -2523,7 +2537,7 @@ function renderETFScreenerContent(){
           <thead><tr>
             ${Object.entries(sortLabels).map(([k,label],i)=>`<th onclick="sortETF('${k}')" style="cursor:pointer;padding:7px 10px;border-bottom:1px solid var(--bdr);text-align:${i===0?'left':'center'};white-space:${i===0?'normal':'nowrap'};font-size:10px;font-weight:700;color:${ETF_SORT.field===k?'var(--mc)':'#6b6b6b'};position:sticky;top:0;background:var(--panel);${i===0?'left:0;z-index:4;box-shadow:2px 0 4px rgba(58,45,127,.08);width:110px;max-width:110px;min-width:110px':'z-index:3'}">${label}${ETF_SORT.field===k?' '+arrow:''}</th>`).join('')}
           </tr></thead>
-          <tbody>${rowsHtml || '<tr><td colspan="9" style="padding:20px;text-align:center;color:#999999;font-size:12px">No ETF data available</td></tr>'}</tbody>
+          <tbody>${rowsHtml || `<tr><td colspan="9">${emptyStateHTML('No ETF data available','Check back once the sheet refreshes','📄')}</td></tr>`}</tbody>
         </table>
       </div>
     </div>
@@ -2712,9 +2726,9 @@ function renderCorporate(){
     :'<div style="text-align:center;padding:24px;color:#6b6b6b;font-size:13px">No corporate actions today</div>';
 
   const makeCards=(cards,valueLabel,valueColor,idPrefix)=>{
-    if(!cards.length)return'<div style="text-align:center;padding:24px;color:#6b6b6b;font-size:13px">No data available</div>';
+    if(!cards.length)return emptyStateHTML('No data available','Check back once this data updates','📄');
     return`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:8px">${cards.map((c,i)=>{
-      const pp=c.pct.includes('+');const pc=pp?'var(--green)':'var(--red)';const pb=pp?'rgba(47,158,94,.1)':'rgba(224,86,47,.1)';
+      const pp=c.pct.includes('+');const pcClass=pp?'badge-green':'badge-red';
       const elId=`si-corp-${idPrefix}-${i}`;
       pushSearch('corporate','Corporate Action · '+valueLabel.replace(/[^A-Za-z ]/g,'').trim(),c.company,valueLabel.replace(/&#8377;/,'₹')+' '+c.value,elId);
       return`<div id="${elId}" style="background:var(--panel);border:1px solid var(--bdr);border-radius:10px;padding:13px 15px;position:relative;overflow:hidden">
@@ -2726,7 +2740,7 @@ function renderCorporate(){
             <div style="font-family:'Space Grotesk',sans-serif;font-size:18px;font-weight:700;color:${valueColor}">${c.value}</div></div>
             <div style="text-align:right"><div style="font-size:9px;color:#6b6b6b;margin-bottom:2px">LTP</div>
             <div style="font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:600;color:#1a1a1a">&#8377;${c.ltp}</div>
-            <span style="font-size:10px;font-weight:700;padding:1px 6px;border-radius:5px;background:${pb};color:${pc}">${c.pct}</span></div>
+            <span class="badge ${pcClass}">${c.pct}</span></div>
           </div>
           <div style="display:flex;justify-content:space-between;font-size:10px;border-top:1px solid rgba(58,45,127,.22);padding-top:7px">
             <div><div style="color:#999999">Announced</div><div style="color:#1a1a1a;font-weight:600;margin-top:1px">${c.annDate}</div></div>
