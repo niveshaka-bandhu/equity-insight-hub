@@ -2083,7 +2083,9 @@ function renderIPO(rows){
           <span style="font-size:11px;font-weight:700;color:${color}">${st(r[4])}</span>
           <span style="font-size:10px;color:#6b6b6b;white-space:nowrap">${st(r[5])}</span>
         </div>
-        <div style="font-size:10px;color:#999999;margin-top:6px">Updated: ${fmtGmpUpdated(updatedRaw)}</div>
+        ${updatedRaw && String(updatedRaw).trim() && String(updatedRaw).trim()!=='—'
+          ? `<div style="font-size:10px;color:#999999;margin-top:6px">Updated: ${fmtGmpUpdated(updatedRaw)}</div>`
+          : ''}
       </div>`;
     }).join('')}
   </div>`;
