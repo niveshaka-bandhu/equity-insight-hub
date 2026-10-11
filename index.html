@@ -1060,7 +1060,7 @@ function renderDashboard(rows, newsRows){
 
       <!-- Technical Analysis report — hidden until opened, same collapsible style as the calculators -->
       <div class="calc-head" onclick="toggleNiftyTA()" style="padding:14px 18px;border-top:1px solid var(--bdr);cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:10px">
-        <div style="font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:700;color:#1a1a1a">Nifty 50 Technical Analysis</div>
+        <div style="font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:700;color:#1a1a1a">Nifty 50 — Complete Technical Analysis</div>
         <span id="chev-nifty-ta-report" style="font-size:12px;color:var(--mc);transition:.2s;flex-shrink:0">+</span>
       </div>
       <div class="calc-body" data-owner="nifty-ta-report" id="nifty-ta-body" style="display:none;padding:16px 18px">
@@ -1940,13 +1940,37 @@ function extractIPOSections(rows){
         })
     : [];
 
-  return {mainboardIPO, gmp, subs, listed};
+  // Mainboard IPO Listing — IPO / IPO Date / Listing Date / ISIN / BSE Symbol / NSE Symbol.
+  // A separate section further down the same sheet from the "Mainboard IPO" table above — that
+  // one tracks open/close dates + issue size, this one tracks confirmed/expected LISTING dates
+  // plus the exchange identifiers (ISIN, BSE/NSE symbol) that only exist once a company is close
+  // to or already listed. Content-detected by its own header text rather than a row offset from
+  // gmpStart, since it sits a variable distance below the Mainboard IPO / GMP tables depending on
+  // how many rows are filled above it on a given day. ISIN/BSE/NSE columns are frequently blank
+  // (e.g. "Tonbo Imaging,TBA,TBA") for IPOs that haven't priced/allotted yet — rendered as still
+  // showing the dates, just without the symbol badges, rather than dropping the row.
+  const listingStart = findIdx('Mainboard IPO Listing');
+  const listingEnd = subsStart > 0 ? subsStart : rows.length;
+  const listingIPO = listingStart > 0
+    ? rows.slice(listingStart+2, listingEnd)
+        .filter(r => r[0] && r[0].trim() && clean(r[0])!=='ipo')
+        .map(r => ({
+          company: r[0],
+          ipoDate: r[1] || '—',
+          listingDate: r[2] || '—',
+          isin: (r[3]||'').trim(),
+          bseSymbol: (r[4]||'').trim(),
+          nseSymbol: (r[5]||'').trim(),
+        }))
+    : [];
+
+  return {mainboardIPO, gmp, subs, listed, listingIPO};
 }
 
 function renderIPO(rows){
   const st = v => String(v||'').replace(/\*/g,'').trim() || '—';
   const clean = v => String(v||'').replace(/\*/g,'').trim().toLowerCase();
-  const {mainboardIPO, gmp, subs, listed} = extractIPOSections(rows);
+  const {mainboardIPO, gmp, subs, listed, listingIPO} = extractIPOSections(rows);
 
   const tbadge = t => `<span class="bd ${/main/i.test(st(t))?'bd-a':'bd-g'}">${st(t)||'—'}</span>`;
 
@@ -2135,10 +2159,40 @@ function renderIPO(rows){
     }).join('')}</tbody>
   </table></div>`;
 
+  // Mainboard IPO Listing — confirmed/expected listing date + exchange identifiers, as cards
+  // (distinct from the Mainboard IPO open/close table above — this one is about WHEN/WHERE shares
+  // actually start trading, which only firms up closer to or after allotment).
+  const listingBody = listingIPO.length ? `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px">
+    ${listingIPO.map((r,i)=>{
+      const elId=`si-ipo-listing-${i}`;
+      const hasSymbols = r.bseSymbol || r.nseSymbol;
+      const tba = /tba/i.test(r.listingDate);
+      pushSearch('ipo','IPO · Listing',r.company,(tba?'Listing TBA':'Lists '+f(r.listingDate)),elId);
+      return `<div id="${elId}" style="background:rgba(255,255,255,.55);border:1px solid var(--bdr);border-radius:10px;padding:12px 14px">
+        <div style="font-size:12px;font-weight:700;color:#1a1a1a;margin-bottom:8px">${f(r.company)}</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;${hasSymbols?'padding-bottom:8px;border-bottom:1px solid rgba(58,45,127,.14);margin-bottom:8px':''}">
+          <div>
+            <div style="font-size:9px;color:#6b6b6b;text-transform:uppercase;letter-spacing:.4px">IPO Dates</div>
+            <div style="font-family:'Space Grotesk',sans-serif;font-size:12.5px;font-weight:600;color:#1a1a1a">${f(r.ipoDate)}</div>
+          </div>
+          <div style="text-align:right">
+            <div style="font-size:9px;color:#6b6b6b;text-transform:uppercase;letter-spacing:.4px">Listing Date</div>
+            <div style="font-family:'Space Grotesk',sans-serif;font-size:12.5px;font-weight:700;color:${tba?'#999999':'var(--mc)'}">${f(r.listingDate)}</div>
+          </div>
+        </div>
+        ${hasSymbols?`<div style="display:flex;gap:6px;flex-wrap:wrap">
+          ${r.bseSymbol?`<span class="bd bd-g">BSE ${f(r.bseSymbol)}</span>`:''}
+          ${r.nseSymbol?`<span class="bd bd-a">NSE ${f(r.nseSymbol)}</span>`:''}
+        </div>`:''}
+      </div>`;
+    }).join('')}
+  </div>` : emptyStateHTML('No listing data yet','Listing dates and symbols appear here as they\'re confirmed','📋');
+
   clearSearchTab('ipo');
   $('s-ipo').innerHTML=`
     <div class="stitle">IPO Corner</div>
     ${panel('','Mainboard IPO','Upcoming open & close dates',mainboardIPO.length,'#555555',mainboardBody,'https://ipowatch.in','ipowatch.in ↗')}
+    ${panel('','Mainboard IPO Listing','Listing date · ISIN · exchange symbols',listingIPO.length,'#1a7a4a',listingBody,'https://www.nseindia.com/market-data/all-upcoming-issues-ipo','nseindia.com ↗')}
     ${panel('','Grey Market Premium','Unofficial pre-listing market prices',gmp.length,'#0d47a1',gmpBody,'https://ipowatch.in/ipo-grey-market-premium-latest-ipo-gmp/','ipowatch.in ↗')}
     ${panel('','Subscription Status','Live subscription data · Mainboard only',subs.length,'#6a1b9a',subsBody,'https://ipowatch.in/ipo-subscription-status-today/','ipowatch.in ↗')}
     ${panel('','Recently Listed IPOs','Performance since listing date · Mainboard only',listed.length,'#1a7a4a',listedBody,'https://www.moneycontrol.com/ipo/listed-ipos/mainline/','moneycontrol.com ↗')}
@@ -5306,14 +5360,21 @@ async function fetchNiftyDailyHistory(){
   const quote=result.indicators?.quote?.[0]||{};
   const closesRaw=quote.close||[];
   const volumesRaw=quote.volume||[];
-  const dailyCloses=[], dailyVolumes=[];
+  const highsRaw=quote.high||[];
+  const lowsRaw=quote.low||[];
+  const dailyCloses=[], dailyVolumes=[], dailyHighs=[], dailyLows=[];
   for(let i=0;i<timestamps.length;i++){
     if(closesRaw[i]!=null){
       dailyCloses.push(closesRaw[i]);
       dailyVolumes.push(volumesRaw[i]!=null ? volumesRaw[i] : null);
+      // High/Low fall back to the close itself on the rare day Yahoo returns a null intraday
+      // extreme but a valid close — keeps indicators that need H/L (ATR, Ichimoku, pivots) from
+      // breaking on a single gappy day instead of silently shortening the whole series.
+      dailyHighs.push(highsRaw[i]!=null ? highsRaw[i] : closesRaw[i]);
+      dailyLows.push(lowsRaw[i]!=null ? lowsRaw[i] : closesRaw[i]);
     }
   }
-  NIFTY_DAILY_HISTORY={closes:dailyCloses, volumes:dailyVolumes};
+  NIFTY_DAILY_HISTORY={closes:dailyCloses, volumes:dailyVolumes, highs:dailyHighs, lows:dailyLows};
   return NIFTY_DAILY_HISTORY;
 }
 function computeSMA(closes, period){
@@ -5335,11 +5396,132 @@ function computeRSI(closes, period){
   const rs=avgGain/avgLoss;
   return 100-(100/(1+rs));
 }
+/* ── Extra indicators, added to go beyond the original MA/RSI/Fibonacci/Volume report toward a
+   fuller "complete technical analysis" (Trend/Momentum/Volatility/Support&Resistance/Patterns,
+   plus Sharpe/drawdown risk readouts) modelled on the categorized bull/bear-signal report style.
+   Every one of these returns null (not a guess) when there isn't enough history for it yet,
+   same defensive-parsing convention used throughout this file. ── */
+function computeEMASeries(closes, period){
+  const out=new Array(closes.length).fill(null);
+  if(closes.length<period) return out;
+  const k=2/(period+1);
+  let ema=closes.slice(0,period).reduce((a,b)=>a+b,0)/period; // seed with a plain SMA
+  out[period-1]=ema;
+  for(let i=period;i<closes.length;i++){
+    ema=closes[i]*k+ema*(1-k);
+    out[i]=ema;
+  }
+  return out;
+}
+function computeMACD(closes){
+  const ema12=computeEMASeries(closes,12);
+  const ema26=computeEMASeries(closes,26);
+  const macdLine=closes.map((_,i)=> (ema12[i]!=null && ema26[i]!=null) ? ema12[i]-ema26[i] : null);
+  const validIdx=macdLine.findIndex(v=>v!=null);
+  if(validIdx<0) return {macd:null, signal:null, hist:null};
+  const signalSeries=computeEMASeries(macdLine.slice(validIdx), 9);
+  const lastMacd=macdLine[macdLine.length-1];
+  const lastSignal=signalSeries[signalSeries.length-1];
+  const hist=(lastMacd!=null && lastSignal!=null) ? lastMacd-lastSignal : null;
+  return {macd:lastMacd, signal:lastSignal, hist};
+}
+function computeBollinger(closes, period, mult){
+  period=period||20; mult=mult||2;
+  if(closes.length<period) return null;
+  const slice=closes.slice(-period);
+  const mean=slice.reduce((a,b)=>a+b,0)/period;
+  const variance=slice.reduce((a,b)=>a+Math.pow(b-mean,2),0)/period;
+  const sd=Math.sqrt(variance);
+  const upper=mean+mult*sd, lower=mean-mult*sd;
+  const current=closes[closes.length-1];
+  const percentB=(upper-lower)!==0 ? (current-lower)/(upper-lower) : 0.5;
+  return {mean, upper, lower, percentB};
+}
+// Simplified ATR — a plain average of the last 14 True Range values rather than Wilder's full
+// recursive smoothing. Close enough for an "elevated vs calm volatility" read at this app's level
+// of rigor (already labelled educational-reference-only throughout).
+function computeATR(highs, lows, closes, period){
+  period=period||14;
+  if(closes.length<period+1) return null;
+  const trs=[];
+  for(let i=1;i<closes.length;i++){
+    const h=highs[i], l=lows[i], pc=closes[i-1];
+    trs.push(Math.max(h-l, Math.abs(h-pc), Math.abs(l-pc)));
+  }
+  const slice=trs.slice(-period);
+  return slice.reduce((a,b)=>a+b,0)/period;
+}
+function computePivotPoints(highs, lows, closes){
+  const n=closes.length;
+  if(n<2) return null;
+  const h=highs[n-1], l=lows[n-1], c=closes[n-1];
+  const pivot=(h+l+c)/3;
+  return {pivot, r1:2*pivot-l, r2:pivot+(h-l), s1:2*pivot-h, s2:pivot-(h-l)};
+}
+function computeWilliamsR(highs, lows, closes, period){
+  period=period||14;
+  if(closes.length<period) return null;
+  const hSlice=highs.slice(-period), lSlice=lows.slice(-period);
+  const highestHigh=Math.max(...hSlice), lowestLow=Math.min(...lSlice);
+  const current=closes[closes.length-1];
+  if(highestHigh===lowestLow) return 0;
+  return ((highestHigh-current)/(highestHigh-lowestLow))*-100;
+}
+// Ichimoku Tenkan-sen (9), Kijun-sen (26), and the Senkou Span A/B that plot as TODAY's cloud —
+// which are actually the spans as computed 26 sessions ago (the cloud is conventionally drawn
+// displaced 26 periods forward, so "today's cloud" = the values calculated at t-26).
+function computeIchimoku(highs, lows, closes){
+  const n=closes.length;
+  const lineOver=(period,endIdx)=>{
+    if(endIdx<period-1) return null;
+    const hSlice=highs.slice(endIdx-period+1, endIdx+1), lSlice=lows.slice(endIdx-period+1, endIdx+1);
+    return (Math.max(...hSlice)+Math.min(...lSlice))/2;
+  };
+  const tenkan=lineOver(9,n-1);
+  const kijun=lineOver(26,n-1);
+  const cloudIdx=n-1-26;
+  let spanA=null, spanB=null;
+  if(cloudIdx>=0){
+    const t=lineOver(9,cloudIdx), k=lineOver(26,cloudIdx);
+    spanA=(t!=null && k!=null) ? (t+k)/2 : null;
+    spanB=lineOver(52,cloudIdx);
+  }
+  return {tenkan, kijun, spanA, spanB};
+}
+// Annualized Sharpe ratio over the trailing `window` sessions, risk-free rate simplified to 0 —
+// a relative "is recent volatility being compensated by recent return" read, not a formal CAPM figure.
+function computeSharpe(closes, window){
+  window=window||30;
+  const slice=closes.slice(-(window+1));
+  if(slice.length<10) return null;
+  const rets=[];
+  for(let i=1;i<slice.length;i++) rets.push((slice[i]-slice[i-1])/slice[i-1]);
+  const mean=rets.reduce((a,b)=>a+b,0)/rets.length;
+  const variance=rets.reduce((a,b)=>a+Math.pow(b-mean,2),0)/rets.length;
+  const sd=Math.sqrt(variance);
+  if(sd===0) return null;
+  return (mean/sd)*Math.sqrt(252);
+}
+// Max drawdown across the full available history, plus where price sits RIGHT NOW relative to
+// its all-time (in-window) peak — the two are different things: a deep historical drawdown that
+// has since fully recovered is informational, a deep CURRENT drawdown is an active risk signal.
+function computeMaxDrawdown(closes){
+  let peak=closes[0], maxDD=0;
+  for(const c of closes){
+    if(c>peak) peak=c;
+    const dd=(c-peak)/peak;
+    if(dd<maxDD) maxDD=dd;
+  }
+  const allTimePeak=Math.max(...closes);
+  const current=closes[closes.length-1];
+  const currentDD=(current-allTimePeak)/allTimePeak;
+  return {maxDD, currentDD};
+}
 let NIFTY_MA={sma50:null, sma200:null};
 async function loadNiftyTechnicalAnalysis(){
   const content=document.getElementById('nifty-ta-content');
   try{
-    const {closes, volumes}=await fetchNiftyDailyHistory();
+    const {closes, volumes, highs, lows}=await fetchNiftyDailyHistory();
     if(!closes.length) throw new Error('No data');
     const current=closes[closes.length-1];
     const sma50=computeSMA(closes,50);
@@ -5364,7 +5546,6 @@ async function loadNiftyTechnicalAnalysis(){
     const fibLevels=[0,0.236,0.382,0.5,0.618,0.786,1].map(r=>({
       pct:r, price: swingHigh-fibRange*r
     }));
-    // Nearest level to current price, for a plain-language read
     let nearestFib=fibLevels[0], nearestDist=Infinity;
     fibLevels.forEach(l=>{ const d=Math.abs(current-l.price); if(d<nearestDist){nearestDist=d; nearestFib=l;} });
 
@@ -5398,8 +5579,113 @@ async function loadNiftyTechnicalAnalysis(){
     else if(rsi14<=30){ rsiText=rsi14.toFixed(1)+' — Oversold'; rsiColor='var(--green)'; }
     else { rsiText=rsi14.toFixed(1)+' — Neutral'; rsiColor='var(--mc)'; }
 
+    // ── Extra indicators ──
+    const macd=computeMACD(closes);
+    const boll=computeBollinger(closes,20,2);
+    const atr=computeATR(highs,lows,closes,14);
+    const atrPct=(atr!=null) ? (atr/current)*100 : null;
+    const pivots=computePivotPoints(highs,lows,closes);
+    const willR=computeWilliamsR(highs,lows,closes,14);
+    const ichi=computeIchimoku(highs,lows,closes);
+    const sharpe=computeSharpe(closes,30);
+    const dd=computeMaxDrawdown(closes);
+
+    // ── Signal tally — every directional read across all categories, collected once so the
+    // "Overall Short-Term Read" banner and the Bulls/Bears lists are always in sync with the
+    // detailed category sections below (same numbers, no separately-maintained count). ──
+    const signals=[]; // {cat, text, dir:'bull'|'bear'}
+    const sig=(cat,text,dir)=>signals.push({cat,text,dir});
+
+    if(sma50 && sma200){
+      if(current>sma50 && sma50>sma200) sig('Trend','Golden Cross structure: price above both 50-DMA and 200-DMA, with the 50-DMA above the 200-DMA','bull');
+      else if(current<sma50 && sma50<sma200) sig('Trend','Death Cross structure: price below both 50-DMA and 200-DMA, with the 50-DMA trailing below the 200-DMA','bear');
+    }
+    if(ichi.tenkan!=null && ichi.kijun!=null){
+      if(ichi.tenkan>ichi.kijun) sig('Trend','Ichimoku Tenkan-sen is above the Kijun-sen — short-term momentum line leading the base line higher','bull');
+      else if(ichi.tenkan<ichi.kijun) sig('Trend','Ichimoku Tenkan-sen is below the Kijun-sen — short-term momentum line trailing the base line','bear');
+    }
+    if(ichi.spanA!=null && ichi.spanB!=null){
+      const cloudTop=Math.max(ichi.spanA,ichi.spanB), cloudBottom=Math.min(ichi.spanA,ichi.spanB);
+      if(current>cloudTop) sig('Trend','Price is trading above the Ichimoku Cloud — the broader structure favours the trend continuing up','bull');
+      else if(current<cloudBottom) sig('Trend','Price is trading below the Ichimoku Cloud — the broader structure favours the trend continuing down','bear');
+    }
+    if(rsi14!=null){
+      if(rsi14>=55) sig('Momentum','RSI(14) at '+rsi14.toFixed(1)+' — momentum leaning bullish'+(rsi14>=70?', overbought territory':''),'bull');
+      else if(rsi14<=45) sig('Momentum','RSI(14) at '+rsi14.toFixed(1)+' — momentum leaning bearish'+(rsi14<=30?', oversold territory':''),'bear');
+    }
+    if(macd.hist!=null){
+      if(macd.hist>0) sig('Momentum','MACD histogram is positive ('+macd.hist.toFixed(1)+') — the MACD line is above its signal line','bull');
+      else if(macd.hist<0) sig('Momentum','MACD histogram is negative ('+macd.hist.toFixed(1)+') — the MACD line is below its signal line','bear');
+    }
+    if(willR!=null){
+      if(willR>=-20) sig('Momentum','Williams %R at '+willR.toFixed(1)+' — overbought zone, strong recent upward push','bull');
+      else if(willR<=-80) sig('Momentum','Williams %R at '+willR.toFixed(1)+' — deep oversold zone, strong recent downward push','bear');
+    }
+    if(boll){
+      if(boll.percentB>=0.8) sig('Volatility','Price is trading in the upper Bollinger Band — extended toward the band\'s edge on the strong side','bull');
+      else if(boll.percentB<=0.2) sig('Volatility','Price is trading in the lower Bollinger Band — pressed toward the band\'s edge on the weak side','bear');
+    }
+    if(atrPct!=null){
+      if(atrPct>=2.5) sig('Volatility','ATR is elevated at '+atrPct.toFixed(2)+'% of price — wider daily swings than usual, raises risk either direction','bear');
+      else if(atrPct<=1.0) sig('Volatility','ATR is subdued at '+atrPct.toFixed(2)+'% of price — calmer daily ranges than usual','bull');
+    }
+    if(pivots){
+      if(current>pivots.pivot) sig('Support & Resistance','Price is above the daily pivot ('+pivots.pivot.toFixed(0)+') — tilts the intraday bias constructive','bull');
+      else sig('Support & Resistance','Price is below the daily pivot ('+pivots.pivot.toFixed(0)+') — tilts the intraday bias cautious','bear');
+    }
+    if(resistance>support){
+      const distToRes=(resistance-current)/current, distToSup=(current-support)/current;
+      if(distToRes<=0.015) sig('Support & Resistance','Trading within 1.5% of the 20-day high ('+resistance.toFixed(0)+') — testing resistance, breakout watch','bull');
+      else if(distToSup<=0.015) sig('Support & Resistance','Trading within 1.5% of the 20-day low ('+support.toFixed(0)+') — testing support, breakdown watch','bear');
+    }
+    if(sharpe!=null){
+      if(sharpe<=-0.3) sig('Risk','Negative Sharpe ratio ('+sharpe.toFixed(2)+') over the last 30 sessions — recent returns aren\'t compensating for the volatility taken','bear');
+      else if(sharpe>=0.5) sig('Risk','Healthy Sharpe ratio ('+sharpe.toFixed(2)+') over the last 30 sessions — recent returns are compensating well for volatility taken','bull');
+    }
+    if(dd.currentDD<=-0.10) sig('Risk','Currently '+Math.abs(dd.currentDD*100).toFixed(1)+'% below its in-window peak — an active drawdown of this size is a standing risk signal, not just a historical one','bear');
+
+    // Pattern read — simple breakout/breakdown/consolidation classification, the one category
+    // that doesn't come from a named indicator: just where today's close sits in its own recent range.
+    let patternText, patternDir=null;
+    const rangePct=(resistance-support)/current*100;
+    if(current>=resistance*0.999) { patternText='Pushing to a new 20-day high — breakout structure, momentum favours continuation if it holds above '+resistance.toFixed(0)+'.'; patternDir='bull'; }
+    else if(current<=support*1.001) { patternText='Pushing to a new 20-day low — breakdown structure, a measured-move target below would project roughly '+(support-(resistance-support)).toFixed(0)+' if the break extends.'; patternDir='bear'; }
+    else if(rangePct<=4) { patternText='Consolidating in a tight '+rangePct.toFixed(1)+'% range over the last 20 sessions — low-energy, often resolves with a sharper move once it breaks either edge.'; }
+    else { patternText='Trading within its recent 20-day range ('+support.toFixed(0)+' – '+resistance.toFixed(0)+'), no breakout or breakdown structure yet.'; }
+    if(patternDir) sig('Patterns', patternText, patternDir);
+
+    const bullSignals=signals.filter(s=>s.dir==='bull');
+    const bearSignals=signals.filter(s=>s.dir==='bear');
+    const catCount=new Set(signals.map(s=>s.cat)).size;
+    let overallText, overallColor;
+    if(bullSignals.length===0 && bearSignals.length===0){ overallText='Neutral — no strongly directional signals right now'; overallColor='#6b6b6b'; }
+    else if(bullSignals.length>bearSignals.length){ overallText='Short-Term Bullish — '+bullSignals.length+' bullish vs '+bearSignals.length+' bearish signals, across '+catCount+' categories'; overallColor='var(--green)'; }
+    else if(bearSignals.length>bullSignals.length){ overallText='Short-Term Bearish — '+bullSignals.length+' bullish vs '+bearSignals.length+' bearish signals, across '+catCount+' categories'; overallColor='var(--red)'; }
+    else { overallText='Mixed — '+bullSignals.length+' bullish vs '+bearSignals.length+' bearish signals, across '+catCount+' categories'; overallColor='var(--mc)'; }
+
+    const signalList=(list,color)=> list.length
+      ? `<ul style="margin:0;padding-left:18px">${list.map(s=>`<li style="margin-bottom:7px;color:#1a1a1a">${s.text}</li>`).join('')}</ul>`
+      : `<div style="color:#999999;font-style:italic">No signals in this direction right now.</div>`;
+
     content.innerHTML=`
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div style="background:${overallColor==='#6b6b6b'?'rgba(107,107,107,.08)':overallColor==='var(--green)'?'rgba(31,138,76,.08)':overallColor==='var(--red)'?'rgba(233,31,43,.08)':'rgba(58,45,127,.08)'};
+        border:1px solid ${overallColor};border-radius:10px;padding:12px 14px;margin-bottom:16px">
+        <div style="font-size:9px;color:#6b6b6b;text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px">Overall Short-Term Read</div>
+        <div style="font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:700;color:${overallColor}">${overallText}</div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:18px">
+        <div>
+          <div style="font-size:11px;font-weight:700;color:var(--green);text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px">Positive Structural Drivers (Bulls)</div>
+          <div style="font-size:11.5px;line-height:1.6">${signalList(bullSignals)}</div>
+        </div>
+        <div>
+          <div style="font-size:11px;font-weight:700;color:var(--red);text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px">Structural Risk Warnings (Bears)</div>
+          <div style="font-size:11.5px;line-height:1.6">${signalList(bearSignals)}</div>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px">
         <div style="background:rgba(58,45,127,.05);border-radius:10px;padding:10px 12px">
           <div style="font-size:9px;color:#6b6b6b;text-transform:uppercase;letter-spacing:.4px">50-Day MA</div>
           <div style="font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:700;color:#1a1a1a">${sma50?sma50.toFixed(2):'—'}</div>
@@ -5417,23 +5703,50 @@ async function loadNiftyTechnicalAnalysis(){
           <div style="font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:700;color:#1a1a1a">${volatility.toFixed(1)}%</div>
         </div>
       </div>
-      <div style="margin-bottom:10px"><strong style="color:${trendColor}">Trend:</strong> ${trendText}</div>
-      <div style="margin-bottom:14px"><strong>Near-term Support:</strong> ${support.toFixed(2)} <span style="color:#999999">(20-day low)</span> &nbsp;·&nbsp; <strong>Near-term Resistance:</strong> ${resistance.toFixed(2)} <span style="color:#999999">(20-day high)</span></div>
 
-      <div style="font-size:11px;font-weight:700;color:var(--mc);text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px">Fibonacci Retracement</div>
-      <div style="font-size:10px;color:#999999;margin-bottom:8px">Based on the 13-month swing high (${swingHigh.toFixed(0)}) to swing low (${swingLow.toFixed(0)})</div>
-      <table style="width:100%;border-collapse:collapse;margin-bottom:6px">
-        ${fibLevels.map(l=>`<tr style="border-bottom:1px solid rgba(58,45,127,.10)">
-          <td style="padding:5px 8px;font-size:11px;color:${l===nearestFib?'var(--mc)':'#6b6b6b'};font-weight:${l===nearestFib?'700':'400'}">${(l.pct*100).toFixed(1)}%</td>
-          <td style="padding:5px 8px;font-size:12px;text-align:right;font-family:'Space Grotesk',sans-serif;color:${l===nearestFib?'var(--mc)':'#1a1a1a'};font-weight:${l===nearestFib?'700':'600'}">${l.price.toFixed(2)}${l===nearestFib?' ← nearest':''}</td>
-        </tr>`).join('')}
-      </table>
-      <div style="margin-bottom:14px;font-size:10px;color:#999999">Price is currently closest to the ${(nearestFib.pct*100).toFixed(1)}% retracement level.</div>
+      ${guideSection('Trend', `
+        <div style="margin-bottom:10px"><strong style="color:${trendColor}">Moving Averages:</strong> ${trendText}</div>
+        ${ichi.tenkan!=null && ichi.kijun!=null ? `<div style="margin-bottom:10px"><strong>Ichimoku Tenkan/Kijun:</strong> Tenkan-sen ${ichi.tenkan.toFixed(0)} ${ichi.tenkan>ichi.kijun?'above':'below'} Kijun-sen ${ichi.kijun.toFixed(0)}</div>` : ''}
+        ${ichi.spanA!=null && ichi.spanB!=null ? `<div>
+          <strong>Ichimoku Cloud:</strong> Price ${current>Math.max(ichi.spanA,ichi.spanB)?'above':current<Math.min(ichi.spanA,ichi.spanB)?'below':'inside'} the cloud
+          (Span A ${ichi.spanA.toFixed(0)}, Span B ${ichi.spanB.toFixed(0)})
+        </div>` : '<div style="color:#999999;font-size:11px">Not enough history yet for the Ichimoku Cloud (needs ~78 sessions).</div>'}
+      `, true)}
 
-      <div style="font-size:11px;font-weight:700;color:var(--mc);text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px">Volume</div>
-      <div style="margin-bottom:10px;color:${volColor}"><strong>Latest Session:</strong> ${volText}</div>
+      ${guideSection('Momentum', `
+        <div style="margin-bottom:10px"><strong style="color:${rsiColor}">RSI (14-Day):</strong> ${rsiText}</div>
+        <div style="margin-bottom:10px"><strong>MACD (12,26,9):</strong> ${macd.hist!=null ? 'Histogram '+macd.hist.toFixed(1)+' — MACD line '+macd.macd.toFixed(1)+' is '+(macd.hist>0?'above':'below')+' its signal line '+macd.signal.toFixed(1) : 'Not enough history yet'}</div>
+        <div><strong>Williams %R (14-Day):</strong> ${willR!=null ? willR.toFixed(1)+(willR>=-20?' — overbought':willR<=-80?' — oversold':' — neutral') : '—'}</div>
+      `)}
 
-      <p style="font-size:10px;color:#999999;margin-top:10px">Computed from ~13 months of daily closing prices and volume via Yahoo Finance. Support/resistance are simple 20-day range extremes, not formal pivot analysis. Fibonacci levels use the full available swing high/low, not a specific detected trend leg. RSI uses a standard 14-day formula. Educational reference only — not investment advice.</p>
+      ${guideSection('Volatility', `
+        <div style="margin-bottom:10px"><strong>Bollinger Bands (20, 2σ):</strong> ${boll ? current.toFixed(0)+' is between '+boll.lower.toFixed(0)+' (lower) and '+boll.upper.toFixed(0)+' (upper) — %B '+boll.percentB.toFixed(2) : 'Not enough history yet'}</div>
+        <div><strong>ATR (14-Day):</strong> ${atr!=null ? atr.toFixed(1)+' points — '+atrPct.toFixed(2)+'% of current price' : '—'}</div>
+      `)}
+
+      ${guideSection('Support &amp; Resistance', `
+        <div style="margin-bottom:10px"><strong>Near-term:</strong> Support ${support.toFixed(2)} <span style="color:#999999">(20-day low)</span> &nbsp;·&nbsp; Resistance ${resistance.toFixed(2)} <span style="color:#999999">(20-day high)</span></div>
+        ${pivots ? `<div style="margin-bottom:10px"><strong>Daily Pivot:</strong> ${pivots.pivot.toFixed(0)} &nbsp;(R1 ${pivots.r1.toFixed(0)} · R2 ${pivots.r2.toFixed(0)} · S1 ${pivots.s1.toFixed(0)} · S2 ${pivots.s2.toFixed(0)})</div>` : ''}
+        <div style="font-size:11px;font-weight:700;color:var(--mc);text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px">Fibonacci Retracement</div>
+        <div style="font-size:10px;color:#999999;margin-bottom:8px">Based on the 13-month swing high (${swingHigh.toFixed(0)}) to swing low (${swingLow.toFixed(0)})</div>
+        <table style="width:100%;border-collapse:collapse;margin-bottom:6px">
+          ${fibLevels.map(l=>`<tr style="border-bottom:1px solid rgba(58,45,127,.10)">
+            <td style="padding:5px 8px;font-size:11px;color:${l===nearestFib?'var(--mc)':'#6b6b6b'};font-weight:${l===nearestFib?'700':'400'}">${(l.pct*100).toFixed(1)}%</td>
+            <td style="padding:5px 8px;font-size:12px;text-align:right;font-family:'Space Grotesk',sans-serif;color:${l===nearestFib?'var(--mc)':'#1a1a1a'};font-weight:${l===nearestFib?'700':'600'}">${l.price.toFixed(2)}${l===nearestFib?' ← nearest':''}</td>
+          </tr>`).join('')}
+        </table>
+        <div style="font-size:10px;color:#999999">Price is currently closest to the ${(nearestFib.pct*100).toFixed(1)}% retracement level.</div>
+      `)}
+
+      ${guideSection('Patterns', `<div>${patternText}</div>`)}
+
+      ${guideSection('Volume &amp; Risk', `
+        <div style="margin-bottom:10px;color:${volColor}"><strong>Latest Session Volume:</strong> ${volText}</div>
+        <div style="margin-bottom:10px"><strong>Sharpe Ratio (30-Day, annualized):</strong> ${sharpe!=null ? sharpe.toFixed(2) : '—'}</div>
+        <div><strong>Drawdown:</strong> Max ${(dd.maxDD*100).toFixed(1)}% over the full ~13-month window · Currently ${(dd.currentDD*100).toFixed(1)}% off its in-window peak</div>
+      `)}
+
+      <p style="font-size:10px;color:#999999;margin-top:10px">Computed from ~13 months of daily OHLCV data via Yahoo Finance. Support/resistance are simple 20-day range extremes; pivots use the standard classic daily formula off the latest session's H/L/C. ATR is a simplified 14-day average of True Range (not Wilder-smoothed). Ichimoku Cloud needs ~78 sessions of history to populate. Signal counts are a simple directional tally across indicators, not a weighted or backtested model. Educational reference only — not investment advice.</p>
     `;
   }catch(e){
     content.innerHTML='<span style="color:var(--red)">Couldn\'t load technical analysis — '+e.message+'. Try again shortly.</span>';
